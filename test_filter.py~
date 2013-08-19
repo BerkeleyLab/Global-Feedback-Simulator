@@ -1,0 +1,94 @@
+#!/usr/bin/python
+
+import linac
+
+#
+# Create a Filter and test it out
+#
+#fil = linac.Filter_Allocate_New(3,3) #this uses malloc, lets avoid this 
+fil = linac.Filter() #declare one in python and then set it up
+linac.Filter_Allocate_In(fil,3,3)
+
+#push in some random poles
+
+poles = linac.complexdouble_Array(3)
+poles[0] = 1.0
+poles[1] = 1.0-2.0j
+poles[2] = 2.5j
+linac.Filter_Append_Modes(fil,poles,3)
+
+poles = linac.complexdouble_Array(1)
+poles[0] = -1.0-1.5j
+linac.Filter_Append_Modes(fil,poles,1)
+poles[0] = -1.0-2.5j
+linac.Filter_Append_Modes(fil,poles,1)
+
+poles = linac.complexdouble_Array(2)
+poles[0] = -1.0-3.5j
+poles[1] = 2.1
+linac.Filter_Append_Modes(fil,poles,2)
+
+# Use the swig carrays.i to get handles to the pointer arrays
+
+fil.A_modes = linac.intArray_frompointer(fil.modes)
+fil.A_coeff_start = linac.intArray_frompointer(fil.coeff_start)
+fil.A_coeffs = linac.complexdouble_Array_frompointer(fil.coeffs)
+fil.A_poles = linac.complexdouble_Array_frompointer(fil.poles)
+
+
+
+#
+# This creates a new linac
+#
+p_TRF1 = linac.complexdouble_Array(2)
+p_TRF1[0] = 1.0-2.0j
+p_TRF1[1] = 3.0-4.0;
+p_TRF2 = linac.complexdouble_Array(1)
+p_TRF2[0] = 5.0+6.0j;
+p_RXF = linac.complexdouble_Array(3)
+p_RXF[0] = -18+0j
+p_RXF[1] = -9.5+15j
+p_RXF[2] = -9.5-15j
+for i in xrange(3):
+    p_RXF[i] *= 1e6
+lin = linac.Linac_Param()
+linac.Linac_Config(lin,
+                   1.0,2.0,3.0,4.0,
+                   5.0,6.0,7.0,8.0,
+                   9,10.0,11.0,
+                   p_TRF1,p_TRF2,p_RXF)
+
+
+
+
+import pydot
+def filter_dotify(fil,fname="test.png"):
+    graph = pydot.Dot(graph_type='digraph',rankdir="LR")
+    innode = pydot.Node("Input")
+    graph.add_node(innode)
+    las = innode
+    for o in xrange(fil.order):
+        if fil.A_modes[o]>1:
+            summer = pydot.Node("Sigma{0}".format(o),label="&Sigma;",shape="circle")
+            graph.add_node(summer)
+
+        for m in xrange(fil.A_modes[o]):
+            nod = pydot.Node(str(fil.A_poles[fil.A_coeff_start[o]+m]))
+            graph.add_node(nod)
+            #these += [nod]
+            if fil.A_modes[o]>1:
+                graph.add_edge(pydot.Edge(nod,summer))
+            edg = pydot.Edge(las,nod)
+            graph.add_edge(edg)
+        if fil.A_modes[o]>1:
+            las=summer
+        else:
+            las=nod
+
+    ounode = pydot.Node("Output")
+    graph.add_node(ounode)
+    graph.add_edge(pydot.Edge(las,ounode))
+    graph.write_png(fname)
+
+
+filter_dotify(fil)

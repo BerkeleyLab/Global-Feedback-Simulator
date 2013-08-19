@@ -1,0 +1,56 @@
+#ifndef STATE_SPACE_TOP_H
+#define STATE_SPACE_TOP_H
+
+/*
+ * state_space_top.h/c
+ *
+ * The mainloop for the beam and linac simulation.
+ *
+ * Alejandro F Queiruga
+ * Daniel S Driver
+ * LBL 2013
+ *
+ */
+
+/*
+ * TODO: Fill in license
+ */
+
+#include <complex.h>
+#include "filter.h"
+#include "linac_param.h"
+#include "step_llrf.h"
+
+/*
+ * A data structure to store dynamically set simulation variables,
+ * i.e. they take on a new value each timestep
+ */
+typedef struct str_dynamic_param {
+  
+  double dQ_Q; //rename him to dQ_Q 
+  double dtg;
+  double dE_ing;
+  double dsig_z;
+  double dsig_E;
+  double dchirp; //go into gun
+
+  double complex adc_noise;
+} Dynamic_Param;
+
+#include "doublecompress.h"
+
+
+Linac_State *** allocate_states(Linac_Param ** linp_array, 
+				int Nlinac, int Nhist);
+void deallocate_states(Linac_State *** linss_array, int Nlinac, int Nhist);
+
+/*
+ * Performs NT timesteps
+ */
+void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
+		     Linac_State *** linss_array, int Nhist, double simdt,
+		     int NT, int openloop,
+		     void (*dynset)(Dynamic_Param *,int)
+		     );
+
+#endif

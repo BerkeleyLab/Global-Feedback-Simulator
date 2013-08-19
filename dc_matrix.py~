@@ -1,0 +1,113 @@
+import numpy as np
+import linac
+#from readjson.readjson import *
+#print "starting  dc_matrix"
+
+#a,accelout,linp_arr,gun=loadaccelerator("readjson/footest.cfg", defaultfile="readjson/default.cfg")
+
+#Nlinac=len(accelout)
+#ki=np.ones(Nlinac)
+#dv=.05
+#dphi=.05
+
+
+
+    
+def dcs_to_numpy(dE_E,sz,sd,dt,numpyarray,Nlinac,Nmeasurements):
+    for n in range(Nlinac):
+        numpyarray[Nlinac*0+n]=dE_E[n]
+        numpyarray[Nlinac*1+n]=sz[n]
+        numpyarray[Nlinac*2+n]=dt[n]
+        numpyarray[Nlinac*3+n]=sd[n]
+        
+def full_dc_matrix(gun,linp_arr,dv,dphi,Nlinac):
+
+
+    #set up empty stuctures to call double compress
+    dynp=linac.Dynamic_Param()
+    
+    dcs=linac.Doublecompress_State()
+    linac.Doublecompress_State_Alloc(dcs,Nlinac)
+    
+    #pointers to outputs of interest
+    sz= linac.double_Array_frompointer(dcs.sz)
+    dE_E = linac.double_Array_frompointer(dcs.dE_E)
+    sd= linac.double_Array_frompointer(dcs.sd)
+    dt= linac.double_Array_frompointer(dcs.dt)
+    
+    dphivr= linac.double_Array(Nlinac)
+    dV_Vvr= linac.double_Array(Nlinac)
+
+    #makes sure everything is zero
+    for j in range(Nlinac):  
+        dV_Vvr[j]=0.0
+        dphivr[j]=0.0
+
+    dynp.dQ_Q=0.0
+    dynp.dtg=0.0
+    dynp.dE_ing=0.0
+    dynp.dsig_z=0.0
+    dynp.dsig_E=0.0
+    dynp.dchirp=0.0
+
+
+    Nmeasurements=4
+    Ncontrols=2
+    M=np.zeros((Nmeasurements*Nlinac,Ncontrols*Nlinac),
+               dtype=float)
+    
+    dcs_plus_dv=np.zeros(Nlinac*Nmeasurements,dtype=float)
+    dcs_minus_dv=np.zeros(Nlinac*Nmeasurements,dtype=float)
+    dcs_plus_dphi=np.zeros(Nlinac*Nmeasurements,dtype=float)
+    dcs_minus_dphi=np.zeros(Nlinac*Nmeasurements,dtype=float)
+
+
+    
+    #find jacobian numericals using midpoint approximation
+    # to the first derivative.
+    for j in range(Nlinac):
+        
+        #actually calcutions needed for midpoint
+        #first do the voltage
+        dV_Vvr[j]=dv
+        print 'V_Vr'
+        for k in range(Nlinac):
+            print dV_Vvr[k]
+        print 'dphi'
+        for k in range(Nlinac):
+            print dphivr[k]
+
+        linac.doublecompress_new(gun,linp_arr.cast(),Nlinac,
+                                 dynp,dphivr,dV_Vvr,
+                                 dcs)
+        dcs_to_numpy(dE_E,sz,sd,dt,dcs_plus_dv,Nlinac,Nmeasurements)
+
+        dV_Vvr[j]=-dv
+        linac.doublecompress_new(gun,linp_arr.cast(),Nlinac,
+                                 dynp,dphivr,dV_Vvr,
+                                 dcs)
+        dcs_to_numpy(dE_E,sz,sd,dt,dcs_minus_dv,Nlinac,Nmeasurements)
+        dV_Vvr[j]=0.0  #set back to zero
+        
+        #next do the phase variations
+        dphivr[j]=dphi
+        linac.doublecompress_new(gun,linp_arr.cast(),Nlinac,
+                                 dynp,dphivr,dV_Vvr,
+                                 dcs)
+        dcs_to_numpy(dE_E,sz,sd,dt,dcs_plus_dphi,Nlinac,Nmeasurements)
+
+        dphivr[j]=-dphi
+        linac.doublecompress_new(gun,linp_arr.cast(),Nlinac,
+                                 dynp,dphivr,dV_Vvr,
+                                 dcs)
+        dcs_to_numpy(dE_E,sz,sd,dt,dcs_minus_dphi,Nlinac,Nmeasurements)
+        dphivr[j]=0.0  #set bck to zero
+        
+        M[:,Ncontrols*j+0]=(dcs_plus_dv- dcs_minus_dv)/(2*dv)  #input v derivative
+        M[:,Ncontrols*j+1]=(dcs_plus_dphi- dcs_minus_dphi)/(2*dphi) #input phi derivative
+
+    return M
+
+#M=full_dc_matrix(gun,linp_arr,dv,dphi,Nlinac)
+
+

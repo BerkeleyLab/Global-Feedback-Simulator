@@ -1,0 +1,15 @@
+#ifndef DYNAMIC_NOISE_H
+#define DYNAMIC_NOISE_H
+
+
+#include "doublecompress.h"
+
+
+#define N_NOISE 8
+#define N_PARAM 1
+typedef struct str_Noise_Source {
+  int[N_NOISE] type;
+  double [N_PARAM] param;
+} Noise_Source;
+
+#endif

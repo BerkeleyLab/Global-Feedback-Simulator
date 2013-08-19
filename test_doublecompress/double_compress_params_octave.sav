@@ -1,0 +1,84 @@
+# Created by Octave 3.6.2, Mon Jul 08 09:53:20 2013 PDT <ddriver@acer1>
+# name: pdc
+# type: scalar struct
+# ndims: 2
+ 1 1
+# length: 12
+# name: lam
+# type: scalar
+0.2306095830769231
+
+
+# name: sz0
+# type: scalar
+0.548
+
+
+# name: sd0
+# type: scalar
+0
+
+
+# name: Eg
+# type: scalar
+0.00075
+
+
+# name: Ev
+# type: matrix
+# rows: 1
+# columns: 5
+ 0.094 0.215 0.215 0.72 2.4
+
+
+# name: R56v
+# type: matrix
+# rows: 1
+# columns: 5
+ -0.005 0 -0.094 -0.076 0
+
+
+# name: T566v
+# type: matrix
+# rows: 1
+# columns: 5
+ 0.0075 0 0.141 0.114 0
+
+
+# name: phiv
+# type: matrix
+# rows: 1
+# columns: 5
+ 0 -20 180 -23.2 0
+
+
+# name: lamv
+# type: matrix
+# rows: 1
+# columns: 5
+ 0.2306095830769231 0.2306095830769231 0.07686986102564103 0.2306095830769231 0.2306095830769231
+
+
+# name: s0v
+# type: matrix
+# rows: 1
+# columns: 5
+ 1.76996 1.76996 0.950628 1.76996 1.76996
+
+
+# name: av
+# type: matrix
+# rows: 1
+# columns: 5
+ 29 29 12.6 29 29
+
+
+# name: Lv
+# type: matrix
+# rows: 1
+# columns: 5
+ 7.259 7.259 2.422 43.554 130.662
+
+
+
+

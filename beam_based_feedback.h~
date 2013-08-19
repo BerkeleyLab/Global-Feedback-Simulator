@@ -1,0 +1,8 @@
+#ifndef BEAM_BASED_FEEDBACK_H
+#define BEAM_BASED_FEEDBACK_H
+
+#include "doublecompress.h"
+
+
+
+#endif

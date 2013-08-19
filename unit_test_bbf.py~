@@ -1,0 +1,18 @@
+#!/usr/bin/python
+
+#
+# Unit tests for Beam Based Feedback Routines
+#
+
+import numpy as np
+from scipy import linalg
+
+import linac
+import full_dc_matrix
+import bbf_config
+from readjson.readjson import loadall as loadall
+
+[ pa, allaccell, linp, gun, bbfconf] = loadall("readjson/allchic.cfg","readjson/bbf_lim.cfg",default_acc="readjson/default.cfg")
+
+bbf,M,U,S,Vh,MA = bbf_config.BBF_Config(pa,gun,linp,len(allaccell),bbfconf)
+

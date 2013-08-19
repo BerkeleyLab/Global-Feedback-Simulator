@@ -1,0 +1,343 @@
+#LyX 2.0 created this file. For more info see http://www.lyx.org/
+\lyxformat 413
+\begin_document
+\begin_header
+\textclass article
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman default
+\font_sans default
+\font_typewriter default
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100
+\font_tt_scale 100
+
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_amsmath 1
+\use_esint 1
+\use_mhchem 1
+\use_mathdots 1
+\cite_engine basic
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 1in
+\topmargin 1in
+\rightmargin 1in
+\bottommargin 1in
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 1
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+NGLS LLRF Documenation
+\end_layout
+
+\begin_layout Section
+Quick Start
+\end_layout
+
+\begin_layout Enumerate
+Execute 
+\begin_inset Quotes eld
+\end_inset
+
+sh doswig.sh
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This will compile the C code and build a Shared Object file with SWIG called
+ linac.so that will be used by the Python code.
+ This only needs to be done once per system, or everytime a change is made
+ to the C source code.
+ 
+\end_layout
+
+\begin_layout Enumerate
+Set up the configuration files as desired.
+ Defaults for the NGLS are contained in the directory 
+\begin_inset Quotes eld
+\end_inset
+
+configfiles
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Enumerate
+Execute the simulation with the format 
+\begin_inset Quotes eld
+\end_inset
+
+python main.py output.txt config1.cfg config2.cfg etc...
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This will load the configuration files config1.cfg, and output data to output.txt.
+ The default set up can be run with
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+python main.py outputdata/test.txt configfiles/default_accelerator.cfg 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+configfiles/NGLS_Accelerator.cfg configfiles/bbf_causal.cfg 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+configfiles/noise_test.cfg
+\end_layout
+
+\end_inset
+
+This command will write data to outputdata/test.txt after reading in the
+ four files listed.
+ The configuration files are read in the order provided, with later files
+ overwriting conflicting fields from previously read in files.
+ For example, if config1.cfg defines x=3, and config2.cfg defines x=5, the
+ simulation will be run with x=5.
+ See Section XXX.
+\end_layout
+
+\begin_layout Enumerate
+Parse the output data.
+ DAN'S STUFF HERE
+\end_layout
+
+\begin_layout Section
+Configuration Files
+\end_layout
+
+\begin_layout Standard
+The extension 
+\begin_inset Quotes eld
+\end_inset
+
+.cfg
+\begin_inset Quotes erd
+\end_inset
+
+ was chosen to be a standard.
+ Filenames cannot have an open bracket 
+\begin_inset Quotes eld
+\end_inset
+
+{
+\begin_inset Quotes erd
+\end_inset
+
+ as the first character and a close bracket 
+\begin_inset Quotes eld
+\end_inset
+
+}
+\begin_inset Quotes erd
+\end_inset
+
+ as the last character (see 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Scripting"
+
+\end_inset
+
+).
+ 
+\end_layout
+
+\begin_layout Subsection
+Easter Eggs
+\end_layout
+
+\begin_layout Subsubsection
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Scripting"
+
+\end_inset
+
+Scripting
+\end_layout
+
+\begin_layout Standard
+If a filename provided is of the format 
+\begin_inset Quotes eld
+\end_inset
+
+{...}
+\begin_inset Quotes erd
+\end_inset
+
+, it is interpretted as a dictionary directly instead of a filename.
+ The regular expression used to check for this case is ^{.*}$.
+ This is to facilitate commandline scripting of parameter searches without
+ having to write hundreds of one-line configuration files.
+ The suggested usage of this feature is, for example:
+\begin_inset listings
+lstparams "language=Python"
+inline false
+status open
+
+\begin_layout Plain Layout
+
+In [11]: for x in [1,2,3]:
+\end_layout
+
+\begin_layout Plain Layout
+
+    print ('python main.py out.txt config1.cfg 
+\backslash
+
+\end_layout
+
+\begin_layout Plain Layout
+
+config2.cfg {{"Cavity0":{{"E":{0}}}'.format(x))
+\end_layout
+
+\begin_layout Plain Layout
+
+   ....:
+\end_layout
+
+\begin_layout Plain Layout
+
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":1} 
+\end_layout
+
+\begin_layout Plain Layout
+
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":2} 
+\end_layout
+
+\begin_layout Plain Layout
+
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":3} 
+\end_layout
+
+\end_inset
+
+where instead of 
+\begin_inset Quotes eld
+\end_inset
+
+print
+\begin_inset Quotes erd
+\end_inset
+
+ one would call os.system('python...') or some other tool to batch commands.
+ Notice that the {{ is used to escape out a single { in a python format
+ specifier.
+ This feature can also be used to call the code from the command, for example:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+python main.py out.txt config1.cfg config2.cfg {
+\backslash
+"Cavity0
+\backslash
+":{
+\backslash
+"E
+\backslash
+":0.1}}}
+\end_layout
+
+\end_inset
+
+where the quotation marks 
+\begin_inset Quotes eld
+\end_inset
+
+ had to be escaped as 
+\backslash
+
+\begin_inset Quotes erd
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+#include
+\end_layout
+
+\begin_layout Standard
+Configuration files can provide a 
+\begin_inset Quotes eld
+\end_inset
+
+#include
+\begin_inset Quotes erd
+\end_inset
+
+ key in the toplevel dictionary.
+ This will cause the file names listed to be scanned as dictionaries in
+ the order they are listed 
+\emph on
+before 
+\emph default
+the current file is added to the dictionary.
+ Therefore, entries in the current configuration file will overwrite those
+ in files it includes.
+ This was only added as a convenience.
+ 
+\emph on
+RECURSIVE INCLUDES ARE NOT HANDLED AND WILL CAUSE AN INFINITE LOOP.
+ USE WITH CAUTION.
+\end_layout
+
+\end_body
+\end_document

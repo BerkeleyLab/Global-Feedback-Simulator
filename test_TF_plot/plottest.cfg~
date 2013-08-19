@@ -1,0 +1,43 @@
+{
+	"Accelerator Config":"../configfiles/NGLS_Accelerator.cfg",
+	"Data":"../outputdata/test.txt",
+	"Plot31":{"type":"TdsF",
+		"output":{"quantity":"dE_E",
+			 "linac":"Linac3",
+			 "scale":1.0
+			 },
+		"input":{"quantity":"dtz",
+			 "linac":"Linac3",	
+			  "scale":1.0
+			 }
+		},
+
+	"Plot1":{"type":"TdaF",
+		"output":{"quantity":"dQ_Q",
+			 "scale":1.0
+			 },
+		"input":{"quantity":"t",
+			  "scale":1.0
+			 }
+		},
+	
+	"Plot2":{"type":"TasdF",
+		"output":{"quantity":"dE_E",
+			 "linac":"Linac3",
+			 "scale":1.0
+			 },
+		"input":{"quantity":"t",
+			  "scale":1.0
+			 }
+		},
+
+	"Plot5":{"type":"versus",
+		 "y":{"quantity":"fpga_err",
+			 "linac":"Linac3",
+			 "scale":1.0
+			 },
+		"x":{"quantity":"t",
+			  "scale":1.0
+		     }
+		}
+}

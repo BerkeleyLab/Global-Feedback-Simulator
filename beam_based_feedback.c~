@@ -1,0 +1,9 @@
+#include "beam_based_feedback.h"
+
+void BBF_Param_Alloc(BBF_Param * bbf, int Uc, int Um) {
+  
+}
+
+void BBF_Param_Free(BBF_Param * bbf) {
+
+}

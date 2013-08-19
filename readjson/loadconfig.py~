@@ -1,0 +1,14 @@
+
+#
+# Top level routine to import json configuration files 
+#
+
+import json
+
+import linac
+import readjson
+
+def LoadConfig(files):
+    dict = {}
+
+    
