@@ -68,6 +68,28 @@
 NGLS LLRF Documenation
 \end_layout
 
+\begin_layout Author
+Alejandro F Queiruga
+\begin_inset Newline newline
+\end_inset
+
+Daniel Scott Driver
+\end_layout
+
+\begin_layout Abstract
+This document presents how to run and utilize the Python and C LLRF model.
+ 
+\end_layout
+
+\begin_layout Standard
+\begin_inset CommandInset toc
+LatexCommand tableofcontents
+
+\end_inset
+
+
+\end_layout
+
 \begin_layout Section
 Quick Start
 \end_layout
@@ -141,14 +163,213 @@ configfiles/noise_test.cfg
 
 This command will write data to outputdata/test.txt after reading in the
  four files listed.
- The configuration files are read in the order provided, with later files
- overwriting conflicting fields from previously read in files.
- 
+ See Section 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "sub:Building-the-dictionary"
+
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Enumerate
 Parse the output data.
  DAN'S STUFF HERE
+\end_layout
+
+\begin_layout Section
+Compilation
+\end_layout
+
+\begin_layout Standard
+The codebase has the following dependencies:
+\end_layout
+
+\begin_layout Enumerate
+Python 2.7
+\end_layout
+
+\begin_layout Enumerate
+Numpy, Scipy, Matplotlib - Python packages.
+ The code was developed with the following versions:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+In [1]: import numpy, scipy, matplotlib
+\end_layout
+
+\begin_layout Plain Layout
+
+In [2]: numpy.__version__
+\end_layout
+
+\begin_layout Plain Layout
+
+Out[2]: '1.6.2'
+\end_layout
+
+\begin_layout Plain Layout
+
+In [3]: scipy.__version__
+\end_layout
+
+\begin_layout Plain Layout
+
+Out[3]: '0.10.1'
+\end_layout
+
+\begin_layout Plain Layout
+
+In [4]: matplotlib.__version__
+\end_layout
+
+\begin_layout Plain Layout
+
+Out[4]: '1.1.1rc2' 
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Swig, with the following version:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+$ swig -version
+\end_layout
+
+\begin_layout Plain Layout
+
+SWIG Version 2.0.7
+\end_layout
+
+\begin_layout Plain Layout
+
+Compiled with g++ [x86_64-unknown-linux-gnu]
+\end_layout
+
+\begin_layout Plain Layout
+
+Configured options: +pcre
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Enumerate
+Pydot - Python wrapper of Graphviz, used for generating images of connectivities.
+\end_layout
+
+\begin_layout Standard
+The shell script 
+\begin_inset Quotes eld
+\end_inset
+
+doswig.sh
+\begin_inset Quotes erd
+\end_inset
+
+ generates the required shared object file.
+ This script only needs to be run once unless changes are made to any C
+ code.
+ First, the swig command generates a wrapper file for Python from the file
+ 
+\begin_inset Quotes eld
+\end_inset
+
+linac.i
+\begin_inset Quotes erd
+\end_inset
+
+ and outputs the files 
+\begin_inset Quotes eld
+\end_inset
+
+linac_wrap.c
+\begin_inset Quotes erd
+\end_inset
+
+ and 
+\begin_inset Quotes eld
+\end_inset
+
+linac.py
+\begin_inset Quotes erd
+\end_inset
+
+.
+ Then, all of the C files for the project are compiled into object files.
+ ld is called on all of the object files to generate a single shared object
+ file, 
+\begin_inset Quotes eld
+\end_inset
+
+linac.so
+\begin_inset Quotes erd
+\end_inset
+
+.
+ This file is loaded upon importing the file 
+\begin_inset Quotes eld
+\end_inset
+
+linac.py
+\begin_inset Quotes erd
+\end_inset
+
+ in Python.
+\end_layout
+
+\begin_layout Standard
+When developing and adding a new C file to the codebase, the following changes
+ need to be made to the compilation:
+\end_layout
+
+\begin_layout Enumerate
+Add a #include 
+\begin_inset Quotes eld
+\end_inset
+
+module.h
+\begin_inset Quotes erd
+\end_inset
+
+ and %include 
+\begin_inset Quotes eld
+\end_inset
+
+module.h
+\begin_inset Quotes erd
+\end_inset
+
+ into linac.i in the correct places (this will be obvious after looking at
+ the file, but be wary of the differences between the hash and percent character
+s in swig interface files.)
+\end_layout
+
+\begin_layout Enumerate
+Add references to the .c file and respective .o file to the compile and link
+ commands in 
+\begin_inset Quotes eld
+\end_inset
+
+doswig.sh
+\begin_inset Quotes erd
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Section
@@ -189,21 +410,398 @@ reference "sub:Scripting"
 \end_inset
 
 ).
- 
+ Watch out for missing commas in JSON files! The Python library does not
+ always catch syntax errors and provide useful messages.
+ Also watch out for ,.'s! They are not parsed as excepted.
+ For example, 
+\begin_inset Quotes eld
+\end_inset
+
+[.3,.2]
+\begin_inset Quotes erd
+\end_inset
+
+ will not be parsed correctly; instead write 
+\begin_inset Quotes eld
+\end_inset
+
+[0.3,0.2]
+\begin_inset Quotes erd
+\end_inset
+
+.
 \end_layout
 
 \begin_layout Subsection
-Easter Eggs
+\begin_inset CommandInset label
+LatexCommand label
+name "sub:Building-the-dictionary"
+
+\end_inset
+
+Building the dictionary
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Standard
+The configuration files are read in the order provided, with latter files
+ overwriting conflicting fields from previously read in files.
+ For example, if config1.cfg defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:3, and config2.cfg defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:5, the simulation will be run with 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:5.
+ Overlapping dictionaries are overlayed, however, so that if config1.cfg
+ defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:{
+\begin_inset Quotes erd
+\end_inset
+
+a
+\begin_inset Quotes erd
+\end_inset
+
+:1,
+\begin_inset Quotes erd
+\end_inset
+
+b
+\begin_inset Quotes erd
+\end_inset
+
+:2} and config2.cfg defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:{
+\begin_inset Quotes erd
+\end_inset
+
+b
+\begin_inset Quotes erd
+\end_inset
+
+:3}, the result will be 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:{
+\begin_inset Quotes erd
+\end_inset
+
+a
+\begin_inset Quotes erd
+\end_inset
+
+:1,
+\begin_inset Quotes erd
+\end_inset
+
+b
+\begin_inset Quotes erd
+\end_inset
+
+:3}.
+ The routine used for this process is loadconfig.py:OverlayDict().
+\end_layout
+
+\begin_layout Subsection
+Evaluating expressions into numerical values.
+\end_layout
+
+\begin_layout Standard
+Fields that except numerical values can also take in strings that can be
+ expressions that will be evaluated.
+ The evaluation is lazy, so that the strings will be evaluated when the
+ value is looked for, after the dictionary is built.
+ That means that parameters redefined in later configuration files will
+ affect expressions in previously loaded files.
+ For example, if config1.cfg defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:3,
+\begin_inset Quotes erd
+\end_inset
+
+y
+\begin_inset Quotes erd
+\end_inset
+
+:
+\begin_inset Quotes erd
+\end_inset
+
+3*x
+\begin_inset Quotes erd
+\end_inset
+
+, and config2.cfg defines 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:4, the final dictionary will be 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+:4,
+\begin_inset Quotes erd
+\end_inset
+
+y
+\begin_inset Quotes erd
+\end_inset
+
+:
+\begin_inset Quotes erd
+\end_inset
+
+3*x
+\begin_inset Quotes erd
+\end_inset
+
+, so that the simulation will see y=12 when the dictionary is parsed.
+ 
+\end_layout
+
+\begin_layout Standard
+When a string is encountered, fields in the expression are searched for
+ at the local level first, and then at the topmost level.
+ Placing fields at the topmost level is useful for definined physical constants.
+ Consider the following configuration file:
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+	"pi":3.14,
+\end_layout
+
+\begin_layout Plain Layout
+
+	"x":4,
+\end_layout
+
+\begin_layout Plain Layout
+
+	"y":3,
+\end_layout
+
+\begin_layout Plain Layout
+
+	"subdict":{
+\end_layout
+
+\begin_layout Plain Layout
+
+		"x":8,
+\end_layout
+
+\begin_layout Plain Layout
+
+		"w":"2*x",
+\end_layout
+
+\begin_layout Plain Layout
+
+		"item_of_interest":{
+\end_layout
+
+\begin_layout Plain Layout
+
+			"d":"pi*y",
+\end_layout
+
+\begin_layout Plain Layout
+
+			"y":4,
+\end_layout
+
+\begin_layout Plain Layout
+
+			"z":"2*x"
+\end_layout
+
+\begin_layout Plain Layout
+
+		}
+\end_layout
+
+\begin_layout Plain Layout
+
+	}
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+The field 
+\begin_inset Quotes eld
+\end_inset
+
+d
+\begin_inset Quotes erd
+\end_inset
+
+ will evaluate to 4
+\begin_inset Formula $\pi$
+\end_inset
+
+, because it looks for 
+\begin_inset Quotes eld
+\end_inset
+
+pi
+\begin_inset Quotes erd
+\end_inset
+
+, fails to find it in the local dictionary, but then finds it at the topmost
+ level, and then it looks for 
+\begin_inset Quotes eld
+\end_inset
+
+y
+\begin_inset Quotes erd
+\end_inset
+
+, and finds it in the current level and does not look at the top level.
+ The field 
+\begin_inset Quotes eld
+\end_inset
+
+z
+\begin_inset Quotes erd
+\end_inset
+
+ evaluates to 8 because 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+ is not found at the local level, and then only the topmost level is searched.
+ The 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+ in subdict will never be found by an expression inside of 
+\begin_inset Quotes eld
+\end_inset
+
+item_of_interest
+\begin_inset Quotes erd
+\end_inset
+
+.
+ However, 
+\begin_inset Quotes eld
+\end_inset
+
+w
+\begin_inset Quotes erd
+\end_inset
+
+ inside of 
+\begin_inset Quotes eld
+\end_inset
+
+subdict
+\begin_inset Quotes erd
+\end_inset
+
+ evaluates to 
+\begin_inset Quotes eld
+\end_inset
+
+16
+\begin_inset Quotes erd
+\end_inset
+
+, because it found 
+\begin_inset Quotes eld
+\end_inset
+
+x
+\begin_inset Quotes erd
+\end_inset
+
+ in the local level.
+\end_layout
+
+\begin_layout Standard
+The routine used for this process is readjson.py:readentry().
+\end_layout
+
+\begin_layout Subsection
 \begin_inset CommandInset label
 LatexCommand label
 name "sub:Scripting"
 
 \end_inset
 
-Scripting
+Command Line Scripting
 \end_layout
 
 \begin_layout Standard
@@ -249,17 +847,17 @@ config2.cfg {{"Cavity0":{{"E":{0}}}'.format(x))
 
 \begin_layout Plain Layout
 
-python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":1} 
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":1}} 
 \end_layout
 
 \begin_layout Plain Layout
 
-python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":2} 
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":2}}
 \end_layout
 
 \begin_layout Plain Layout
 
-python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":3} 
+python main.py out.txt config1.cfg config2.cfg {"Cavity0":{"E":3}} 
 \end_layout
 
 \end_inset
@@ -308,7 +906,21 @@ where the quotation marks
 .
 \end_layout
 
-\begin_layout Subsubsection
+\begin_layout Standard
+The routine main.py:DoSimulation() can also be called with a Python script,
+ with the argument ConfigFiles being a list of filenames, which can also
+ use the 
+\begin_inset Quotes eld
+\end_inset
+
+{...}
+\begin_inset Quotes erd
+\end_inset
+
+ syntax.
+\end_layout
+
+\begin_layout Subsection
 #include
 \end_layout
 
@@ -330,11 +942,108 @@ before
 the current file is added to the dictionary.
  Therefore, entries in the current configuration file will overwrite those
  in files it includes.
- This was only added as a convenience.
- 
+ This was only added as a convenience: 
 \emph on
 RECURSIVE INCLUDES ARE NOT HANDLED AND WILL CAUSE AN INFINITE LOOP.
  USE WITH CAUTION.
+\end_layout
+
+\begin_layout Standard
+Suggested usage is to have 
+\emph on
+only one top-level file with include statements
+\emph default
+, which specifies the files to be included, to reduce the number of parameters
+ that need to be passed in via command line.
+ For example, the lengthy command
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+python main.py out.txt /path/to/config1.cfg config2.cfg config3.cfg config4.cfg
+\end_layout
+
+\end_inset
+
+can be simplified by making a new config file, say 
+\begin_inset Quotes eld
+\end_inset
+
+master.cfg
+\begin_inset Quotes erd
+\end_inset
+
+, containing
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+{
+\end_layout
+
+\begin_layout Plain Layout
+
+	"#include":["/path/to/config1.cfg",
+\end_layout
+
+\begin_layout Plain Layout
+
+		"config2.cfg",
+\end_layout
+
+\begin_layout Plain Layout
+
+		"config3.cfg",
+\end_layout
+
+\begin_layout Plain Layout
+
+		"config4.cfg"
+\end_layout
+
+\begin_layout Plain Layout
+
+	]
+\end_layout
+
+\begin_layout Plain Layout
+
+}
+\end_layout
+
+\end_inset
+
+and instead running the command
+\begin_inset listings
+inline false
+status open
+
+\begin_layout Plain Layout
+
+python main.py out.txt master.cfg
+\end_layout
+
+\end_inset
+
+We envision this being useful for keeping complicated set ups with configuration
+ files in multiple paths in order.
+\end_layout
+
+\begin_layout Section
+Important Configuration Options
+\end_layout
+
+\begin_layout Section
+Exhaustive List of Configuration Options
+\end_layout
+
+\begin_layout Standard
+TODO...
+ Hopefully they are self explanatory enough for now.
 \end_layout
 
 \end_body

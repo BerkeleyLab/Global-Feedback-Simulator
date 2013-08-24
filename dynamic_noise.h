@@ -6,7 +6,7 @@
 
 
 #define N_NOISE_PARAM 8
-#define N_NOISE_SET 1
+#define N_NOISE_SET 2
 /*
  * Data structure for storing the noise configurations
  * for the entries in Dynamic_Param.
@@ -21,8 +21,11 @@
  * 6,7 -> real,imag of adc_noise
  *
  * The types are keys for what type of whitenoise to apply:
- * 0 -> None
- * 1 -> White
+ * 0 -> None  = 0
+ * 1 -> White = s0 * rand[-1/2,1/2] 
+ * 2 -> Sine  = s0 * sin( s1 * t );
+ * 3 -> Chirp = s0 * sin( s1 * t^2 );
+ * 4 -> Step  = 0.0 if time<s0 else s1
  * default -> None
  */
 

@@ -18,12 +18,16 @@ import sys
 
 import numpy as np
 
-import linac
+import linac, linac_pretty_print
 
 from readjson.loadconfig import LoadConfig
 from readjson.readjson import readentry
 
+#
+# Call this routine to script!
+#
 def DoSimulation(ConfigFiles,OutputFile):
+    
     #
     # Read in the configuration files
     #  confdict:    is the raw dictionary from the json file
@@ -40,27 +44,43 @@ def DoSimulation(ConfigFiles,OutputFile):
         LoadConfig(ConfigFiles)
     Nlinac = len(linp_pylist)
     
-    
+    #for l in xrange(len(linp_pylist)):
+    #    print "*****LINAC ",l,"*****"
+    #    print linac_pretty_print.lintostr(linp_pylist[l])
+
     #
     # Allocate the delay buffer
     #
-    linss_array = linac.allocate_states(linp_arr.cast(), Nlinac, 3)
+    # How much history data is needed... 
+    # TODO: This should probably be in the JSON parameters
+    Nhist = 3
+    linss_array = linac.allocate_states(linp_arr.cast(), Nlinac, Nhist)
 
 
+    #
+    # Pull out the number of step, dt and frequency of outputdata from the config file
+    #
     Nstep=int(readentry(confdict,confdict['Simulation']['Nstep'],localdic=confdict['Simulation']))
     dt=readentry(confdict,confdict['Simulation']['dt'],localdic=confdict['Simulation'])
+    Outputfreq=readentry(confdict,confdict['Simulation']['Outputfreq'],localdic=confdict['Simulation'])
+    
+
     #
     # Actually run the simulation
     #
-    linac.state_space_top(gun,linp_arr.cast(),Nlinac, linss_array,3, 
+    linac.state_space_top(gun,linp_arr.cast(),Nlinac, linss_array,Nhist, 
                           bbf, nsrc, dt, Nstep,0,
-                          OutputFile)
+                          OutputFile,Outputfreq)
+
     #
     # Deallocate all c-objects needed
     #
-    linac.deallocate_states(linss_array, Nlinac, 3)
+    linac.deallocate_states(linss_array, Nlinac, Nhist)
     for linp in linp_pylist:
         linac.Linac_Deallocate(linp)
+    linac.BBF_Param_Free(bbf)
+
+
 
 
 #
@@ -68,14 +88,14 @@ def DoSimulation(ConfigFiles,OutputFile):
 # or some defualt settings.
 #
 if __name__=="__main__":
-    outputfile= sys.argv[1] #"outputdata/test.txt"
+    outputfile= sys.argv[1] #"outputdata/test.dat"
 
     ConfigFiles = sys.argv[2:]
-#[
-#        "configfiles/default_accelerator.cfg",
-#        "configfiles/NGLS_Accelerator.cfg",
-#        "configfiles/bbf_causal.cfg",
-#        "configfiles/noise_test.cfg"
-#        ]
+    #[
+    #        "configfiles/default_accelerator.cfg",
+    #        "configfiles/NGLS_Accelerator.cfg",
+    #        "configfiles/bbf_causal.cfg",
+    #        "configfiles/noise_test.cfg"
+    #        ]
     print sys.argv
     DoSimulation(ConfigFiles,outputfile)

@@ -1,6 +1,0 @@
-#!/usr/bin/python
-
-from ctypes import *
-
-lib_filter = CDLL('filter.so')
-

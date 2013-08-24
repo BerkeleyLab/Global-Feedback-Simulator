@@ -6496,6 +6496,81 @@ fail:
 }
 
 
+SWIGINTERN PyObject *_wrap_doublecompress_octave_ourtypes(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
+  PyObject *resultobj = 0;
+  Gun_Param *arg1 = (Gun_Param *) 0 ;
+  Linac_Param **arg2 = (Linac_Param **) 0 ;
+  int arg3 ;
+  Dynamic_Param *arg4 = (Dynamic_Param *) 0 ;
+  double *arg5 = (double *) 0 ;
+  double *arg6 = (double *) 0 ;
+  Doublecompress_State *arg7 = (Doublecompress_State *) 0 ;
+  void *argp1 = 0 ;
+  int res1 = 0 ;
+  void *argp2 = 0 ;
+  int res2 = 0 ;
+  int val3 ;
+  int ecode3 = 0 ;
+  void *argp4 = 0 ;
+  int res4 = 0 ;
+  void *argp5 = 0 ;
+  int res5 = 0 ;
+  void *argp6 = 0 ;
+  int res6 = 0 ;
+  void *argp7 = 0 ;
+  int res7 = 0 ;
+  PyObject * obj0 = 0 ;
+  PyObject * obj1 = 0 ;
+  PyObject * obj2 = 0 ;
+  PyObject * obj3 = 0 ;
+  PyObject * obj4 = 0 ;
+  PyObject * obj5 = 0 ;
+  PyObject * obj6 = 0 ;
+  
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOO:doublecompress_octave_ourtypes",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6)) SWIG_fail;
+  res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_str_gun_param, 0 |  0 );
+  if (!SWIG_IsOK(res1)) {
+    SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "doublecompress_octave_ourtypes" "', argument " "1"" of type '" "Gun_Param *""'"); 
+  }
+  arg1 = (Gun_Param *)(argp1);
+  res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_p_str_linac_param, 0 |  0 );
+  if (!SWIG_IsOK(res2)) {
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "doublecompress_octave_ourtypes" "', argument " "2"" of type '" "Linac_Param **""'"); 
+  }
+  arg2 = (Linac_Param **)(argp2);
+  ecode3 = SWIG_AsVal_int(obj2, &val3);
+  if (!SWIG_IsOK(ecode3)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode3), "in method '" "doublecompress_octave_ourtypes" "', argument " "3"" of type '" "int""'");
+  } 
+  arg3 = (int)(val3);
+  res4 = SWIG_ConvertPtr(obj3, &argp4,SWIGTYPE_p_str_dynamic_param, 0 |  0 );
+  if (!SWIG_IsOK(res4)) {
+    SWIG_exception_fail(SWIG_ArgError(res4), "in method '" "doublecompress_octave_ourtypes" "', argument " "4"" of type '" "Dynamic_Param *""'"); 
+  }
+  arg4 = (Dynamic_Param *)(argp4);
+  res5 = SWIG_ConvertPtr(obj4, &argp5,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res5)) {
+    SWIG_exception_fail(SWIG_ArgError(res5), "in method '" "doublecompress_octave_ourtypes" "', argument " "5"" of type '" "double *""'"); 
+  }
+  arg5 = (double *)(argp5);
+  res6 = SWIG_ConvertPtr(obj5, &argp6,SWIGTYPE_p_double, 0 |  0 );
+  if (!SWIG_IsOK(res6)) {
+    SWIG_exception_fail(SWIG_ArgError(res6), "in method '" "doublecompress_octave_ourtypes" "', argument " "6"" of type '" "double *""'"); 
+  }
+  arg6 = (double *)(argp6);
+  res7 = SWIG_ConvertPtr(obj6, &argp7,SWIGTYPE_p_str_doublecompress_state, 0 |  0 );
+  if (!SWIG_IsOK(res7)) {
+    SWIG_exception_fail(SWIG_ArgError(res7), "in method '" "doublecompress_octave_ourtypes" "', argument " "7"" of type '" "Doublecompress_State *""'"); 
+  }
+  arg7 = (Doublecompress_State *)(argp7);
+  doublecompress_octave_ourtypes(arg1,arg2,arg3,arg4,arg5,arg6,arg7);
+  resultobj = SWIG_Py_Void();
+  return resultobj;
+fail:
+  return NULL;
+}
+
+
 SWIGINTERN PyObject *_wrap_Filter_alloc_order_set(PyObject *SWIGUNUSEDPARM(self), PyObject *args) {
   PyObject *resultobj = 0;
   struct str_filter *arg1 = (struct str_filter *) 0 ;
@@ -11435,6 +11510,7 @@ SWIGINTERN PyObject *_wrap_state_space_top(PyObject *SWIGUNUSEDPARM(self), PyObj
   int arg9 ;
   int arg10 ;
   char *arg11 = (char *) 0 ;
+  int arg12 ;
   void *argp1 = 0 ;
   int res1 = 0 ;
   void *argp2 = 0 ;
@@ -11458,6 +11534,8 @@ SWIGINTERN PyObject *_wrap_state_space_top(PyObject *SWIGUNUSEDPARM(self), PyObj
   int res11 ;
   char *buf11 = 0 ;
   int alloc11 = 0 ;
+  int val12 ;
+  int ecode12 = 0 ;
   PyObject * obj0 = 0 ;
   PyObject * obj1 = 0 ;
   PyObject * obj2 = 0 ;
@@ -11469,8 +11547,9 @@ SWIGINTERN PyObject *_wrap_state_space_top(PyObject *SWIGUNUSEDPARM(self), PyObj
   PyObject * obj8 = 0 ;
   PyObject * obj9 = 0 ;
   PyObject * obj10 = 0 ;
+  PyObject * obj11 = 0 ;
   
-  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOO:state_space_top",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10)) SWIG_fail;
+  if (!PyArg_ParseTuple(args,(char *)"OOOOOOOOOOOO:state_space_top",&obj0,&obj1,&obj2,&obj3,&obj4,&obj5,&obj6,&obj7,&obj8,&obj9,&obj10,&obj11)) SWIG_fail;
   res1 = SWIG_ConvertPtr(obj0, &argp1,SWIGTYPE_p_str_gun_param, 0 |  0 );
   if (!SWIG_IsOK(res1)) {
     SWIG_exception_fail(SWIG_ArgError(res1), "in method '" "state_space_top" "', argument " "1"" of type '" "Gun_Param *""'"); 
@@ -11526,7 +11605,12 @@ SWIGINTERN PyObject *_wrap_state_space_top(PyObject *SWIGUNUSEDPARM(self), PyObj
     SWIG_exception_fail(SWIG_ArgError(res11), "in method '" "state_space_top" "', argument " "11"" of type '" "char *""'");
   }
   arg11 = (char *)(buf11);
-  state_space_top(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11);
+  ecode12 = SWIG_AsVal_int(obj11, &val12);
+  if (!SWIG_IsOK(ecode12)) {
+    SWIG_exception_fail(SWIG_ArgError(ecode12), "in method '" "state_space_top" "', argument " "12"" of type '" "int""'");
+  } 
+  arg12 = (int)(val12);
+  state_space_top(arg1,arg2,arg3,arg4,arg5,arg6,arg7,arg8,arg9,arg10,arg11,arg12);
   resultobj = SWIG_Py_Void();
   if (alloc11 == SWIG_NEWOBJ) free((char*)buf11);
   return resultobj;
@@ -12127,15 +12211,15 @@ SWIGINTERN PyObject *_wrap_Noise_Source_settings_set(PyObject *SWIGUNUSEDPARM(se
   arg1 = (struct str_Noise_Source *)(argp1);
   res2 = SWIG_ConvertPtr(obj1, &argp2,SWIGTYPE_p_double, 0 |  0 );
   if (!SWIG_IsOK(res2)) {
-    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Noise_Source_settings_set" "', argument " "2"" of type '" "double [8*1]""'"); 
+    SWIG_exception_fail(SWIG_ArgError(res2), "in method '" "Noise_Source_settings_set" "', argument " "2"" of type '" "double [8*2]""'"); 
   } 
   arg2 = (double *)(argp2);
   {
     if (arg2) {
       size_t ii = 0;
-      for (; ii < (size_t)8*1; ++ii) arg1->settings[ii] = arg2[ii];
+      for (; ii < (size_t)8*2; ++ii) arg1->settings[ii] = arg2[ii];
     } else {
-      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""settings""' of type '""double [8*1]""'");
+      SWIG_exception_fail(SWIG_ValueError, "invalid null reference " "in variable '""settings""' of type '""double [8*2]""'");
     }
   }
   resultobj = SWIG_Py_Void();
@@ -12369,6 +12453,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"doublecompress_octave", _wrap_doublecompress_octave, METH_VARARGS, NULL},
 	 { (char *)"doublecompress_better", _wrap_doublecompress_better, METH_VARARGS, NULL},
 	 { (char *)"doublecompress_new", _wrap_doublecompress_new, METH_VARARGS, NULL},
+	 { (char *)"doublecompress_octave_ourtypes", _wrap_doublecompress_octave_ourtypes, METH_VARARGS, NULL},
 	 { (char *)"Filter_alloc_order_set", _wrap_Filter_alloc_order_set, METH_VARARGS, NULL},
 	 { (char *)"Filter_alloc_order_get", _wrap_Filter_alloc_order_get, METH_VARARGS, NULL},
 	 { (char *)"Filter_alloc_coeffs_set", _wrap_Filter_alloc_coeffs_set, METH_VARARGS, NULL},
@@ -13405,7 +13490,7 @@ SWIG_init(void) {
   SWIG_InstallConstants(d,swig_const_table);
   
   SWIG_Python_SetConstant(d, "N_NOISE_PARAM",SWIG_From_int((int)(8)));
-  SWIG_Python_SetConstant(d, "N_NOISE_SET",SWIG_From_int((int)(1)));
+  SWIG_Python_SetConstant(d, "N_NOISE_SET",SWIG_From_int((int)(2)));
 #if PY_VERSION_HEX >= 0x03000000
   return m;
 #else

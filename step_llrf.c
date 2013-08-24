@@ -34,7 +34,8 @@ void Linac_State_Allocate(Linac_State * lins, Linac_Param * linp) {
   lins->fpga.state = 0.0*I;
   
   lins->cav.beam = 0.0*I;
-  
+  lins->cav.voltage = 0.0*I;
+
   lins->RXF_out = 0.0*I;
 }
 
@@ -59,7 +60,8 @@ double complex step_fpga(FPGA_Param * fpga, double complex cavity_vol,
     stnow->state = fpga->set_point;
     stnow->drive = fpga->set_point;
   } else {
-    double correction = sig_error*fpga->gain;
+    double complex correction = sig_error*fpga->gain;
+    
     stnow->state = stpast->state + fpga->int_gain*correction;
     if( cabs(stnow->state) > 1.0) stnow->state /= cabs(stnow->state);
     stnow->drive = stnow->state + correction;
@@ -113,6 +115,12 @@ double complex step_cavity(Linac_Param *linp, double delta_tz,
   */
   beam_charge_in = beam_charge * 
     cexp(I*(linp->cav.nom_beam_phase + delta_tz*linp->cav.w0));
+
+  /* printf("%lf %lf   %lf %lf   %lf %lf   %lf %lf\n", */
+  /* 	 creal(beam_charge_in),cimag(beam_charge_in), */
+  /* 	 creal(linp->cav.nom_beam_phase),cimag(linp->cav.nom_beam_phase), */
+  /* 	 creal(linp->cav.w0),cimag(linp->cav.w0), */
+  /* 	 creal(beam_charge),cimag(beam_charge)); */
   /*
    % Calculate beam induced voltage
    */
@@ -134,6 +142,7 @@ double complex step_cavity(Linac_Param *linp, double delta_tz,
 
 
 
+#define CPRINTs(c) {if(cimag(c)<0) printf("%10.16e%10.16ej ",creal(c),cimag(c)); else printf("%10.16e+%10.16ej ",creal(c),cimag(c)); }
 
 double complex step_llrf(Linac_Param *linp,
 			 double dt, double delta_tz,
@@ -155,48 +164,97 @@ double complex step_llrf(Linac_Param *linp,
 	   creal(linss[i]->fpga.state),cimag(linss[i]->fpga.state));
 	   }*/
  
-  //printf("Entered...\n");
-  //return 0.0j; 
+
  /*
    * Apply FPGA control
    */
+  /*
+  printf("linss[RXFDELAY]->RXF_out");
+  CPRINTs(linss[RXFDELAY]->RXF_out);
+  printf("\n");
+
+  printf(" adc_noise");
+  CPRINTs( adc_noise);
+  printf("\n");
+  */
+
   cavity_meas = linss[RXFDELAY]->RXF_out + adc_noise;
+  /*
+  printf("cavity_meas ");
+  CPRINTs(cavity_meas);
+  printf("\n");
+  */
   sig_error = step_fpga(&linp->fpga, cavity_meas,
   			&linnow->fpga, &linpast->fpga, openloop);
+  /*
+  printf("sig_error ");
+  CPRINTs(sig_error);
+  printf("\n");
+
+  printf("linnow->fpga.driver ");
+  CPRINTs(linnow->fpga.drive);
+  printf("\n");
+  */
   // drift on fpga->drive
   fpga_drive_d = phase_shift( linnow->fpga.drive, linp->drift[0] );
 
-  //return 0.0;
-  //printf("Hizzle...\n");
-
+  /*
+  printf("fpga_drive_d ");
+  CPRINTs(fpga_drive_d);
+  printf("\n");
+  /*
   /*
    * Call Triode
    */
   triode_out = step_triode(linp, fpga_drive_d,
 	      linnow, linpast);
+
+  /*
+  printf("triode_out ");
+  CPRINTs(triode_out);
+  printf("\n");
+  */
   // drift on triode_output
   triode_out_d = phase_shift( triode_out, linp->drift[1]);
-
-//printf("Tizzle...\n");
+  
+  /*
+  printf("triode_out_d ");
+  CPRINTs(triode_out_d);
+  printf("\n");
+  */
 
   /*
    * Drive the Cavity
    */
   cav_out = step_cavity(linp, delta_tz, triode_out_d, beam_charge,
   		   linnow,linpast);
+  
+  /*
+  printf("cav_out ");
+  CPRINTs(cav_out);
+  printf("\n");
+  */
   linnow->cav.voltage = cav_out;
   // drift
   cav_out_d = phase_shift( cav_out, linp->drift[2] );
 
-//printf("Over Hizzle...\n");
-
+  /*
+  printf("cav_out_d ");
+  CPRINTs(cav_out_d);
+  printf("\n");
+  */
   /*
    * RXF
    */
-  //return 0.0;
   linnow->RXF_out = Filter_Step(&linp->RXF, cav_out_d,
   		&linnow->RXF, &linpast->RXF);
-//printf("Getting Out...\n");
-  //fflush(0);
+  
+  /*
+  printf("linnow->RXF_out ");
+  CPRINTs(linnow->RXF_out);
+  printf("\n");
+  */
+  
   return linnow->RXF_out;
 }
+#undef CPRINTs

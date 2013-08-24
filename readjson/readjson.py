@@ -1,14 +1,10 @@
 import linac
-
-def loadall(acceleratorfile,bbffile,noisefile="noise_test.cfg",default_acc="default.cfg",default_bbf="bbf_default.cfg",Verbose=False):
-    
-    bbf_conf=jsontodict(bbffile,defaultfile=default_bbf, Verbose=Verbose)
-    noise_conf=jsontodict(noisefile)
-    a,allaccel,linp_arr,gun=loadaccelerator(acceleratorfile,defaultfile=default_acc, Verbose=Verbose)
-    
-    return a,allaccel,linp_arr,gun,bbf_conf,noise_conf
     
 def jsontodict(filename, defaultfile="default.cfg", Verbose=False):
+    #
+    #a little helper routine for reading in a json file and a optionally
+    # a default file and return a python dictionary
+    #
     import json
 
     #read in file of interest
@@ -32,78 +28,6 @@ def jsontodict(filename, defaultfile="default.cfg", Verbose=False):
     return a
 
 
-
-def loadaccelerator(filename, defaultfile="default.cfg", Verbose=False):
-    import json
-    import pydot
-
-    #read in file of interest
-    f=open(filename)
-    nondefault=json.load(f)
-    f.close()
-
-    #look for a default file
-    try:
-        f=open(defaultfile)
-        a=json.load(f)
-        f.close()
-    except Exception,e:
-        print "No default parameters read"
-        print str(e)
-        a={}
-    
-    #add the new to the defualt overwriteing changed defualt values
-    a.update(nondefault)
-    #print a
-    #start a pydot graph for display
-    graph = pydot.Dot(graph_type='digraph',rankdir="LR")
-    
-
-
-    #read in the gun parameters
-    gun,Elast=readgun(a)
-    
-    #find the acclerator connectivty and read in parameters
-
-    net=a['Accelerator']["connect"]
-    allaccel=[] #array to store linac points temporarily
-    for k in range(len(net)):
-
-        if (k<len(net)-1):
-            edge=pydot.Edge(a[net[k]]['name'],a[net[k+1]]['name'])
-            graph.add_edge(edge)
-
-        elem=a[net[k]]
-        t=elem['type']
-        if (t=="linac"):
-            #print t
-            linout,Elast=readlinac(a,net[k],Elast,graph)
-            allaccel.append(linout)
-        elif (t=="chicane"):
-            print t
-            #readchicance()
-        else:
-            print ("type called {0} not supported".format(t))
-        
-
-
-    #move pointers in allaccel into c array
-    linp_arr=linac.Linac_Param_Array(len(allaccel))
-    for l in range(len(allaccel)):
-        linp_arr[l]=allaccel[l]
-
-
-
-    #find accelerator name else use generic name
-    try:
-        name=a['Accelerator']['name']
-    except:
-        name="Accelerator"
-
-    graph.write_png("{0}_graph.png".format(name))
-    return a,allaccel,linp_arr,gun
-
-
 def readgun(a,Verbose=False):
     #get the name of the gun object, return defualt if not found
     GUN=a["Accelerator"].get("Gun","d_Gun")
@@ -125,7 +49,12 @@ def readgun(a,Verbose=False):
                      E,sz0,sd0,Q)
     return gun, E
 
-def readlinac(a,linac_key,Elast,graph,Verbose=False):
+def readlinac(a,linac_key,Elast,Verbose=False):
+    #routine intializes the c data structures for a linac,
+    #reads all the parameters out of the dictionary(subsituting defualts)
+    #and inserts the values into the c data structures using the 
+    #Linac_Config routine which can be found in linac_param.c
+
     from numpy import pi
     if(Verbose):
         print "reading linac called {0}".format(a[linac_key]['name'])
@@ -197,9 +126,11 @@ def readlinac(a,linac_key,Elast,graph,Verbose=False):
     #controller parameters
     stable_gbw=readentry(a,a[CONT]['stable_gbw'],localdic=a[CONT])
         
-    #simparamters
+    #sim paramters
     dt=readentry(a,a["Simulation"]['dt'],localdic=a["Simulation"])
 
+    #initialize the c data strucutre for a linac and call Linac_Config
+    # to insert the values
     lin = linac.Linac_Param()
     linac.Linac_Config(lin,
                    dt,
@@ -274,6 +205,87 @@ def readentry(dictin,entry,localdic=None):
 
 
 
+def loadaccelerator(filename, defaultfile="default.cfg", Verbose=False):
+    #
+    #this routine is used only in the unit tests for double compress and dc_matrix
+    #In the main code it has been replaced by ReadAccelerator in loadconfig.py
+    #
+
+    import json
+    import pydot
+
+    #read in file of interest
+    f=open(filename)
+    nondefault=json.load(f)
+    f.close()
+
+    #look for a default file
+    try:
+        f=open(defaultfile)
+        a=json.load(f)
+        f.close()
+    except Exception,e:
+        print "No default parameters read"
+        print str(e)
+        a={}
+    
+    #add the new to the defualt overwriteing changed defualt values
+    a.update(nondefault)
+    #print a
+    #start a pydot graph for display
+    graph = pydot.Dot(graph_type='digraph',rankdir="LR")
+    
+
+
+    #read in the gun parameters
+    gun,Elast=readgun(a)
+    
+    #find the acclerator connectivty and read in parameters
+
+    net=a['Accelerator']["connect"]
+    allaccel=[] #array to store linac points temporarily
+    for k in range(len(net)):
+
+        if (k<len(net)-1):
+            edge=pydot.Edge(a[net[k]]['name'],a[net[k+1]]['name'])
+            graph.add_edge(edge)
+
+        elem=a[net[k]]
+        t=elem['type']
+        if (t=="linac"):
+            #print t
+            linout,Elast=readlinac(a,net[k],Elast,graph)
+            allaccel.append(linout)
+        elif (t=="chicane"):
+            print t
+            #readchicance()
+        else:
+            print ("type called {0} not supported".format(t))
+        
+
+
+    #move pointers in allaccel into c array
+    linp_arr=linac.Linac_Param_Array(len(allaccel))
+    for l in range(len(allaccel)):
+        linp_arr[l]=allaccel[l]
+
+
+
+    #find accelerator name else use generic name
+    try:
+        name=a['Accelerator']['name']
+    except:
+        name="Accelerator"
+
+    graph.write_png("{0}_graph.png".format(name))
+    return a,allaccel,linp_arr,gun
+
+
+########
+#
+#Old or broken stuff which we do not think is currently used
+#
+#######
 def readfilter(a,f,graph):
     
     #
@@ -318,3 +330,16 @@ def readfilter(a,f,graph):
 
 
     return 0
+
+
+
+def loadall(acceleratorfile,bbffile,noisefile="noise_test.cfg",default_acc="default.cfg",default_bbf="bbf_default.cfg",Verbose=False):
+    #
+    #old routine that was used during to development to read in json files for testing
+    #I do not think any routine still uses this routine
+    #
+    bbf_conf=jsontodict(bbffile,defaultfile=default_bbf, Verbose=Verbose)
+    noise_conf=jsontodict(noisefile)
+    a,allaccel,linp_arr,gun=loadaccelerator(acceleratorfile,defaultfile=default_acc, Verbose=Verbose)
+    
+    return a,allaccel,linp_arr,gun,bbf_conf,noise_conf

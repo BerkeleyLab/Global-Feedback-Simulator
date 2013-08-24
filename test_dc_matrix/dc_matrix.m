@@ -42,7 +42,7 @@ function [M] = dc_matrix(paramsdc, Q_nom, bbf)
           excitation(row_exc,col_exc,:)=(row_exc==2)*bbf.dv + (row_exc==1)*bbf.dphi
           for c=[1:2]
               [Ipk,sz(:,c),ddE(:,c),sd(:,c),dt(:,c),sdsgn,kk,Eloss] = ...
-                  double_compressxv(paramsdc,0,0,0,0,0,0,excitation(1,:,c),excitation(2,:,c),Q_nom);
+                  double_compressxv_better(paramsdc,0,0,0,0,0,0,excitation(1,:,c),excitation(2,:,c),Q_nom);
           end
           dc_out = [(ddE(linac,2)-ddE(linac,1)); (sz(linac,2)-sz(linac,1)); (dt(linac,2)-dt(linac,1));  (sd(linac,2)-sd(linac,1))];
           M(m,indx2(k)) = dc_out(bbf.idx_meas(m))/(excitation(row_exc,col_exc,2) - excitation(row_exc,col_exc,1));

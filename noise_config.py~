@@ -1,7 +1,0 @@
-
-#
-# Routine to create a noise data structure from a dictionary
-#
-
-import linac
-

@@ -1,6 +1,0 @@
-import oct2py
-
-rawout=oct2py.octave.call('load', "results_TF_charge_dE3.dat")  
-rawout=oct2py.octave.call('load', "SSToutput.dat")
-
-

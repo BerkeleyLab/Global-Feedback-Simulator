@@ -113,7 +113,7 @@ bbf.dphi = [-.05 .05];
 
 [M] = dc_matrix(params_doublecomp, charge_nom, bbf);
 
-[Ipk,sz_0,ddE_0,sd,dt,sdsgn,k,Eloss] = double_compressxv(params_doublecomp,0,0,0,0,0,0,[0 0 0 0 0],[0 0 0 0 0],charge_nom);
+[Ipk,sz_0,ddE_0,sd,dt,sdsgn,k,Eloss] = double_compressxv_better(params_doublecomp,0,0,0,0,0,0,[0 0 0 0 0],[0 0 0 0 0],charge_nom);
 
 bbf.M = M;
 bbf.sz_0 = sz_0;

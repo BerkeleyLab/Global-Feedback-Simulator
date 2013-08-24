@@ -97,8 +97,8 @@ def lintostr(lin):
 #
 ####################################
 
-import pydot
 def filter_dotify(fil,fname="test.png"):
+    import pydot
     graph = pydot.Dot(graph_type='digraph',rankdir="LR")
     innode = pydot.Node("Input")
     graph.add_node(innode)

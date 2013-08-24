@@ -88,7 +88,7 @@ void Filter_Append_Modes(Filter * fil, double complex * poles, int mod, double d
                         /(1.0-0.5*dt*poles[i]);
     fil->coeffs[3*cs+2] = cabs(poles[i]);
   }
-  // TODO
+  
 }
 void Filter_State_Allocate(Filter_State * sf, Filter * fil) {
   sf->state = calloc(fil->n_coeffs,sizeof(double complex));

@@ -86,7 +86,7 @@ void Linac_Config(Linac_Param * linp,
 
   double cav_open_loop_bw = w0 / (2.0*M_PI * 2.0*Q_L);
   double kp =  -stable_gbw/cav_open_loop_bw;
-  double set_point = linp->cav.design_voltage*cexp(I*linp->cav.rf_phase)
+  double complex set_point = linp->cav.design_voltage*cexp(I*linp->cav.rf_phase)
                          / linp->cav.unity_voltage;
 
   FPGA_Config(&linp->fpga,kp,kp*0.1,

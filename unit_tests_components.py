@@ -20,6 +20,7 @@
 import linac
 from linac_pretty_print import *
 from readjson.readjson import *
+from readjson.loadconfig import *
 
 import numpy as np
 import matplotlib.pylab as plt
@@ -72,8 +73,7 @@ def unit_compare(fname,cfunc,showplots=True,TOL=1.0e-14,title=None):
 ##########################
 def unit_triode(showplots=True,TOL=1.0e-14):
     # Load a linac configuration file and select out the first one 
-    [pa,allaccell,linp,gun] = loadaccelerator("readjson/footest.cfg",
-                       defaultfile="readjson/default.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
     linnow = linac.Linac_State()
     linpast = linac.Linac_State()
     linac.Linac_State_Allocate(linnow,linp[0]);
@@ -101,6 +101,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
     if showplots: plt.figure()
     lins = [ linnow,linpast ];
     def ride(x):
+        print 'in ride'
         out = linac.step_triode(linp[0],1.0,lins[0],lins[1])
         tmp=lins[1]
         lins[1]=lins[0]
@@ -126,9 +127,8 @@ def unit_triode(showplots=True,TOL=1.0e-14):
 #
 ################################
 def unit_cavity(showplots=True,TOL=1.0e-8):
-    # Load a linac configuration file and select out the first one 
-    [pa,allaccell,linp,gun] = loadaccelerator("readjson/footest.cfg",
-                       defaultfile="readjson/default.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
+
     linnow = linac.Linac_State()
     linpast = linac.Linac_State()
     linac.Linac_State_Allocate(linnow,linp[0]);
@@ -170,7 +170,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     if showplots: plt.figure()
     pass_third,norm_third = unit_compare(
         "unit_test_data/cavity_zero_deltatz.csv",
-        lambda x: linac.step_cavity(linp[0],x.real,1.0,1.0,
+        lambda x: linac.step_cavity(linp[0],1e-12*x.real,1.0,1.0,
                                     linnow,linpast),
         showplots=showplots, TOL=TOL )
     print "   Third test: ||py-oct||_2 = ",norm_third
@@ -212,8 +212,8 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
 
 def unit_step_llrf(showplots=True,TOL=1.0e-8):
     # Load a linac configuration file and select out the first one 
-    [pa,allaccell,linp,gun] = loadaccelerator("readjson/footest.cfg",
-                       defaultfile="readjson/default.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
+
     dt = pa["Simulation"]["dt"]
     #print lintostr(linp[0])
     # Allocate the history array and each state
@@ -236,31 +236,37 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
 
     pass_first,norm_first = unit_compare(
          "unit_test_data/llrf_step_beam.csv",
-         lambda x: linac.step_llrf(linp[0],dt,0.0,0.0, x, 0,
+         lambda x: linac.step_llrf(linp[0],dt,0.0, x,0.0, 0,
                                    linss.cast()),
          showplots=showplots,TOL=TOL)
     print "   First test: ||py-oct||_2 = ",norm_first
 
     #
-    # First Unit Test
-    # Load on meas_d from a zero state
+    # Second Unit Test
+    # Load on beam_charge
     #
     plt.figure()
     pass_second,norm_second = unit_compare(
          "unit_test_data/llrf_step_deltatz.csv",
-         lambda x: linac.step_llrf(linp[0],dt,0.0, x.real, 0.1, 0,
+         lambda x: linac.step_llrf(linp[0],dt, 1.0e-12*x.real, 0.1,0.1, 0,
                                    linss.cast()),
          showplots=showplots,TOL=TOL)
     print "   Second test: ||py-oct||_2 = ",norm_second
 
     #
-    # First Unit Test
-    # Load on meas_d from a zero state
+    # Third Unit Test
+    # Unity ride 
     #
     plt.figure()
     def ride(x):
-        out = linac.step_llrf(linp[0],dt,0.0, 0.1, 0.1, 0,
+        #print ' '
+        #print '******************'
+        #print 'here'
+        out = linac.step_llrf(linp[0],dt,0.1e-12, 0.1, 0.0, 0,
                                    linss.cast())
+        print out
+        #print'out in python'
+        #print out
         # tmp = linss[4]
         # for i in xrange(4):
         #     linss[i+1]=linss[i]

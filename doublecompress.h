@@ -72,4 +72,10 @@ void doublecompress_new(Gun_Param * gun, Linac_Param ** linp_array,int Nlinac,
 		      Doublecompress_State * dcs
 		    );
 
+void doublecompress_octave_ourtypes(Gun_Param * gun, Linac_Param ** linp_array,int Nlinac, 
+			//Inputs which change with time potentially
+			Dynamic_Param * dynp, double * dphivr, double * dV_Vvr,
+			//double_compress output states
+			Doublecompress_State * dcs
+		    );
 #endif

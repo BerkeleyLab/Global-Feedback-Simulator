@@ -2,8 +2,17 @@
 #define FILTER_H
 #include "complex.h"
 
+/*
+ * Generic Filter Data structure
+ *
+ * Can handle a multi-order filter, with an arbitrary number 
+ * of modes in parallel. Stored in a similator format to 
+ * Compressed-Row-Sparse. 
+ *
+ *
+ *
+ */
 
-//#define FILTER_ORDER_MAX 10
 typedef struct str_filter {
   int alloc_order;
   int alloc_coeffs;

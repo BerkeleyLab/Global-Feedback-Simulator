@@ -108,7 +108,7 @@ for cnt in range(testnum):
     #set up for the python version
     Nlinac=len(accelout)
     ki=np.ones(Nlinac)*g
-    dv=.05/100
+    dv=.05/100.0
     dphi=.05*np.pi/180.0
 
     M=full_dc_matrix(gun,linp_arr,dv,dphi,Nlinac)
@@ -116,6 +116,7 @@ for cnt in range(testnum):
     #scale the outputs so that derivative units match
     scalenum=[100.0,1000.0,1.0e12,100.0]
     scaleden=[100.0,180.0/np.pi]
+
     for k in range(4):
         for j in range(2):
             M[k::4,j::2]=M[k::4,j::2]\

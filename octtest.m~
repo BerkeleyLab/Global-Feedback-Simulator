@@ -1,2 +1,0 @@
-function [out]=test_for_py(in)
-  out=10*in

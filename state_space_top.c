@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define OUTPUTFREQ 100
+
 
 Linac_State *** allocate_states(Linac_Param ** linp_array, 
 				int Nlinac, int Nhist)
@@ -32,7 +32,7 @@ void deallocate_states(Linac_State *** linss_array, int Nlinac, int Nhist)
   free(linss_array);
 }
 
-#define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%e%ej ",creal(c),cimag(c)); else fprintf(fp,"%e+%ej ",creal(c),cimag(c)); }
+#define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); }
 
 void filewrite(FILE * fp, double time, Gun_Param * gun, 
 	       Dynamic_Param *dynp, Doublecompress_State * dcs,
@@ -40,17 +40,20 @@ void filewrite(FILE * fp, double time, Gun_Param * gun,
 	       double * error_vol_a, double * error_vol_p) 
 {
   int l;
-  fprintf(fp,"%e   ",time);
-  fprintf(fp,"%e %e %e %e %e   ",gun->Q, dynp->dQ_Q, 
-	 dynp->dtg,dcs->dE_E[Nlinac-1],dcs->dt[Nlinac-1]);
+  fprintf(fp,"%10.16e   ",time);
+  fprintf(fp,"%10.16e %10.16e %10.16e   ",gun->Q, dynp->dQ_Q, 
+	  dynp->dtg,dcs->dE_E[Nlinac-1],dcs->dt[Nlinac-1]);
 
   CPRINT(dynp->adc_noise);
+
   for(l=0;l<Nlinac;l++) {
-    fprintf(fp,"%e %e %e %e   ",error_vol_a[l],error_vol_p[l],dcs->dE_E[l],dcs->dt[l]);
+    fprintf(fp,"%10.16e %10.16e %10.16e %10.16e   ",error_vol_a[l],error_vol_p[l],dcs->dE_E[l],dcs->dt[l]);
     
     CPRINT(linss_array[l][0]->cav.voltage);
     CPRINT(linss_array[l][0]->fpga.err);
     CPRINT(linp_array[l]->fpga.set_point);
+    CPRINT(linss_array[l][0]->fpga.drive);
+    CPRINT(linss_array[l][0]->fpga.state);
     
   }
   
@@ -63,7 +66,7 @@ void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
 		     Linac_State *** linss_array, int Nhist,
 		     BBF_Param * bbf, Noise_Source * nsrc, 
 		     double simdt, int NT, int openloop,
-		     char * fname
+		     char * fname, int OUTPUTFREQ
 		     )
 {
   double time;
@@ -100,9 +103,9 @@ void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
    * Start the mainloop
    *******************************************/
   for(ti=0; ti<NT; ti++) {
-    time = ti*simdt;
+    time = (ti+1)*simdt;
 
-
+    // printf("%i\n",ti);
     /***
      * Call apply noise, where noise and stuff is introduced
      ***/
@@ -118,8 +121,8 @@ void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
       // Cycle the buffer of histories
       cycle_buffer(linss_array[l], Nhist);
 
-      // Call step_llrf: passing in simdt is wrong it seems
-      step_llrf(linp_array[l], simdt, dcs.dt[l], gun->Q,
+      // Call step_llrf: passing in simdt is unneccessary it seems
+      step_llrf(linp_array[l], simdt, dcs.dt[l], gun->Q*(1.0+dynp.dQ_Q),
 		dynp.adc_noise,
 	        openloop,
 		linss_array[l]);
@@ -142,7 +145,7 @@ void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
     /***
      * Call double_compress
      ***/
-    doublecompress_new(gun,linp_array,Nlinac,
+    doublecompress_octave_ourtypes(gun,linp_array,Nlinac,
 		       &dynp,error_vol_p,error_vol_a,
 		       &dcs);
 

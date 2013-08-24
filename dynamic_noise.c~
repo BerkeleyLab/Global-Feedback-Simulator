@@ -1,9 +1,0 @@
-#include "dynamic_noise.h"
-
-
-void Apply_Noise(int ti,double simdt, Noise_Source * ns,
-		 Dynamic_Param * dynp)
-{
-  
-
-}

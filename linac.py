@@ -391,6 +391,10 @@ doublecompress_better = _linac.doublecompress_better
 def doublecompress_new(*args):
   return _linac.doublecompress_new(*args)
 doublecompress_new = _linac.doublecompress_new
+
+def doublecompress_octave_ourtypes(*args):
+  return _linac.doublecompress_octave_ourtypes(*args)
+doublecompress_octave_ourtypes = _linac.doublecompress_octave_ourtypes
 class Filter(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, Filter, name, value)
