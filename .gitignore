@@ -1,0 +1,7 @@
+# Lines that start with '#' are comments.
+#
+# The following files will be ignored by git.
+
+# Normal editor rules
+*.swp
+*~
