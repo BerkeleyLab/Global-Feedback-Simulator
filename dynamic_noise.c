@@ -15,10 +15,12 @@ void do_item(int ti,double simdt, int type,double *settings, double *val) {
     break;
   case 3:
     /* Chirp */
-    *val = settings[0]*( sin(settings[1] * ti*simdt) );
+    *val = settings[0]*( sin(settings[1] * (ti*simdt)*(ti*simdt)) );
+    break;
   case 4:
     /* Step */
     *val = settings[0] > (ti+1)*simdt ? 0.0 : settings[1];
+    break;
   case 0:
   default:
     /* Do Nothing */

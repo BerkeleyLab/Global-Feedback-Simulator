@@ -180,12 +180,13 @@ def readentry(dictin,entry,localdic=None):
     #try to evluate the entry to interest
     #print localdic
     try:
+       
         out=eval(str(entry),{},localdic) 
         #if the entry can not be evaluated look at error to get missing entry     
     except NameError as e: 
         #pull out the missing variable from the expressio
         name=str(e).split("'")[1] 
-        
+
         try:
             #search search the dicitionary for the entry
             #and add to local variables and retry the evaluation

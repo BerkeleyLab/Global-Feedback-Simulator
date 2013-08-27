@@ -34,12 +34,13 @@ from full_dc_matrix import full_dc_matrix
 
 readfile=True
 if(readfile):
+
     a,accelout,linp_arr,gun=loadaccelerator("footest.cfg", 
                                             defaultfile="default.cfg")
     Nlinac=len(accelout)
-
+    
     loadout=oct2py.octave.call('load',
-                               "double_compress_params_octave.sav")
+                               "double_compress_params_octave.sav",verbose=False)
     params=loadout.pdc
     Nlinmax=Nlinac
 
@@ -117,15 +118,18 @@ for cnt in range(testnum):
     scalenum=[100.0,1000.0,1.0e12,100.0]
     scaleden=[100.0,180.0/np.pi]
 
-    for k in range(4):
-        for j in range(2):
-            M[k::4,j::2]=M[k::4,j::2]\
-                *scalenum[k]/scaleden[j]
+    Nbbfval=4;
+    Nsetpnt=2;
+    for k in range(Nbbfval):
+        for j in range(Nsetpnt):
+            M[k::Nbbfval,j::Nsetpnt]*=scalenum[k]/scaleden[j]
+    #for k in range(Nbbfval*Nlinac):
+    #    for j in range(Nsetpnt*Nlinac):
+    #         M[k,j]*=scalenum[k%Nbbfval]/scaleden[j%Nsetpnt]
 
     #compare ouputs to ensure that they are the same
     err=np.max(abs(bbf.M-M))
     maxerr=max(maxerr,err)
-
 
 tol=1.0e-10   
 print "Maximum error: ", maxerr 

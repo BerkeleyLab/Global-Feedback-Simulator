@@ -9,6 +9,7 @@ import re
 import linac
 import readjson
 from bbf_config import BBF_Config
+#from bbf_config_like_oct import BBF_Config
 from noise_config import noise_config
 
 #
