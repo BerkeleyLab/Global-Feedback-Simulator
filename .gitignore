@@ -1,6 +1,16 @@
+<<<<<<< HEAD
 *~
 *.o
 *.so
 *.pyc
 *.png
 *.dat
+=======
+# Lines that start with '#' are comments.
+#
+# The following files will be ignored by git.
+
+# Normal editor rules
+*.swp
+*~
+>>>>>>> 38c6b264bf69b5ddc752be532e2b5bb58e2f158e
