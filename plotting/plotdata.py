@@ -75,7 +75,7 @@ def iodict_to_column_num(iodict,connect=None):
         "Q":1,
         "dQ_Q":2,
         "dtg":3,
-        "adc_noised":4
+        "adc_noise":4
         }
 
     item=iodict["quantity"]
