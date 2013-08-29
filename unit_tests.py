@@ -14,13 +14,14 @@ import linac_pretty_print
 
 import numpy as np
 import matplotlib.pylab as plt
+import scipy.linalg as linalg
 
 ####################################
 #
 # Unit test for Filter_Step
 #
 ####################################
-def step_response(dt=0.04):
+def step_response(dt=0.002):
     tmax = 5.0
     nt = int(tmax/dt)
     st = np.zeros(nt,dtype=np.complex)
@@ -39,18 +40,18 @@ def step_response(dt=0.04):
     filpast = linac.Filter_State()
     linac.Filter_State_Allocate(filpast,fil)
 
-    for i in xrange(nt):
+    for i in xrange(1,nt):
         st[i] = linac.Filter_Step(fil,1.0+0.0j,
                         filnow,filpast)
         tmp = filpast
         filpast=filnow
         filnow=tmp
         
-    trang = np.arange(0.0,tmax,dt)
+    trang = np.arange(0,tmax,dt)
     anal = 1.0-np.exp(-trang)*(np.sin(trang)+np.cos(trang))
-    plt.plot(trang,st,'x',trang,anal,'-')
+    plt.plot(trang,st.real,'x',trang,anal,'-')
     plt.title("Step reponse compared to analytic solution")
-
+    print "Normalized error is ", linalg.norm(st.real-anal)/linalg.norm(anal)
 
 ####################################
 #
@@ -75,7 +76,7 @@ def unit_phase_shift(inp=1.0j):
 #
 def unit_fpga(dt=0.01):
     fpgap = linac.FPGA_Param()
-    print "Here"
+    print "Configuration:"
     linac.FPGA_Config(fpgap,
                       10.0,1.5,1.0)
     print linac_pretty_print.fpgatostr(fpgap)
@@ -112,7 +113,7 @@ def unit_fpga(dt=0.01):
         stpast=stnow
         stnow=tmp
 
-    plt.plot(trang,plantxa,'o',trang,drv.real,'-+',trang,sta.real,'-*')
+    plt.plot(trang,plantxa.real,'o',trang,drv.real,'-+',trang,sta.real,'-*')
     plt.title("Testing an FPGA")
     plt.show()
 
@@ -136,21 +137,25 @@ def unit_saturate():
 # Now execute the tests...
 #
 ######################################
-plt.close('all')
 
-print "\n****\nPlotting a the step response to the filter (-1-1j),(-1+1j)"
-step_response()
+def perform_tests():
+    print "\n****\nPlotting a the step response to the filter (-1-1j),(-1+1j)"
+    step_response()
+    
+    plt.figure()
+    print "\n****\nPlotting some phase shifts..."
+    unit_phase_shift(1.0j)
+    unit_phase_shift(2.0+3.0j)
+    
+    plt.figure()
+    print "\n****\nTesting the FPGA module"
+    unit_fpga()
+    
+    plt.figure()
+    print "\n****\nTesting Saturate"
+    unit_saturate()
+    return True
 
-plt.figure()
-print "\n****\nPlotting some phase shifts..."
-unit_phase_shift(1.0j)
-unit_phase_shift(2.0+3.0j)
-
-plt.figure()
-print "\n****\nTesting the FPGA module"
-unit_fpga()
-
-
-plt.figure()
-print "\n****\nTesting Saturate"
-unit_saturate()
+if __name__=="__main__":
+    plt.close('all')
+    perform_tests()

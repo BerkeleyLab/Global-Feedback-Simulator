@@ -20,7 +20,7 @@ def LoadConfig(files):
     # Read the Configuration
     #
     confdict = ReadDict(files)
-    print confdict
+    #print confdict
     #
     # Run the configuration routines
     #
@@ -63,7 +63,7 @@ def ReadDict(files):
             print "No #include found... continuing"
         print "Loading ",fname,"..."
         OverlayDict(masterdict,fdic)
-        print masterdict
+        
     return masterdict
 
 

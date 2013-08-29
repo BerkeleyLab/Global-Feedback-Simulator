@@ -279,7 +279,7 @@ The outputs from the routine are then compared to the Octave data via the
 
 \end_deeper
 \begin_layout Description
-test_coublecompress/test_doublecompress(_new|octave).py Compares the C version
+test_doublecompress/test_doublecompress(_new|octave).py Compares the C version
  of doublecompress to the Octave version.
  Tests multiple random inputs on both versions and evaluates the norms of
  the differences.

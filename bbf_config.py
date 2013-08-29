@@ -71,15 +71,15 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
             KIdict[(lval,cval)] = Affected['ki']
     used_measured = sorted(set(used_measured))
     used_control = sorted(set(used_control))
-    print KIdict
+    #print KIdict
     KI = np.array([KIdict[x] for x in used_control])
     Um = len(used_measured)
     Uc = len(used_control)
     
-    print KI
-    print used_measured
-    print used_control
-    print mask
+    #print KI
+    #print used_measured
+    #print used_control
+    #print mask
     #return
 
 
@@ -90,7 +90,7 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
     M = full_dc_matrix.full_dc_matrix(gun,linp_arr, 0.0005,
                        0.0008,Nlinac)
     Mmasked = (M*mask)
-    print Mmasked
+    #print Mmasked
     Mmasked = Mmasked[
         [Nmeas*A+i for (A,i) in used_measured]
         ,:][:,[Ncont*A+i for (A,i) in used_control ] ]

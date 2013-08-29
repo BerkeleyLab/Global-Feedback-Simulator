@@ -101,7 +101,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
     if showplots: plt.figure()
     lins = [ linnow,linpast ];
     def ride(x):
-        print 'in ride'
+        
         out = linac.step_triode(linp[0],1.0,lins[0],lins[1])
         tmp=lins[1]
         lins[1]=lins[0]
@@ -259,14 +259,10 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
     #
     plt.figure()
     def ride(x):
-        #print ' '
-        #print '******************'
-        #print 'here'
+        
         out = linac.step_llrf(linp[0],dt,0.1e-12, 0.1, 0.0, 0,
                                    linss.cast())
-        print out
-        #print'out in python'
-        #print out
+        
         # tmp = linss[4]
         # for i in xrange(4):
         #     linss[i+1]=linss[i]
@@ -300,10 +296,19 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
 #
 # Run all of them
 #
+def perform_tests():
+    tri = unit_triode()
+    plt.figure()
+    cav = unit_cavity(TOL=1.0e-8)
+    plt.figure()
+    step = unit_step_llrf()
+    if tri and cav and step:
+        print "oo PASSED: unit_tests_components.py oo"
+        return True
+    else:
+        print "xx FAILED: unit_tests_components.py xx"
+        return False
+
 if __name__ == "__main__":
     plt.close('all')
-    unit_triode()
-    plt.figure()
-    unit_cavity(TOL=1.0e-8)
-    plt.figure()
-    unit_step_llrf()
+    perform_tests()
