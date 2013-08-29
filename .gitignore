@@ -1,0 +1,9 @@
+*~
+*.o
+*.so
+*.pyc
+*.png
+*.dat
+
+linac_wrap.c
+
