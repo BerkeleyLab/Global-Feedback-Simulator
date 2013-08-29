@@ -200,20 +200,6 @@ def TF_plot(indata,outdata,dt,
     py.semilogx(freq[0:N_nyq],TF_pha[0:N_nyq]*180/np.pi)
     py.xlabel('frequency [log]')
     py.ylabel('Angle [deg]')
-
-    py.figure(6)
-    py.plot(freq[0:N_nyq],fft_out[0:N_nyq])
-    py.figure(7)
-    py.plot(freq[0:N_nyq],fft_in[0:N_nyq])
-
-    py.figure(1)
-    py.plot(freq[0:N_nyq],20*np.log10(np.abs(fft_out[0:N_nyq])))
-
-
-    py.figure(4)
-    py.plot(trunc_indata)
-    py.figure(5)
-    py.plot(trunc_outdata)
     py.show()
 
     return 0
