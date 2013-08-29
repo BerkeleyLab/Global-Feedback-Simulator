@@ -1,3 +1,7 @@
+#!/usr/bin/python
+
+import sys
+
 def plotdata(plotcfgfile):
 
     import sys
@@ -7,11 +11,11 @@ def plotdata(plotcfgfile):
     from readjson.readjson import readentry
     import numpy as np
     import pylab as py
-    plotdict=jsontodict(plotcfgfile) #read json and return python dictionary
-    acceldict=jsontodict(plotdict["Accelerator Config"]) #read accelerator config
+    plotdict = jsontodict(plotcfgfile) #read json and return python dictionary
+    acceldict = jsontodict(plotdict["Accelerator Config"]) #read accelerator config
 
     datafile=plotdict["Data"]
-    connect = acceldict['Accelerator']['connect']
+    connect=acceldict['Accelerator']['connect']
     Nlinac=len(connect)
 
     closeflag=plotdict.get('closewindow','none')
@@ -56,7 +60,7 @@ def plotdata(plotcfgfile):
 
 def iodict_to_column_num(iodict,connect=None):
     if (connect):
-        linidx = { connect[i]:i for i in range(len(connect)) }
+        linidx={connect[i]:i for i in range(len(connect))}
 
     linackeys={
         "error_vol_a":0,
@@ -196,3 +200,8 @@ def TF_plot(indata,outdata,dt,
     py.show()
 
     return 0
+
+# Make the plot autoexecutable
+if __name__=="__main__":
+    configfile= sys.argv[1]
+    plotdata(configfile)
