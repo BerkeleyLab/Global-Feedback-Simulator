@@ -1,6 +1,8 @@
 #!/usr/bin/python
 
 import sys
+import numpy as np
+import pylab as py
 
 def plotdata(plotcfgfile):
 
@@ -19,6 +21,7 @@ def plotdata(plotcfgfile):
     Nlinac=len(connect)
 
     closeflag=plotdict.get('closewindow','none')
+    display= plotdict.get('display','True') in ['True','true']
     py.close(closeflag)
 
     for (typeplot,plotcont) in plotdict.iteritems():
@@ -26,7 +29,13 @@ def plotdata(plotcfgfile):
         if "type" not in plotcont:
             continue
 
-        if (plotcont["type"]=='TF'):
+        figurenum=plotcont.get('figure',1)
+        output_fn=plotcont.get('filename',None)
+        local_display=plotcont.get('display',None)
+        if (local_display):
+            display = local_display in ['True','true']
+
+        if plotcont["type"]=='TF':
             in_col=iodict_to_column_num(plotcont["input"],connect=connect)
             out_col=iodict_to_column_num(plotcont["output"],connect=connect)
 
@@ -44,22 +53,30 @@ def plotdata(plotcfgfile):
             wintype=plotcont.get('windowtype',None)
             steadyN=readentry(plotcont,plotcont.get('steadyN',0),localdic=acceldict['Simulation'])
 
-            figurenum=plotcont.get('figure',1)
-            TF_plot(indata,outdata,effective_dt,
+            py.figure(figurenum)
+            errcode=TF_plot(indata,outdata,effective_dt,
                     scale_in=scale_in,scale_out=scale_in,
                     OL_suppression=OL_suppression,wintype=wintype,
-                    steadyN=steadyN,figurenum=figurenum)
+                    steadyN=steadyN)
+            if output_fn:
+                py.savefig(output_fn, bbox_inches=0)
+            if display:
+                py.show()
 
         elif (plotcont["type"]=='versus'):
+            py.figure(figurenum)
             errcode=versus_plot(datafile,plotcont,connect=connect)
-            print 'versus'
+            if output_fn:
+                py.savefig(output_fn, bbox_inches=0)
+            if display:
+                py.show()
         else:
             print 'Case for that type {0}  is not present'.format(plotcont["type"])
 
     return 0
 
 def iodict_to_column_num(iodict,connect=None):
-    if (connect):
+    if connect:
         linidx={connect[i]:i for i in range(len(connect))}
 
     linackeys={
@@ -103,8 +120,6 @@ def iodict_to_column_num(iodict,connect=None):
 
 
 def versus_plot(datafile,plotcont,connect=None):
-    import numpy as np
-    import pylab as py
     skiprows=plotcont.get('skiprows',0)
 
     y_col=iodict_to_column_num(plotcont["y"],connect=connect)
@@ -135,27 +150,24 @@ def versus_plot(datafile,plotcont,connect=None):
     xtoplot=x*scale_x
     ytoplot=y*scale_y
 
-    fignum=plotcont.get('figure',1)
     linetype=plotcont.get('linetype','')
     linewidth=plotcont.get('linewidth',1)
     linelabel=plotcont.get('linelabel',None)
 
-    py.figure(fignum)
     py.plot(xtoplot,ytoplot,linetype,label=linelabel,linewidth=linewidth)
     py.xlabel(xlabelis)
     py.ylabel(ylabelis)
     py.legend()
-    py.show()
+
     return 0
+
 
 def TF_plot(indata,outdata,dt,
             scale_in=1.0,scale_out=1.0, OL_suppression=0.0,
-            figurenum=1, outputfile=None,wintype=None,steadyN=0):
+            wintype=None,steadyN=0):
 
     from scipy import fft
     from scipy import signal
-    import numpy as np
-    import pylab as py
 
     #cut out the beginning transient data if specificied
     trunc_indata=indata[steadyN:]
@@ -168,7 +180,6 @@ def TF_plot(indata,outdata,dt,
         window=eval(windcommand)
         trunc_indata=trunc_indata*window
         trunc_outdata=trunc_outdata*window
-
 
     #perform the ffts
     fft_in=fft(trunc_indata*scale_in)
@@ -183,12 +194,10 @@ def TF_plot(indata,outdata,dt,
     N=fft_in.size
     freq=np.arange(N)/(N*dt)
 
-
     N_nyq=np.int(N/2) # only frequencys up to half the sampling frequency are
                       #viable so divide in half and round down to cut out
                       #negative(aliased?) results above 1/(2*dt)
 
-    py.figure(figurenum)
     py.subplot(2,1,1)
     py.semilogx(freq[0:N_nyq],TF_mag[0:N_nyq])
     py.xlabel('frequency [log]')
@@ -197,7 +206,6 @@ def TF_plot(indata,outdata,dt,
     py.semilogx(freq[0:N_nyq],TF_pha[0:N_nyq]*180/np.pi)
     py.xlabel('frequency [log]')
     py.ylabel('Angle [deg]')
-    py.show()
 
     return 0
 
