@@ -10,7 +10,6 @@ def plotdata(plotcfgfile):
     plotdict=jsontodict(plotcfgfile) #read json and return python dictionary
     acceldict=jsontodict(plotdict["Accelerator Config"]) #read accelerator config
 
-    #data=loadalldata(plotdict["Data"]) #read the data file and return array
     datafile=plotdict["Data"]
     connect = acceldict['Accelerator']['connect']
     Nlinac=len(connect)
@@ -157,11 +156,9 @@ def TF_plot(indata,outdata,dt,
     #cut out the beginning transient data if specificied
     trunc_indata=indata[steadyN:]
     trunc_outdata=outdata[steadyN:]
-    #trunc_outdata=trunc_outdata-np.mean(trunc_outdata)
 
     #use a windowing function in scipy.signal to condition
     #data for fft. No window if not specified in file
-
     if(wintype):
         windcommand="signal.{0}(len(trunc_indata))".format(wintype)
         window=eval(windcommand)
@@ -175,13 +172,9 @@ def TF_plot(indata,outdata,dt,
 
     fft_rat = fft_out/fft_in;
     #form the magnitude and phase data and scale appropiately
-   # TF_mag=(np.abs(fft_out)*scale_out)/(np.abs(fft_in)*scale_in)
-    #TF_mag=np.abs(fft_out)/np.abs(fft_in)
     TF_mag=20*np.log10(np.abs(fft_rat))
     TF_mag=TF_mag-OL_suppression
 
-    #TF_pha=(np.angle(fft_out)*scale_out)/(np.angle(fft_in)*scale_in)
-    #TF_pha=np.angle(fft_out)/np.angle(fft_in)
     TF_pha = np.angle(fft_rat);
     N=fft_in.size
     freq=np.arange(N)/(N*dt)
