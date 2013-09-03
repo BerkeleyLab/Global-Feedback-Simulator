@@ -1,0 +1,53 @@
+digraph {
+    rankdir = TB;
+    style="rounded";
+	
+	 subgraph cluster_post {
+	     	      rank="min";
+	     label = "Work Flow In Python";
+     	      parse [label="Parse Config",shape="box"];
+     	      	     sim [label="Run Simulation",shape="box"];
+	     parse -> sim;
+	     "sim"->"read"[ltail=sim lhead=cluster_post];
+	    	    
+		      read [label="Read\nData",shape="box"];
+		      trim [label="Trim",shape="box"];
+		      wind [label="Window",shape="box"];
+		      fft [label="FFT",shape="box"];
+		      TF [label="Transfer\nFunction",shape="box"];	
+		      read->trim->wind->fft->TF;
+		      TF->plotting;
+		      
+	    	       plotting->save->done;
+		       done[label="Done!",shape="box"];
+	}	      
+		      
+		      
+	 jsonlib [label="json",shape="diamond"];
+	      parse->jsonlib->parse;	
+	      simlib [label="DoSimulation",shape="diamond"];
+	      sim->simlib->sim;
+	      
+             readlib [label="numpy.loadtxt",shape="diamond"];
+	     read->readlib->read;
+	     trimlib [label="Slice[10:]",shape="diamond"];
+	     trim->trimlib->trim;
+
+	     windlib [label="scipy.signal",shape="diamond"];
+	     wind->windlib->wind;
+	     fftlib [label="scipy.fft",shape="diamond"];
+	     fft->fftlib->fft;
+	      
+	     
+	     plotting [label="Plot",shape="box"];
+	     save [label="Save",shape="box"];
+	     
+	     plotlib [label="pylab.semilogx",shape="diamond"];
+	     plotting->plotlib->plotting;
+	     savelib [label="pylab.savefig",shape="diamond"];
+	     save->savelib->save;
+	     tflib [label="numpy.abs/angle",shape="diamond"];
+	      TF->tflib->TF;
+	
+
+}

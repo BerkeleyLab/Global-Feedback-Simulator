@@ -1,0 +1,24 @@
+digraph {
+    rankdir = TB;
+    style="rounded";
+    subgraph cluster_clientside {
+        label = "Clientside";
+        frontend [label="Web Client Editor\nof Configuration Files\n",shape="box"];
+    }
+    frontend -> server [label="JSon Files"];
+    server -> frontend [label="Rendered Plots\nand Data"];
+
+    subgraph cluster_serverside {
+        label = "Server Side";
+        server [label="Server Backend",shape="box"];
+        server -> python [label="Executes with\nJSon files"];
+	python -> server [label="Simulation\nData and Plots"];
+	subgraph cluster_simulation {
+            label="Simulation Program";
+            python [label="Python Top Level",shape="box"];
+            python -> cmodule [label="Configures\nand calls"];
+            cmodule -> python [label="Time series\ndata"]
+            cmodule [label="Swig wrapped C code\nsimulation routines",shape="box"];
+        }
+    }
+}

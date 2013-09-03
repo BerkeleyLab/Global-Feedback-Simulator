@@ -1,0 +1,58 @@
+digraph {
+  usercfg [label="User written JSON config files"];
+  defaultcfg [label="default.cfg"];
+  pymain [label="main.py:\nCommand line arguments parsed\nCall main.py:DoSimulation()",shape=box];
+  usercfg->pymain;
+  defaultcfg->pymain;
+  
+  subgraph cluster_load {
+	  label = "Configuration Routines:\nloadconfig.py:LoadConfig()";
+	  
+	  pyparse [label = "Parse CFG files into dictionary:\nloadconfig.py:ReadDict()",shape=box];
+
+	  pyconfig [label = "Python allocates C structures\nand calls C routines:\nloadconfig.py:ReadAccelerator(),\nnoise_config.py\nbbf_config.py",shape=box];
+	  pyparse->pyconfig[penwidth=5];
+
+	  pybbfconfig [label = "Python Calculates M matrix and SVD for BBF\nbbf_config.py\nfull_dc_matrix.py",shape=box];
+	  pyconfig -> pybbfconfig [penwidth=5];
+	  
+	  //pyalloc->pyconfig[penwidth=5];
+	  cconfig [label = "C fills in data structures with values\n computed from inputs.\nlinac_param.c\ndynamic_noise.c\nbeam_based_feedback.c\n"
+  		   ,shape=box,style=rounded];
+	  cconfig->pybbfconfig [penwidth=0,arrowsize=0];
+	  
+
+  }
+  pymain -> pyparse [penwidth=5];
+  
+
+  pyconfig -> cconfig -> pyconfig[label="swig",color=blue];
+  pybbfconfig -> pyloop [penwidth=5];
+  pyloop [label = "Python calls C mainloop routine",shape="box"];
+  //pyconfig -> pyloop [penwidth=5];
+  
+  subgraph cluster_cmain {
+    label = "Top level C routine for all timesteps\nstate_space_top.c";
+    timestep [label= "For loop over timesteps:",shape=box,style=rounded];
+    linacloop [label = "For loop over linacs:",shape=box,style=rounded];
+    stepllrf [label = "Control Looop:\nstep_llrf.c",shape=box,style=rounded];
+    doublecompress [label = "Compute beam dynamics:\ndoublecompress.c",shape=box,style=rounded];
+    bbf [label = "Do Beam Based Feedback:\nbeam_based_feedback.c",shape=box,style=rounded];
+    
+ 
+    linacloop->stepllrf->linacloop;
+    stepllrf -> doublecompress[penwidth=0,arrowsize=0];
+    
+    outtrans [label="Transient data written to file"];
+    
+    timestep->linacloop->doublecompress->bbf->outtrans->timestep;
+
+  }
+    //outtrans -> pyloop [color=blue,label="swig"];
+  pyloop -> timestep [label="swig",color=blue];
+  outtrans->pypost [color=white];
+  pypost [label = "Python does basic post processing",shape=box];
+  pyloop -> pypost[penwidth=5];
+  outfiles [label="Final output files,matplotlib\n generated graphs,etc"];
+  pypost -> outfiles;
+}

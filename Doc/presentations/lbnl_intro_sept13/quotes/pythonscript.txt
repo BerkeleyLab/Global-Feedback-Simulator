@@ -1,0 +1,5 @@
+from main import DoSimulation
+for x in [0.0,1.0,2.0]:
+  DoSimulation("out.dat",["inputs.cfg",
+    '{{"Cavity0":{{"E":{0}}}'.format(x)
+  ])

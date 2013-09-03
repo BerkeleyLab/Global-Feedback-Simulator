@@ -1,0 +1,26 @@
+digraph {
+rankdir = TB;
+    style="rounded";
+	subgraph cluster_scripting {
+	     label = "Genetic Algorithm"
+	     params [label="Select Parameters",shape="box"];
+	     params -> parfork;
+	     parfork [label="Parallel Toolkit",shape="box"];
+	     
+	     sim1 [label="Sim 1",shape="box"];
+	     sim2 [label="Sim 2",shape="box"];
+	     simn [label="Sim N",shape="box"]
+	     parfork->sim1;
+	     parfork->sim2;	
+	     parfork->simn;
+	     success [label="Evaluate Success",shape="box"];
+	     sim1->success;
+	     sim2->success;	
+ 	     simn->success;
+	     success->good;
+	     good [label="good?",shape="box"];
+	     done [label="Done!",shape="box"];
+	     good->params [label="No"];
+	     good->done [label="Yes"];	
+	}
+}

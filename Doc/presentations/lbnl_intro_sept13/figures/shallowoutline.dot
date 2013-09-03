@@ -1,0 +1,33 @@
+digraph {
+  usercfg [label="User written JSON config files"];
+
+  usercfg->pyparse;
+  
+  pyparse [label = "Python parse config\nfiles into dictionary",shape=box];
+
+  pyconfig [label = "Python allocates data\nstructures and calls C",shape=box];
+  pyparse->pyconfig[penwidth=5];
+  {rank=same; pyconfig; cconfig;}
+  //pybbfconfig [label = "Python calculates M\nand SVD for BBF",shape=box];
+  //pyconfig -> pybbfconfig [penwidth=5];
+	  
+  cconfig [label = "C fills in data\nstructures with values"
+  		   ,shape=box,style=rounded];
+  //cconfig->pybbfconfig [penwidth=0,arrowsize=0];
+	  
+  
+  {rank=same; pyloop; cmainloop;}
+  pyconfig -> cconfig -> pyconfig[label="swig",color=blue];
+  //pybbfconfig -> pyloop [penwidth=5];
+  pyconfig->pyloop [penwidth=5];
+  pyloop [label = "Python calls C\nmainloop routine",shape="box"];
+  
+  cmainloop [label="C state_space_top()",style=rounded,shape=box];
+  
+  pyloop -> cmainloop [label="swig",color=blue];
+  cmainloop->pypost [label="Output files"];
+  pypost [label = "Python does basic post processing",shape=box];
+  pyloop -> pypost[penwidth=5];
+  outfiles [label="Final output files,matplotlib\n generated graphs,etc"];
+  pypost -> outfiles;
+}

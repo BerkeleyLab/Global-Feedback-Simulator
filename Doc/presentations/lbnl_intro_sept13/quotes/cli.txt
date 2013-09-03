@@ -1,0 +1,1 @@
+python main.py out.dat inputs.cfg {"Cavity0":{"E":1}}
