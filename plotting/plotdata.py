@@ -1,5 +1,9 @@
 #!/usr/bin/python
 
+# shim for plotting without X server
+import matplotlib as mtp
+mtp.use('Agg')
+
 import sys
 import numpy as np
 import pylab as py
@@ -13,6 +17,7 @@ def plotdata(plotcfgfile):
     from readjson.readjson import readentry
     import numpy as np
     import pylab as py
+
     plotdict = jsontodict(plotcfgfile) #read json and return python dictionary
     acceldict = jsontodict(plotdict["Accelerator Config"]) #read accelerator config
 
@@ -26,7 +31,7 @@ def plotdata(plotcfgfile):
 
     for (typeplot,plotcont) in plotdict.iteritems():
         plotflag=True
-        if "type" not in plotcont:
+        if type(plotcont) != dict or "type" not in plotcont:
             continue
 
         figurenum=plotcont.get('figure',1)

@@ -121,7 +121,7 @@ def readlinac(a,linac_key,Elast,Verbose=False):
     T566=readentry(a,a[CHIC]['T566'],localdic=a[CHIC])
     
     #linac properties
-    n_cav=readentry(a,a[linac_key]['n_cav'],localdic=a[linac_key])
+    n_cav=int(readentry(a,a[linac_key]['n_cav'],localdic=a[linac_key]))
 
     #controller parameters
     stable_gbw=readentry(a,a[CONT]['stable_gbw'],localdic=a[CONT])
@@ -181,7 +181,11 @@ def readentry(dictin,entry,localdic=None):
     #print localdic
     try:
        
-        out=eval(str(entry),{},localdic) 
+        out=eval(str(entry),{},localdic)
+        if type(out) == int:
+            out = float(out)
+        elif type(out) == list:
+            out = [float(x) if type(x)==int else x for x in out]
         #if the entry can not be evaluated look at error to get missing entry     
     except NameError as e: 
         #pull out the missing variable from the expressio

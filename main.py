@@ -62,7 +62,7 @@ def DoSimulation(ConfigFiles,OutputFile):
     #
     Nstep=int(readentry(confdict,confdict['Simulation']['Nstep'],localdic=confdict['Simulation']))
     dt=readentry(confdict,confdict['Simulation']['dt'],localdic=confdict['Simulation'])
-    Outputfreq=readentry(confdict,confdict['Simulation']['Outputfreq'],localdic=confdict['Simulation'])
+    Outputfreq=int(readentry(confdict,confdict['Simulation']['Outputfreq'],localdic=confdict['Simulation']))
     
 
     #
