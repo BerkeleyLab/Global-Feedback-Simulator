@@ -137,12 +137,12 @@
 		Both from a computationally and from an operational standpoint.
 		\end{center}
 	\end{block}
-	\begin{block}{Rigurosity}
+	\begin{block}{Rigor}
 		\begin{center}
 		Reviewing process performed while migrating models into C/Python.
 		\end{center}
 	\end{block}
-	\begin{block}{Flexibilty}
+	\begin{block}{Flexibility}
 		\begin{center}
 		Generic models where configuration and interaction with high-level applications is greatly simplified. 
 		\end{center}
@@ -212,7 +212,7 @@
     \begin{columns}[t]
     \begin{column}[T]{0.6\textwidth}
       \begin{enumerate}
-        \item User edits files in browser frontend
+        \item User edits files in browser front-end
         \item Client sends JSON files to Server
         \item Server executes simulation Python
         \item Python configures and calls wrapped C code
@@ -289,7 +289,7 @@
 \frame{
   \frametitle[]{Improvements over Octave Code}
   \begin{itemize}
-  \item Speed: 1.6Hours for 6,000 steps vs. 30 seconds for 1.2 million steps. $\approx$40,000x Faster
+  \item Speed: 1.6 hours for 6,000 steps vs. 30 seconds for 1.2 million steps. $\approx$40,000x Faster
   \item Memory: No longer storing timeseries data in memory.
   \item Flexibility: Linac structure can be rearranged and reconfigured easily in configurations.
   \item Documented and commented code.
@@ -313,7 +313,7 @@
 	\item Numpy
 	\item Scipy
 	\item Matplotlib
-	\item Json
+	\item JSON
 	\end{itemize}
 	\item One stop environment
       \end{itemize}
@@ -322,7 +322,7 @@
 	\item Well documented
 	\item Huge user community
 	\item Easy to learn
-	\item Active develompent
+	\item Active development
 	\end{itemize}
     \end{column}
     \begin{column}{0.5\hsize}
@@ -337,7 +337,7 @@
 \subsection{Configuration files}
 % \frame{
 %   \frametitle[]{Configuration files}
-%     Details on Json. Say what it is and why it's useful to use for interaction with upper levels.
+%     Details on JSON. Say what it is and why it's useful to use for interaction with upper levels.
 % }
 
 \frame{
@@ -345,7 +345,7 @@
   \begin{columns}[t]
       \begin{column}{0.5\textwidth}
  
-        JavaScript Object Notation (JSon)
+        JavaScript Object Notation (JSON)
 	\begin{itemize}
 	\item Widely used standard
 	\item Easy for humans to read and write
@@ -401,7 +401,7 @@
 
 \frame{
   \frametitle[]{Example Parameter Search}
-  Python's multiprocessing library makes multicore batching easy.
+  Python's multiprocessing library makes multi core batching easy.
 
   See multiprocessing.Pool.map().
 
@@ -413,7 +413,13 @@
 \subsection{Front End}
 \frame{
   \frametitle[]{Front End}
-    Details on the front end and the web business. This is for Quim to show, potentually with a live demo.
+    \begin{itemize}
+     \item ATG is migrating to JavaScript-based front ends,
+     \item Server/client architecture where server generates JSON files and runs models,
+     \item No need to install software or dependencies locally to run models and visualize results: Models can run in a powerful server to serve several clients,
+     \item User-friendly interface enabling focus on science and hiding implementation details from the user.
+    \end{itemize}
+
 }
 
 \section[Conclusions]{Conclusions and future improvements}
