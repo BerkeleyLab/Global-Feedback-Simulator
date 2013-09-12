@@ -100,7 +100,7 @@ def readlinac(a,linac_key,Elast,Verbose=False):
     #Cavity parameters
     E=readentry(a,a[CAV]['E'],localdic=a[CAV])*1e9 #[Gev]->[ev]
     dE=(E-Elast)
-    phi=float(readentry(a,a[CAV]['phi'],localdic=a[CAV]))*pi/180  #[deg]->[rad]
+    phi=readentry(a,a[CAV]['phi'],localdic=a[CAV])*pi/180  #[deg]->[rad]
     lam=readentry(a,a[CAV]['lam'],localdic=a[CAV])         #[m]
     s0=readentry(a,a[CAV]['s0'],localdic=a[CAV])*1e-3      #[mm]->[m]
     aper=readentry(a,a[CAV]['a'],localdic=a[CAV])*1e-3  #[mm]->[m]  
@@ -182,13 +182,13 @@ def readentry(dictin,entry,localdic=None):
     try:
        
         out=eval(str(entry),{},localdic)
-        if type(out) == int:
+        if type(out) in [str,int]:
             out = float(out)
         elif type(out) == list:
-            out = [float(x) if type(x)==int else x for x in out]
+            out = [float(x) if type(x) in [int,str] else x for x in out]
         #if the entry can not be evaluated look at error to get missing entry     
     except NameError as e: 
-        #pull out the missing variable from the expressio
+        #pull out the missing variable from the expression
         name=str(e).split("'")[1] 
 
         try:

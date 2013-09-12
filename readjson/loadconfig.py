@@ -20,7 +20,7 @@ def LoadConfig(files):
     # Read the Configuration
     #
     confdict = ReadDict(files)
-    print confdict
+    #print confdict
     #
     # Run the configuration routines
     #
@@ -29,7 +29,7 @@ def LoadConfig(files):
     bbfstructs = BBF_Config(confdict,gun,linp_arr,Nlinac)
     bbf = bbfstructs[0]
     nsrc = noise_config(confdict['Noise'])
-    print confdict
+    #print confdict
 
     return confdict, linp_pylist,linp_arr,gun, bbf, nsrc
 
@@ -63,7 +63,7 @@ def ReadDict(files):
             print "No #include found... continuing"
         print "Loading ",fname,"..."
         OverlayDict(masterdict,fdic)
-        print masterdict
+        #print masterdict
         
     return masterdict
 
@@ -131,3 +131,4 @@ def ReadAccelerator(confdict):
     # But we don't actually care about the name anymore...
     
     return allaccel,linp_arr,gun
+
