@@ -100,7 +100,7 @@ def readlinac(a,linac_key,Elast,Verbose=False):
     #Cavity parameters
     E=readentry(a,a[CAV]['E'],localdic=a[CAV])*1e9 #[Gev]->[ev]
     dE=(E-Elast)
-    phi=readentry(a,a[CAV]['phi'],localdic=a[CAV])*pi/180  #[deg]->[rad]
+    phi=float(readentry(a,a[CAV]['phi'],localdic=a[CAV]))*pi/180  #[deg]->[rad]
     lam=readentry(a,a[CAV]['lam'],localdic=a[CAV])         #[m]
     s0=readentry(a,a[CAV]['s0'],localdic=a[CAV])*1e-3      #[mm]->[m]
     aper=readentry(a,a[CAV]['a'],localdic=a[CAV])*1e-3  #[mm]->[m]  
@@ -138,7 +138,7 @@ def readlinac(a,linac_key,Elast,Verbose=False):
                    lam,s0,aper,L,
                    saturate_c,
                    p_TRF1,p_TRF2,p_RXF,
-                   n_cav, nom_grad,
+                   int(n_cav), nom_grad,
                    psd_llrf,w0,bunch_rep,
                    Q_L,R_Q,
                    beta_in,beta_out,beta_beam,

@@ -48,15 +48,15 @@ def plotdata(plotcfgfile):
             indata=data[:,0]
             outdata=data[:,1]
 
-            scale_out=plotcont["output"].get("scale",1.0)
-            scale_in=plotcont["input"].get("scale",1.0)
-            OL_suppression=plotcont.get("OL_suppression",0.0)
+            scale_out=float(plotcont["output"].get("scale",1.0))
+            scale_in=float(plotcont["input"].get("scale",1.0))
+            OL_suppression=float(plotcont.get("OL_suppression",0.0))
 
             dt=acceldict["Simulation"]["dt"]
             effective_dt=dt*acceldict['Simulation']['Outputfreq']
 
             wintype=plotcont.get('windowtype',None)
-            steadyN=readentry(plotcont,plotcont.get('steadyN',0),localdic=acceldict['Simulation'])
+            steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),localdic=acceldict['Simulation']))
 
             py.figure(figurenum)
             errcode=TF_plot(indata,outdata,effective_dt,
