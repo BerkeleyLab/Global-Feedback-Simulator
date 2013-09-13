@@ -148,7 +148,7 @@ def readlinac(a,linac_key,Elast,Verbose=False):
     return lin,E
 
 
-def readentry(dictin,entry,localdic=None):
+def readentry(dictin,entry,localdic=None, safedic={}):
 #Daniel Driver
 #Alejandro Quiruga
 #LBL 2013
@@ -178,32 +178,42 @@ def readentry(dictin,entry,localdic=None):
         localdic={}
 
     #try to evluate the entry to interest
-    #print localdic
     try:
        
-        out=eval(str(entry),{},localdic)
-        if type(out) in [str,int]:
+        out=eval(str(entry),{},safedic)
+        if isinstance(out,str) or isinstance(out,int) or isinstance(out, unicode):
             out = float(out)
-        elif type(out) == list:
-            out = [float(x) if type(x) in [int,str] else x for x in out]
-        #if the entry can not be evaluated look at error to get missing entry     
+        elif isinstance(out,list):
+            out = [float(x) if isinstance(x,int) or isinstance(x,str) or isinstance(x,unicode) else x for x in out]
+    
+    #if the entry can not be evaluated look at error to get missing entry     
     except NameError as e: 
         #pull out the missing variable from the expression
         name=str(e).split("'")[1] 
+        print 'Looking for {0}'.format(name)
 
+        #search the dictionary for the entry
+        #and add to local variables and retry the evaluation
         try:
-            #search search the dicitionary for the entry
-            #and add to local variables and retry the evaluation
-            localdic[name]=readentry(dictin,dictin[str(name)],localdic=localdic) 
-            out=readentry(dictin,entry,localdic=localdic)
+            newentry=dictin[str(name)]
+        except KeyError:
+            try:
+                newentry=localdic[str(name)]
+            except KeyError:
+                print '{0} has no numeric evaluation in dictionary'.format(name)
+                newentry = str(name)
 
-        except:
+        safedic[name]=readentry(dictin,newentry,None,localdic) 
+        out=readentry(dictin,entry,localdic,safedic)
+
+        #except Exception:
             #go down the dictionary until a value cannot be found
             #print out what value is missing and return failed entry
-            print '{0} has no no numeric evaluation in dictionary'.format(name)
-            out = entry   
+            #print '{0} has no numeric evaluation in dictionary'.format(name)
+            #out = entry   
    
-    except TypeError:
+    except TypeError as e:
+        print 'Oops! TypeError: ' + str(e)
         return entry
 
     return out 

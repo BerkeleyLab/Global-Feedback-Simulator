@@ -10,6 +10,7 @@ from scipy import linalg
 
 import linac
 import full_dc_matrix
+import readjson.readjson as rj
 
 #
 # bbf_conf is located in pa['BBF'] in the master dictionary from JSON
@@ -72,7 +73,7 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
     used_measured = sorted(set(used_measured))
     used_control = sorted(set(used_control))
     #print KIdict
-    KI = np.array([KIdict[x] for x in used_control])
+    KI = np.array([rj.readentry(pa,KIdict[x],bbf_conf) for x in used_control])
     Um = len(used_measured)
     Uc = len(used_control)
     

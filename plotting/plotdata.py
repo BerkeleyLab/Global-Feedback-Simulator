@@ -34,7 +34,7 @@ def plotdata(plotcfgfile):
         if type(plotcont) != dict or "type" not in plotcont:
             continue
 
-        figurenum=plotcont.get('figure',1)
+        figurenum=int(plotcont.get('figure',1))
         output_fn=plotcont.get('filename',None)
         local_display=plotcont.get('display',None)
         if (local_display):
@@ -52,8 +52,8 @@ def plotdata(plotcfgfile):
             scale_in=float(plotcont["input"].get("scale",1.0))
             OL_suppression=float(plotcont.get("OL_suppression",0.0))
 
-            dt=acceldict["Simulation"]["dt"]
-            effective_dt=dt*acceldict['Simulation']['Outputfreq']
+            dt=float(acceldict["Simulation"]["dt"])
+            effective_dt=dt*float(acceldict['Simulation']['Outputfreq'])
 
             wintype=plotcont.get('windowtype',None)
             steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),localdic=acceldict['Simulation']))
@@ -128,13 +128,13 @@ def versus_plot(datafile,plotcont,connect=None):
     skiprows=plotcont.get('skiprows',0)
 
     y_col=iodict_to_column_num(plotcont["y"],connect=connect)
-    scale_y=plotcont["y"].get("scale",1.0)
+    scale_y=float(plotcont["y"].get("scale",1.0))
     ylabelis=plotcont.get('ylabel',"{0} times {1}".format(plotcont['y']['quantity'],scale_y))
 
 
     if(plotcont.get('x',False)):
         x_col=iodict_to_column_num(plotcont["x"],connect=connect)
-        scale_x=plotcont["x"].get("scale",1.0)
+        scale_x=float(plotcont["x"].get("scale",1.0))
         xlabelis=plotcont.get('xlabel',"{0} times {1}".format(plotcont['x']['quantity'],scale_x))
 
         usecols=(x_col,y_col)
