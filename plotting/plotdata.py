@@ -56,7 +56,7 @@ def plotdata(plotcfgfile):
             effective_dt=dt*float(acceldict['Simulation']['Outputfreq'])
 
             wintype=plotcont.get('windowtype',None)
-            steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),localdic=acceldict['Simulation']))
+            steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),acceldict['Simulation']))
 
             py.figure(figurenum)
             errcode=TF_plot(indata,outdata,effective_dt,
@@ -125,7 +125,7 @@ def iodict_to_column_num(iodict,connect=None):
 
 
 def versus_plot(datafile,plotcont,connect=None):
-    skiprows=plotcont.get('skiprows',0)
+    skiprows=int(plotcont.get('skiprows',0))
 
     y_col=iodict_to_column_num(plotcont["y"],connect=connect)
     scale_y=float(plotcont["y"].get("scale",1.0))
