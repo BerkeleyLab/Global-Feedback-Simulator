@@ -63,6 +63,7 @@ def ReadDict(files):
             print "No #include found... continuing"
         print "Loading ",fname,"..."
         OverlayDict(masterdict,fdic)
+        #print masterdict
         
     return masterdict
 
@@ -130,3 +131,4 @@ def ReadAccelerator(confdict):
     # But we don't actually care about the name anymore...
     
     return allaccel,linp_arr,gun
+
