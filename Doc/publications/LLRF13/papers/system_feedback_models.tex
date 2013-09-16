@@ -1,0 +1,57 @@
+\documentclass[acus]{JAC2003}
+
+%%
+%%  This file was updated in April 2009 by J. Poole to be in line with Word tempaltes
+%%
+%%  Use \documentclass[boxit]{JAC2003}
+%%  to draw a frame with the correct margins on the output.
+%%
+%%  Use \documentclass{JAC2003}
+%%  for A4 paper layout
+%%
+
+\usepackage{graphicx}
+\usepackage{booktabs}
+
+%%
+%%   VARIABLE HEIGHT FOR THE TITLE BOX (default 35mm)
+%%
+
+\setlength{\titleblockheight}{27mm}
+
+\begin{document}
+\title{NEW GENERATION OF LLRF AND BEAM-BASED FEEDBACK STABILITY MODELS}
+
+\author{A. F. Queiruga, D. S. Driver, University of California, Berkeley, CA 94720, USA\\
+L. R. Doolittle, C. Serrano\thanks{CSerrano@lbl.gov}, LBNL, Berkeley, CA 94720, USA}
+
+\maketitle
+
+\begin{abstract}
+    All RF groups in the accelerator community use modeling to some extent for LLRF development, and LBNL has
+traditionally invested a significant effort in this area for a number of reasons. It is possible to solve many
+issues in the control algorithms in a comfortable software environment, often well before the availability of production
+systems. Software and hardware designs can be combined in simulation, easing the transition to final hardware system
+integration.  Over time we have built a solid base of generic models which can be applied to a variety of machines and
+configuration schemes. The low-level implementation of the models has been re-implemented and extended to include
+elements in beam-based feedback loops and optimized to improve computation speed, memory usage, scalability and
+flexibility. The way they are configured and interact with high-level software has has been greatly improved to provide clean APIs
+and a convenient configuration scheme accessible from user-friendly tools such as GUIs and websites.
+\end{abstract}
+
+\section{INTRODUCTION}
+
+
+\section{CONCLUSIONS}
+
+\begin{thebibliography}{9}   % Use for  1-9  references
+%\begin{thebibliography}{99} % Use for 10-99 references
+
+\bibitem{original-model-ref}
+M. Mellado Munoz, L. Doolittle, P. Emma, G. Huang, A. Ratti, C. Serrano, J. M. Byrd, ``A Dynamic feedback model for high repetition rate LINAC-Driver FELs,''
+IPAC'12, New Orleans LA, May 2012.
+
+
+\end{thebibliography}
+
+\end{document}
