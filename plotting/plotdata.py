@@ -89,11 +89,14 @@ def iodict_to_column_num(iodict,connect=None):
         "error_vol_p":1,
         "dE_E":2,
         "dtz":3,
-        "cav_voltage":4,
-        "fpga_err":5,
-        "fpga_set_point":6,
-        "fpga_drive":7,
-        "fpga_state":8
+        "sz":4,
+        "dE_Ei":5,
+        "dE_Ei2":6,
+        "cav_voltage":7,
+        "fpga_err":8,
+        "fpga_set_point":9,
+        "fpga_drive":10,
+        "fpga_state":11
         }
     otherkeys={
         "t":0,
