@@ -47,7 +47,7 @@ void filewrite(FILE * fp, double time, Gun_Param * gun,
   CPRINT(dynp->adc_noise);
 
   for(l=0;l<Nlinac;l++) {
-    fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e",error_vol_a[l],error_vol_p[l],dcs->dE_E[l],dcs->dt[l], dcs->sz[l], dcs->dE_Ei[l], dcs->dE_Ei2[l]);
+    fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e   ",error_vol_a[l],error_vol_p[l],dcs->dE_E[l],dcs->dt[l], dcs->sz[l], dcs->dE_Ei[l], dcs->dE_Ei2[l]);
     
     CPRINT(linss_array[l][0]->cav.voltage);
     CPRINT(linss_array[l][0]->fpga.err);
