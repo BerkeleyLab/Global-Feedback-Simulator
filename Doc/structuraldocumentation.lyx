@@ -360,7 +360,7 @@ timing error from gun[s]
 \begin_inset Text
 
 \begin_layout Plain Layout
-adc_noised
+adc_noise
 \end_layout
 
 \end_inset
@@ -407,7 +407,7 @@ status open
 
 \begin_layout Plain Layout
 \begin_inset Tabular
-<lyxtabular version="3" rows="10" columns="3">
+<lyxtabular version="3" rows="13" columns="3">
 <features tabularvalignment="middle">
 <column alignment="center" valignment="top" width="0">
 <column alignment="center" valignment="top" width="0">
@@ -464,7 +464,7 @@ error_vol_a
 \begin_inset Text
 
 \begin_layout Plain Layout
-amplitude of the voltage error[?]
+amplitude of the voltage error [normalized units]
 \end_layout
 
 \end_inset
@@ -522,7 +522,7 @@ dE_E
 \begin_inset Text
 
 \begin_layout Plain Layout
-relative energy error after linac []
+relative energy error after j-th linac wrt total energy [unitless]
 \end_layout
 
 \end_inset
@@ -571,7 +571,7 @@ timing error after linac [Seconds]
 \begin_inset Text
 
 \begin_layout Plain Layout
-cav_voltage
+sz
 \end_layout
 
 \end_inset
@@ -580,7 +580,7 @@ cav_voltage
 \begin_inset Text
 
 \begin_layout Plain Layout
-voltage []
+rms bunch length after j-th linac [m]
 \end_layout
 
 \end_inset
@@ -600,7 +600,7 @@ voltage []
 \begin_inset Text
 
 \begin_layout Plain Layout
-fpga_err
+dE_Ei
 \end_layout
 
 \end_inset
@@ -609,7 +609,7 @@ fpga_err
 \begin_inset Text
 
 \begin_layout Plain Layout
-error at fpga in control loop []
+Relative energy offset of j-th linac wrt j-th delta E [unitless]
 \end_layout
 
 \end_inset
@@ -629,7 +629,7 @@ error at fpga in control loop []
 \begin_inset Text
 
 \begin_layout Plain Layout
-fpga_set_point
+dE_Ei2
 \end_layout
 
 \end_inset
@@ -638,7 +638,7 @@ fpga_set_point
 \begin_inset Text
 
 \begin_layout Plain Layout
-setpoints of the fpga []
+Energy offset error of j-th Linac relative to final energy [unitless]
 \end_layout
 
 \end_inset
@@ -658,6 +658,93 @@ setpoints of the fpga []
 \begin_inset Text
 
 \begin_layout Plain Layout
+cav_voltage
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+voltage [normalized units]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+8
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fpga_err
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+error at fpga in control loop [normalized units]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+9
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+fpga_set_point
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" rightline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+setpoints of the fpga [normalized units]
+\end_layout
+
+\end_inset
+</cell>
+</row>
+<row>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
+10
+\end_layout
+
+\end_inset
+</cell>
+<cell alignment="center" valignment="top" topline="true" leftline="true" usebox="none">
+\begin_inset Text
+
+\begin_layout Plain Layout
 fpga_drive
 \end_layout
 
@@ -667,7 +754,7 @@ fpga_drive
 \begin_inset Text
 
 \begin_layout Plain Layout
-number 0 to 1, 0 not drive, 1 max voltage possible from linac []
+FPGA drive signal [normalized units]
 \end_layout
 
 \end_inset
@@ -678,7 +765,7 @@ number 0 to 1, 0 not drive, 1 max voltage possible from linac []
 \begin_inset Text
 
 \begin_layout Plain Layout
-8
+11
 \end_layout
 
 \end_inset
@@ -696,7 +783,7 @@ fpga_state
 \begin_inset Text
 
 \begin_layout Plain Layout
-current state of the fpga []
+current state of the fpga [normalized units]
 \end_layout
 
 \end_inset
