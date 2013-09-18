@@ -132,13 +132,18 @@ def versus_plot(datafile,plotcont,connect=None):
 
     y_col=iodict_to_column_num(plotcont["y"],connect=connect)
     scale_y=float(plotcont["y"].get("scale",1.0))
-    ylabelis=plotcont.get('ylabel',"{0} times {1}".format(plotcont['y']['quantity'],scale_y))
-
+    if scale_y != 1.0:
+        ylabelis=plotcont.get('ylabel',"{0} times {1}".format(plotcont['y']['quantity'],scale_y))
+    else:
+        ylabelis=plotcont.get('ylabel',plotcont['y']['quantity'])
 
     if(plotcont.get('x',False)):
         x_col=iodict_to_column_num(plotcont["x"],connect=connect)
         scale_x=float(plotcont["x"].get("scale",1.0))
-        xlabelis=plotcont.get('xlabel',"{0} times {1}".format(plotcont['x']['quantity'],scale_x))
+        if scale_x != 1.0:
+            xlabelis=plotcont.get('xlabel',"{0} times {1}".format(plotcont['x']['quantity'],scale_x))
+        else:
+            xlabelis=plotcont.get('xlabel',plotcont['x']['quantity'])
 
         usecols=(x_col,y_col)
         data=np.loadtxt(datafile,dtype=np.complex,usecols=usecols,skiprows=skiprows)
@@ -157,6 +162,22 @@ def versus_plot(datafile,plotcont,connect=None):
 
     xtoplot=x*scale_x
     ytoplot=y*scale_y
+
+    dimension_x = plotcont["x"].get("dimension",None)
+    if dimension_x == "amp":
+        xtoplot = np.abs(xtoplot)
+        xlabelis += " (amp)"
+    elif dimension_x == "phase":
+        xtoplot = np.angle(xtoplot)        
+        xlabelis += " (phase)"
+
+    dimension_y = plotcont["y"].get("dimension",None)
+    if dimension_y == "amp":
+        ytoplot = np.abs(ytoplot)
+        ylabelis += " (amplitude)"
+    elif dimension_y == "phase":
+        ytoplot = np.angle(ytoplot)        
+        ylabelis += " (phase)"
 
     linetype=plotcont.get('linetype','')
     linewidth=plotcont.get('linewidth',1)
