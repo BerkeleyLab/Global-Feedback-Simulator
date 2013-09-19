@@ -188,6 +188,7 @@ def versus_plot(datafile,plotcont,columndict,connect=None):
     else:
         title=plotcont.get('title','{0} vs. {1}'.format(y_name,x_name))
 
+    py.xlim([xtoplot.min(),xtoplot.max()])
     py.plot(xtoplot,ytoplot,linetype,label=linelabel,linewidth=linewidth)
     py.xlabel(xlabelis)
     py.ylabel(ylabelis)
@@ -204,7 +205,7 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
     from scipy import fft
     from scipy import signal
 
-    steadyN = max(512, steadyN)
+    #steadyN = max(512, steadyN)
 
     #cut out the beginning transient data if specificied
     trunc_indata=indata[steadyN:]
@@ -222,13 +223,15 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
     fft_in=fft(trunc_indata*scale_in)
     fft_out=fft(trunc_outdata*scale_out)
 
-    fft_rat = fft_out/fft_in;
+    # Add an infinitesimal to avoid division by 0
+    fft_rat = (np.abs(fft_out) + np.spacing(1))/(np.abs(fft_in) + np.spacing(1))
+    #fft_rat = np.abs(fft_out) / np.abs(fft_in)
     #form the magnitude and phase data and scale appropiately
-    TF_mag=20*np.log10(np.abs(fft_rat))
+    TF_mag=20*np.log10(fft_rat)
     TF_mag=TF_mag-OL_suppression
 
-    #TF_pha = np.unwrap(np.angle(fft_rat));
-    TF_pha = np.angle(fft_out)-np.angle(fft_in);
+    TF_pha = (np.angle(fft_out/fft_in))
+    #TF_pha = np.angle(fft_out)-np.angle(fft_in)
     N=fft_in.size
     freq=np.arange(N)/(N*dt)
 
@@ -237,11 +240,13 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
                       #negative(aliased?) results above 1/(2*dt)
 
     py.subplot(2,1,1)
+    #py.xlim(freq[0], freq[N_nyq-1])
     py.semilogx(freq[0:N_nyq],TF_mag[0:N_nyq])
     #py.xlabel('Frequency [Hz]')
     py.ylabel('Power [dB]')
     py.title('Transfer Function: {0} vs. {1}'.format(indata_label,outdata_label))
     py.subplot(2,1,2)
+    #py.xlim(freq[0], freq[N_nyq-1])
     py.semilogx(freq[0:N_nyq],TF_pha[0:N_nyq]*180/np.pi)
     py.xlabel('Frequency [Hz]')
     py.ylabel('Phase [deg]')

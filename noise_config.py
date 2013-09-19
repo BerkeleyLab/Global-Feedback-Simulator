@@ -37,8 +37,11 @@ def noise_config(noisedict):
             typeArr[i] = typedict[entry["Type"]]
             # Write the settings for the noise into the C structure
             settings = entry["Settings"]
-            for k in xrange(len(settings)):
-                setsArr[linac.N_NOISE_SET*i+k] = float(settings[k])
+            if not isinstance(settings, list):
+                setsArr[linac.N_NOISE_SET*i] = float(settings)
+            else:
+                for k in xrange(len(settings)):
+                    setsArr[linac.N_NOISE_SET*i+k] = float(settings[k])
         except:
             # Default to no noise and whine to the user
             typeArr[i] = 0
