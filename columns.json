@@ -1,0 +1,92 @@
+{
+
+    "globals": 5,
+    "locals": 12,
+
+    "error_vol_a": {
+        "index": 0,
+        "name": "Cavity Error (Amp)",
+        "units": ""
+    },
+    "error_vol_p": {
+        "index": 1,
+        "name": "Cavity Error (Phase)",
+        "units": ""
+    },
+    "dE_E": {
+        "index": 2,
+        "name": "Total Energy Error (dE/E)",
+        "units": ""
+    },
+    "dtz": {
+        "index": 3,
+        "name": "Arrival Time Error (dtz)",
+        "units": ""
+    },
+    "sz": {
+        "index": 4,
+        "name": "RMS Bunch Length (sz)",
+        "units": ""
+    },
+    "dE_Ei2": {
+        "index": 6,
+        "name": "Linac Contribution to Energy Error",
+        "units": ""
+    },
+    "cav_voltage": {
+        "index": 7,
+        "name": "Cavity Voltage",
+        "complex": true,
+        "units": ""
+    },
+    "fpga_err": {
+        "index": 8,
+        "name": "FPGA Error",
+        "complex": true,
+        "units": ""
+    },
+    "fpga_set_point": {
+        "index": 9,
+        "name": "FPGA Set Point",
+        "complex": true,
+        "units": ""
+    },
+    "fpga_drive": {
+        "index": 10,
+        "name": "FPGA Drive",
+        "complex": true,
+        "units": ""
+    },
+    "t": {
+        "index": 0,
+        "name": "Time",
+        "global": true,
+        "units": "s",
+    },
+    "Q": {
+        "index": 1,
+        "name": "Nominal Charge (Q)",
+        "global": true,
+        "units": "C"
+    },
+    "dQ_Q": {
+        "index": 2,
+        "name": "Charge Error (dQ/Q)",
+        "global": true,
+        "units": ""
+    },
+    "dtg": {
+        "index": 3,
+        "name": "Gun Timing Error (dtg)",
+        "global": true,
+        "units": ""
+    },
+    "adc_noise": {
+        "index": 4,
+        "name": "Cavity Measurement Noise",
+        "complex": true,
+        "global": true,
+        "units": ""
+    }
+
+}

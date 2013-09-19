@@ -8,7 +8,7 @@ import sys
 import numpy as np
 import pylab as py
 
-def plotdata(plotcfgfile):
+def plotdata(plotcfgfile, columnscfgfile):
 
     import sys
     sys.path.append("../")
@@ -20,6 +20,7 @@ def plotdata(plotcfgfile):
 
     plotdict = jsontodict(plotcfgfile) #read json and return python dictionary
     acceldict = jsontodict(plotdict["Accelerator Config"]) #read accelerator config
+    columnsdict = jsontodict(columnscfgfile) # read column mapping
 
     datafile=plotdict["Data"]
     connect=acceldict['Accelerator']['connect']
@@ -36,13 +37,11 @@ def plotdata(plotcfgfile):
 
         figurenum=int(plotcont.get('figure',1))
         output_fn=plotcont.get('filename',None)
-        local_display=plotcont.get('display',None)
-        if (local_display):
-            display = local_display in ['True','true']
+        local_display=plotcont.get('display',display)
 
         if plotcont["type"]=='TF':
-            in_col=iodict_to_column_num(plotcont["input"],connect=connect)
-            out_col=iodict_to_column_num(plotcont["output"],connect=connect)
+            in_col=iodict_to_column_num(plotcont["input"],columnsdict,connect)
+            out_col=iodict_to_column_num(plotcont["output"],columnsdict,connect)
 
             data=np.loadtxt(datafile,dtype=np.complex,usecols=(in_col,out_col))
             indata=data[:,0]
@@ -58,58 +57,41 @@ def plotdata(plotcfgfile):
             wintype=plotcont.get('windowtype',None)
             steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),acceldict['Simulation']))
 
+            inlabel = columnsdict[plotcont['input']['quantity']]['name']
+            outlabel = columnsdict[plotcont['output']['quantity']]['name']
+       
             py.figure(figurenum)
-            errcode=TF_plot(indata,outdata,effective_dt,
+            errcode=TF_plot(indata,outdata,inlabel, outlabel, effective_dt,
                     scale_in=scale_in,scale_out=scale_in,
                     OL_suppression=OL_suppression,wintype=wintype,
                     steadyN=steadyN)
-            if output_fn:
-                py.savefig(output_fn, bbox_inches=0)
-            if display:
-                py.show()
 
         elif (plotcont["type"]=='versus'):
             py.figure(figurenum)
-            errcode=versus_plot(datafile,plotcont,connect=connect)
-            if output_fn:
-                py.savefig(output_fn, bbox_inches=0)
-            if display:
-                py.show()
+            errcode=versus_plot(datafile,plotcont,columnsdict,connect)
         else:
             print 'Case for that type {0}  is not present'.format(plotcont["type"])
+            continue
+        
+        if output_fn:
+            py.savefig(output_fn, bbox_inches=0)
+        if local_display:
+            py.show()
 
     return 0
 
-def iodict_to_column_num(iodict,connect=None):
+def iodict_to_column_num(iodict,columndict,connect=None):
     if connect:
         linidx={connect[i]:i for i in range(len(connect))}
 
-    linackeys={
-        "error_vol_a":0,
-        "error_vol_p":1,
-        "dE_E":2,
-        "dtz":3,
-        "sz":4,
-        "dE_Ei":5,
-        "dE_Ei2":6,
-        "cav_voltage":7,
-        "fpga_err":8,
-        "fpga_set_point":9,
-        "fpga_drive":10,
-        "fpga_state":11
-        }
-    otherkeys={
-        "t":0,
-        "Q":1,
-        "dQ_Q":2,
-        "dtg":3,
-        "adc_noise":4
-        }
-
-    item=iodict["quantity"]
-    if item in otherkeys:
-        col=otherkeys[item]
-    elif item in linackeys:
+    code=iodict["quantity"]
+    column = columndict[code]
+    if not column:
+        print "that key does not have a translation"
+        return None
+    elif column["global"]:
+        col=int(column["index"])
+    else :
         if "linac" not in iodict:
             print "need a linac key word for this item"
             return False
@@ -118,32 +100,35 @@ def iodict_to_column_num(iodict,connect=None):
         else:
             linnum=linidx[iodict["linac"]]
 
-        col=len(otherkeys)+linnum*len(linackeys) \
-            +linackeys[item]
-    else:
-        print "that key does not have a translation"
-        return None
-    print col
+        col=int(columndict["globals"])+linnum*int(columndict["locals"]) \
+            +int(column["index"])
+    #print col
     return col
 
 
-def versus_plot(datafile,plotcont,connect=None):
+def versus_plot(datafile,plotcont,columndict,connect=None):
     skiprows=int(plotcont.get('skiprows',0))
 
-    y_col=iodict_to_column_num(plotcont["y"],connect=connect)
+    y_col=iodict_to_column_num(plotcont["y"],columndict,connect)
+    y_dict = columndict[plotcont["y"]["quantity"]]
+    y_name = y_dict['name']
+    y_units = y_dict['units']
     scale_y=float(plotcont["y"].get("scale",1.0))
     if scale_y != 1.0:
-        ylabelis=plotcont.get('ylabel',"{0} times {1}".format(plotcont['y']['quantity'],scale_y))
+        ylabelis=plotcont.get('ylabel',"{0} times {1} [{2}]".format(y_name,scale_y,y_units))
     else:
-        ylabelis=plotcont.get('ylabel',plotcont['y']['quantity'])
+        ylabelis=plotcont.get('ylabel','{0} [{1}]'.format(y_name.y_units))
 
-    if(plotcont.get('x',False)):
-        x_col=iodict_to_column_num(plotcont["x"],connect=connect)
+    if plotcont.get('x',False):
+        x_col=iodict_to_column_num(plotcont["x"],columndict,connect)
+        x_dict = columndict[plotcont['x']['quantity']]
+        x_name = x_dict["name"]
+        x_units = x_dict['units']
         scale_x=float(plotcont["x"].get("scale",1.0))
         if scale_x != 1.0:
-            xlabelis=plotcont.get('xlabel',"{0} times {1}".format(plotcont['x']['quantity'],scale_x))
+            xlabelis=plotcont.get('xlabel',"{0} times {1} [{2}]".format(x_name,scale_x, x_units))
         else:
-            xlabelis=plotcont.get('xlabel',plotcont['x']['quantity'])
+            xlabelis=plotcont.get('xlabel',"{0} [{1}]".format(x_name, x_units))
 
         usecols=(x_col,y_col)
         data=np.loadtxt(datafile,dtype=np.complex,usecols=usecols,skiprows=skiprows)
@@ -152,13 +137,12 @@ def versus_plot(datafile,plotcont,connect=None):
 
     else:
         print ' no x data input plotting y against data number'
-        scale_x=1.0;
+        scale_x=1.0
         xlabelis="data series number"
 
         usecols=(y_col,)
         y=np.loadtxt(datafile,dtype=np.complex,usecols=usecols,skiprows=skiprows)
         x=np.arange(0,y.size)
-
 
     xtoplot=x*scale_x
     ytoplot=y*scale_y
@@ -166,32 +150,37 @@ def versus_plot(datafile,plotcont,connect=None):
     dimension_x = plotcont["x"].get("dimension",None)
     if dimension_x == "amp":
         xtoplot = np.abs(xtoplot)
-        xlabelis += " (amp)"
+        xlabelis += " (Amplitude)"
     elif dimension_x == "phase":
         xtoplot = np.angle(xtoplot)        
-        xlabelis += " (phase)"
+        xlabelis += " (Phase)"
 
     dimension_y = plotcont["y"].get("dimension",None)
     if dimension_y == "amp":
         ytoplot = np.abs(ytoplot)
-        ylabelis += " (amplitude)"
+        ylabelis += " (Amplitude)"
     elif dimension_y == "phase":
         ytoplot = np.angle(ytoplot)        
-        ylabelis += " (phase)"
+        ylabelis += " (Phase)"
 
     linetype=plotcont.get('linetype','')
     linewidth=plotcont.get('linewidth',1)
     linelabel=plotcont.get('linelabel',None)
+    if plotcont['x']['quantity'] == 't'
+        title=plotcont.get('title',y_name)
+    else
+        title=plotcont.get('title','{0} vs. {1}'.format(y_name,x_name))
 
     py.plot(xtoplot,ytoplot,linetype,label=linelabel,linewidth=linewidth)
     py.xlabel(xlabelis)
     py.ylabel(ylabelis)
+    py.title(title)
     py.legend()
 
     return 0
 
 
-def TF_plot(indata,outdata,dt,
+def TF_plot(indata,outdata,indata_label, outdata_label, dt,
             scale_in=1.0,scale_out=1.0, OL_suppression=0.0,
             wintype=None,steadyN=0):
 
@@ -219,7 +208,8 @@ def TF_plot(indata,outdata,dt,
     TF_mag=20*np.log10(np.abs(fft_rat))
     TF_mag=TF_mag-OL_suppression
 
-    TF_pha = np.angle(fft_rat);
+    #TF_pha = np.unwrap(np.angle(fft_rat));
+    TF_pha = np.angle(fft_out)-np.angle(fft_in);
     N=fft_in.size
     freq=np.arange(N)/(N*dt)
 
@@ -229,16 +219,18 @@ def TF_plot(indata,outdata,dt,
 
     py.subplot(2,1,1)
     py.semilogx(freq[0:N_nyq],TF_mag[0:N_nyq])
-    py.xlabel('frequency [log]')
-    py.ylabel('Magnitude')
+    #py.xlabel('Frequency [Hz]')
+    py.ylabel('Power [dB]')
+    py.title('Transfer Function: {0} vs. {1}'.format(indata_label,outdata_label))
     py.subplot(2,1,2)
     py.semilogx(freq[0:N_nyq],TF_pha[0:N_nyq]*180/np.pi)
-    py.xlabel('frequency [log]')
-    py.ylabel('Angle [deg]')
+    py.xlabel('Frequency [Hz]')
+    py.ylabel('Phase [deg]')
 
     return 0
 
 # Make the plot autoexecutable
 if __name__=="__main__":
     configfile= sys.argv[1]
+    columns= sys.argv.len > 2 ? sys.argv[2] : './columns.json'
     plotdata(configfile)
