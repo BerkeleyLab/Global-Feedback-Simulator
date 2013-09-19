@@ -57,8 +57,14 @@ def plotdata(plotcfgfile, columnscfgfile):
             wintype=plotcont.get('windowtype',None)
             steadyN=int(readentry(plotcont,plotcont.get('steadyN',0),acceldict['Simulation']))
 
-            inlabel = columnsdict[plotcont['input']['quantity']]['name']
-            outlabel = columnsdict[plotcont['output']['quantity']]['name']
+            indict = plotcont['input']
+            inlabel = columnsdict[indict['quantity']]['name']
+            if not columnsdict[indict['quantity']].get('global',False):
+                inlabel = indict['linac'] + ': ' + inlabel
+            outdict = plotcont['output']
+            outlabel = columnsdict[outdict['quantity']]['name']
+            if not columnsdict[outdict['quantity']].get('global',False):
+                outlabel = outdict['linac'] + ': ' + outlabel
        
             py.figure(figurenum)
             errcode=TF_plot(indata,outdata,inlabel, outlabel, effective_dt,
@@ -89,7 +95,7 @@ def iodict_to_column_num(iodict,columndict,connect=None):
     if not column:
         print "that key does not have a translation"
         return None
-    elif column["global"]:
+    elif column.get("global",False):
         col=int(column["index"])
     else :
         if "linac" not in iodict:
@@ -110,20 +116,27 @@ def versus_plot(datafile,plotcont,columndict,connect=None):
     skiprows=int(plotcont.get('skiprows',0))
 
     y_col=iodict_to_column_num(plotcont["y"],columndict,connect)
-    y_dict = columndict[plotcont["y"]["quantity"]]
-    y_name = y_dict['name']
-    y_units = y_dict['units']
+    y_code = plotcont['y']['quantity']
+    y_dict = columndict[y_code]
+    y_name = y_dict.get('name',y_code)
+    if not y_dict.get('global',False):
+        y_name = plotcont['y']['linac'] + ': ' + y_name
+
+    y_units = y_dict.get('units','')
     scale_y=float(plotcont["y"].get("scale",1.0))
     if scale_y != 1.0:
         ylabelis=plotcont.get('ylabel',"{0} times {1} [{2}]".format(y_name,scale_y,y_units))
     else:
-        ylabelis=plotcont.get('ylabel','{0} [{1}]'.format(y_name.y_units))
+        ylabelis=plotcont.get('ylabel','{0} [{1}]'.format(y_name,y_units))
 
     if plotcont.get('x',False):
         x_col=iodict_to_column_num(plotcont["x"],columndict,connect)
-        x_dict = columndict[plotcont['x']['quantity']]
-        x_name = x_dict["name"]
-        x_units = x_dict['units']
+        x_code = plotcont['x']['quantity']
+        x_dict = columndict[x_code]
+        x_name = x_dict.get("name",x_code)
+        if not x_dict.get('global',False):
+            x_name = plotcont['x']['linac'] + ': ' + x_name
+        x_units = x_dict.get('units','')
         scale_x=float(plotcont["x"].get("scale",1.0))
         if scale_x != 1.0:
             xlabelis=plotcont.get('xlabel',"{0} times {1} [{2}]".format(x_name,scale_x, x_units))
@@ -151,24 +164,28 @@ def versus_plot(datafile,plotcont,columndict,connect=None):
     if dimension_x == "amp":
         xtoplot = np.abs(xtoplot)
         xlabelis += " (Amplitude)"
+        x_name += " (Amplitude)"
     elif dimension_x == "phase":
         xtoplot = np.angle(xtoplot)        
         xlabelis += " (Phase)"
+        x_name += " (Phase)"
 
     dimension_y = plotcont["y"].get("dimension",None)
     if dimension_y == "amp":
         ytoplot = np.abs(ytoplot)
         ylabelis += " (Amplitude)"
+        y_name += " (Amplitude)"
     elif dimension_y == "phase":
         ytoplot = np.angle(ytoplot)        
         ylabelis += " (Phase)"
+        y_name += " (Amplitude)"
 
     linetype=plotcont.get('linetype','')
     linewidth=plotcont.get('linewidth',1)
     linelabel=plotcont.get('linelabel',None)
-    if plotcont['x']['quantity'] == 't'
+    if plotcont['x']['quantity'] == 't':
         title=plotcont.get('title',y_name)
-    else
+    else:
         title=plotcont.get('title','{0} vs. {1}'.format(y_name,x_name))
 
     py.plot(xtoplot,ytoplot,linetype,label=linelabel,linewidth=linewidth)
@@ -186,6 +203,8 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
 
     from scipy import fft
     from scipy import signal
+
+    steadyN = max(512, steadyN)
 
     #cut out the beginning transient data if specificied
     trunc_indata=indata[steadyN:]
@@ -232,5 +251,8 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
 # Make the plot autoexecutable
 if __name__=="__main__":
     configfile= sys.argv[1]
-    columns= sys.argv.len > 2 ? sys.argv[2] : './columns.json'
-    plotdata(configfile)
+    if len(sys.argv) > 2:
+        columns = sys.argv[2]
+    else:
+        columns = '../columns.json'
+    plotdata(configfile,columns)

@@ -61,7 +61,7 @@
         "index": 0,
         "name": "Time",
         "global": true,
-        "units": "s",
+        "units": "s"
     },
     "Q": {
         "index": 1,
