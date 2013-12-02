@@ -4,6 +4,7 @@
 .SUFFIXES: .c .o
 
 all: targets
+check: check_all
 
 #Subdirectories in random order,
 
@@ -60,10 +61,10 @@ CLEAN := $(CLEAN) *.log
 # fragments in the various subdirectories
 
 ePHONY:     targets
-targets:    $(TGT_$(DOC_DIR)) $(TGT_$(SOURCE_C_DIR)) $(TGT_$(SOURCE_PYTHON_DIR)) $(TGT_$(UNIT_TESTS_DIR))
+targets:    $(TGT_$(DOC_DIR)) $(TGT_$(SOURCE_DIR)) $(TGT_$(UNIT_TESTS_DIR))
 
 .PHONY:     check_all
-check_all:      $(CHK_ALL_$(SOURCE_C_DIR)) $(CHK_ALL_$(SOURCE_PYTHON_DIR)) $(CHK_ALL_$(UNIT_TESTS_DIR))
+check_all:      $(CHK_ALL_$(SOURCE_DIR)) $(CHK_ALL_$(UNIT_TESTS_DIR))
 
 # The "find" commands below check that the source code satisifies:
 #  no hidden files
