@@ -73,7 +73,7 @@ def unit_compare(fname,cfunc,showplots=True,TOL=1.0e-14,title=None):
 ##########################
 def unit_triode(showplots=True,TOL=1.0e-14):
     # Load a linac configuration file and select out the first one 
-    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
     linnow = linac.Linac_State()
     linpast = linac.Linac_State()
     linac.Linac_State_Allocate(linnow,linp[0]);
@@ -88,7 +88,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
     # and advance a timestep with a varying input signal
     #
     pass_first,norm_first = unit_compare(
-        "unit_test_data/triode_zero_load.csv",
+        "source/unit_test_data/triode_zero_load.csv",
         lambda x: linac.step_triode(linp[0],x,linnow,linpast),
         showplots=showplots, TOL=TOL)
     print "   First test: ||py-oct||_2 = ",norm_first
@@ -108,7 +108,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
         lins[0]=tmp
         return out
     pass_second,norm_second = unit_compare(
-        "unit_test_data/triode_unity_ride.csv",
+        "source/unit_test_data/triode_unity_ride.csv",
         ride, showplots=showplots, TOL=TOL)
     print "   Second test: ||py-oct||_2 = ",norm_second
 
@@ -127,7 +127,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
 #
 ################################
 def unit_cavity(showplots=True,TOL=1.0e-8):
-    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
 
     linnow = linac.Linac_State()
     linpast = linac.Linac_State()
@@ -142,7 +142,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     # and advance a timestep with a varying drive_in signal
     #
     pass_first,norm_first = unit_compare(
-        "unit_test_data/cavity_zero_drive.csv",
+        "source/unit_test_data/cavity_zero_drive.csv",
         lambda x: linac.step_cavity(linp[0],0.0,x,1.0,
                                     linnow,linpast),
         showplots=showplots, TOL=TOL )
@@ -156,7 +156,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     #
     if showplots: plt.figure()
     pass_second,norm_second = unit_compare(
-        "unit_test_data/cavity_zero_beam.csv",
+        "source/unit_test_data/cavity_zero_beam.csv",
         lambda x: linac.step_cavity(linp[0],0.0,1.0,x,
                                     linnow,linpast),
         showplots=showplots, TOL=TOL )
@@ -169,7 +169,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     #
     if showplots: plt.figure()
     pass_third,norm_third = unit_compare(
-        "unit_test_data/cavity_zero_deltatz.csv",
+        "source/unit_test_data/cavity_zero_deltatz.csv",
         lambda x: linac.step_cavity(linp[0],1e-12*x.real,1.0,1.0,
                                     linnow,linpast),
         showplots=showplots, TOL=TOL )
@@ -189,7 +189,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
         lins[0]=tmp
         return out
     pass_fourth,norm_fourth = unit_compare(
-        "unit_test_data/cavity_unity_ride.csv",
+        "source/unit_test_data/cavity_unity_ride.csv",
         ride, showplots=showplots, TOL=TOL )
     print "   Fourth test: ||py-oct||_2 = ",norm_fourth
 
@@ -212,7 +212,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
 
 def unit_step_llrf(showplots=True,TOL=1.0e-8):
     # Load a linac configuration file and select out the first one 
-    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("configfiles/all_config.cfg")
+    [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
 
     dt = pa["Simulation"]["dt"]
     #print lintostr(linp[0])
@@ -235,7 +235,7 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
     #
 
     pass_first,norm_first = unit_compare(
-         "unit_test_data/llrf_step_beam.csv",
+         "source/unit_test_data/llrf_step_beam.csv",
          lambda x: linac.step_llrf(linp[0],dt,0.0, x,0.0, 0,
                                    linss.cast()),
          showplots=showplots,TOL=TOL)
@@ -247,7 +247,7 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
     #
     plt.figure()
     pass_second,norm_second = unit_compare(
-         "unit_test_data/llrf_step_deltatz.csv",
+         "source/unit_test_data/llrf_step_deltatz.csv",
          lambda x: linac.step_llrf(linp[0],dt, 1.0e-12*x.real, 0.1,0.1, 0,
                                    linss.cast()),
          showplots=showplots,TOL=TOL)
@@ -271,7 +271,7 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
         return out
 
     pass_third,norm_third = unit_compare(
-         "unit_test_data/llrf_unity_ride.csv",
+         "source/unit_test_data/llrf_unity_ride.csv",
          ride,
          showplots=showplots,TOL=TOL)
     print "   Third test: ||py-oct||_2 = ",norm_third

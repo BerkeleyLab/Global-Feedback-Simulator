@@ -11,9 +11,9 @@ import unit_tests
 import unit_tests_components
 import unit_test_bbf
 
-import test_doublecompress.test_doublecompress
+#import test_doublecompress.test_doublecompress
 import test_doublecompress.test_doublecompress_new
-import test_doublecompress.test_doublecompress_octave
+#import test_doublecompress.test_doublecompress_octave
 
 if __name__ == "__main__":
     print "===== Basic tests: unit_tests.py ====="

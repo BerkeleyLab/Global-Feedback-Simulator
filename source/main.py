@@ -91,11 +91,6 @@ if __name__=="__main__":
     outputfile= sys.argv[1] #"outputdata/test.dat"
 
     ConfigFiles = sys.argv[2:]
-    #[
-    #        "configfiles/default_accelerator.cfg",
-    #        "configfiles/NGLS_Accelerator.cfg",
-    #        "configfiles/bbf_causal.cfg",
-    #        "configfiles/noise_test.cfg"
-    #        ]
+    
     print sys.argv
     DoSimulation(ConfigFiles,outputfile)
