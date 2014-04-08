@@ -24,20 +24,19 @@ print "Starting unit test for double Compress..."
 import sys
 sys.path.append("../")
 sys.path.append(".")
-
 import numpy as np
 from numpy.random import rand
-from readjson.readjson import loadaccelerator
+from readjson.readjson_accelerator import loadaccelerator
 import linac
 import oct2py
-
 
 def perform_test(basedir="."):
     readfile=True
     if(readfile):
         a,accelout,linp_arr,gun=loadaccelerator("/".join([basedir,"footest.cfg"]), defaultfile="/".join([basedir,"default.cfg"]))
         Nlinac=len(accelout)
-        
+
+
         loadout=oct2py.octave.call('load',"double_compress_params_octave.sav")
         params=loadout.pdc
         Nlinmax=Nlinac
@@ -76,18 +75,24 @@ def perform_test(basedir="."):
     #allocate the c arrays
     dphivr= linac.double_Array(Nlinmax)
     dV_Vvr= linac.double_Array(Nlinmax)
-    #outputs
-    Ipk= linac.double_Array(Nlinmax)
-    sz= linac.double_Array(Nlinmax)
-    dE_E= linac.double_Array(Nlinmax)
-    sd= linac.double_Array(Nlinmax)
-    dt= linac.double_Array(Nlinmax)
-    sdsgn= linac.double_Array(Nlinmax)
-    k= linac.double_Array(Nlinmax)
-    Eloss= linac.double_Array(Nlinmax)
-    dE_Ei= linac.double_Array(Nlinmax)
-    dE_Ei2= linac.double_Array(Nlinmax)
-    cor= linac.double_Array(Nlinmax)
+
+        #outputs
+    dynp=linac.Dynamic_Param()
+    dcs=linac.Doublecompress_State()
+    linac.Doublecompress_State_Alloc(dcs,Nlinmax)
+     #points to outputs
+    Ipk= linac.double_Array_frompointer(dcs.Ipk)
+    sz= linac.double_Array_frompointer(dcs.sz)
+    dE_E= linac.double_Array_frompointer(dcs.dE_E)
+    sd= linac.double_Array_frompointer(dcs.sd)
+    dt= linac.double_Array_frompointer(dcs.dt)
+    sdsgn= linac.double_Array_frompointer(dcs.sdsgn)
+    k= linac.double_Array_frompointer(dcs.k)
+    Eloss= linac.double_Array_frompointer(dcs.Eloss)
+    dE_Ei= linac.double_Array_frompointer(dcs.dE_Ei)
+    dE_Ei2= linac.double_Array_frompointer(dcs.dE_Ei2)
+    cor= linac.double_Array_frompointer(dcs.cor)
+
 
     testnum=60
     maxerr=0.0
@@ -95,7 +100,7 @@ def perform_test(basedir="."):
     for cnt in range(testnum):
         np.random.seed(1301+cnt)
 
-    #find random values
+        #find random values
         for l in range(Nlinac):
             params.lamv[0][l]=rand()+.2
             params.Lv[0][l]=100*rand()+10
@@ -104,8 +109,8 @@ def perform_test(basedir="."):
             params.T566v[0][l]=.002*(rand()-.5)*2.0
             params.phiv[0][l]=360.0*rand()
             params.s0v[0][l]=3.0*rand()+.5
-            
-        #copy and do unit conversion for c verion
+
+            #copy and do unit conversion for c verion
             linp_arr[l].lam=params.lamv[0][l]
             linp_arr[l].L=params.Lv[0][l]
             linp_arr[l].a=params.av[0][l]/1000.0
@@ -122,50 +127,33 @@ def perform_test(basedir="."):
         dsig_E=100*(rand()-.5)*2 # [%]
         chirp = .00001*(rand()-0)*2*0 #[m]
 
-    #vectors to go to the octave code
+        #vectors to go to the octave code
         dphiv_oct,dV_Vv_oct=np.zeros((2,Nlinac),dtype=float)
         for i in range(Nlinac):
             dphiv_oct[i]=180*(rand()-.5)*2 #[deg]
             dV_Vv_oct[i]=100*(rand()-.5)*2 #[%]
+        dynp.dQ_Q=dN_N/100
+        dynp.dtg=dtg/1e12
+        dynp.dE_ing=dEg*1e9
+        dynp.dsig_z=dsig_z/1000
+        dynp.dsig_E=dsig_E/100
+        dynp.dchirpt=chirp
 
-        #N=1.8724e9
-        #Q=N/6.241E18 #charge for octave code. C takes in N (number of particles)
-        #gun.Q=Q
-
-        #print Q
         #put values in c structures and set outputs to zero
         for i in range(Nlinac):
-        #inputs
+            #inputs
             dphivr[i]=dphiv_oct[i]*np.pi/180
             dV_Vvr[i]=dV_Vv_oct[i]/100
 
-            Ipk[i]=0.0  
-            sz[i]=0.0
-            dE_E[i]=0.0
-            sd[i]=0.0
-            dt[i]=0.0
-            sdsgn[i]=0.0 
-            k[i]=0.0 
-            Eloss[i]=0.0 
-            dE_Ei[i]=0.0
-            dE_Ei2[i]=0.0  
-        for i in range(Nlinac):
-            cor[i]=0.0 
-
         #run the C routine
-        linac.doublecompress_octave(gun,linp_arr.cast(),Nlinac,
-                           dN_N/100,  dtg/1e12,  dEg*1e9,
-                           dsig_z/1000,   dsig_E/100,  chirp,
-                           dphivr,  dV_Vvr,
-                           Ipk,  sz,  dE_E,
-                           sd ,  dt,  sdsgn, 
-                           k,  Eloss,  dE_Ei,
-                           dE_Ei2,  cor)
+        linac.doublecompress_new(gun,linp_arr.cast(),Nlinac,
+                                 dynp,dphivr,  dV_Vvr,
+                                 dcs)
 
         #call the octave routine using Oct2py
         Ipk_o,sz_o,dE_E_o,sd_o,dt_o,sdsgn_o,k_o,Eloss_o\
             ,dE_Ei_o,dE_Ei2_o,cor1_o=oct2py.octave.call\
-            ('double_compressxv',params,\
+            ('double_compressxv_better',params,\
                  dN_N, dtg,dEg,dsig_z,\
                  dsig_E,chirp,\
                  dphiv_oct,dV_Vv_oct,gun.Q,verbose=False)
@@ -194,21 +182,16 @@ def perform_test(basedir="."):
 
         #find maximum error for this run
         temp=np.max([errIpk,
-                 errsz,
-                 errdE_E,
-                 errsd,
-                 errdt,
-                 errsdsgn,
-                 errk,
-                 errEloss,
-                 errdE_Ei,
-                 errdE_Ei2,
-                 errcor])
-
-        #print errIpk
-        #print errk
-        #print errEloss
-        #print errdE_E
+                     errsz,
+                     errdE_E,
+                     errsd,
+                     errdt,
+                     errsdsgn,
+                     errk,
+                     errEloss,
+                     errdE_Ei,
+                     errdE_Ei2,
+                     errcor])
 
         #compare to maximum of previous runs and keep highest error
         maxerr=max(temp,maxerr)
@@ -218,11 +201,11 @@ def perform_test(basedir="."):
             print cnt
             print temp2
 
-
     print "After {0} runs with random inputs the".format(testnum)
     print "Maximum difference is {0}".format(maxerr)
 
-    linac.Doublecompress_State_Dealloc(dcs)    
+    linac.Doublecompress_State_Dealloc(dcs)
+
     tol=1e-8
     if maxerr<tol:
         print "******************************"
@@ -235,8 +218,7 @@ def perform_test(basedir="."):
         print "******************************"
         return False
 
-   
-    
+
 
 if __name__=="__main__":
     perform_test()

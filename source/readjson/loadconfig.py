@@ -7,7 +7,7 @@ import json
 import re
 
 import linac
-import readjson
+import readjson_accelerator
 from bbf_config import BBF_Config
 #from bbf_config_like_oct import BBF_Config
 from noise_config import noise_config
@@ -86,7 +86,7 @@ def OverlayDict(olddict,newdict):
 # Read in the Linac Accelerators from the dictionary
 #
 def ReadAccelerator(confdict):
-    from readjson import readgun,readlinac
+    from readjson_accelerator import readgun,readlinac
     #
     # Read in the gun parameters
     #
