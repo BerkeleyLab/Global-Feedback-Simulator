@@ -1,3 +1,4 @@
+import re
    
 def jsontodict(filename, defaultfile="default.cfg", Verbose=False):
     #
@@ -95,4 +96,53 @@ def readentry(dictin,entry,localdic=None, safedic={}):
         print 'Oops! TypeError: ' + str(e)
         return entry
 
-    return out 
+    return out
+
+#
+# Build a dictionary from a list of files
+#
+def ReadDict(files):
+    import json
+    if(type(files)==str):
+        files = [files]
+    masterdict = {}
+    for fname in files:
+        #
+        # See if the filename is actually a dictionary 
+        # passed in through the command line.
+        #
+        if re.match("^{.*}$",fname):
+            fdic = json.loads(fname)
+        else:
+            f = open(fname)
+            fdic = json.load(f)
+            f.close()
+        #
+        # See if the user made any references inside of the file...
+        #
+        try:
+            includes = fdic['#include']
+            print "INCLUDING THESE FILES: ",includes
+            incdict = ReadDict(includes)
+            masterdict.update(incdict)
+        except:
+            print "No #include found... continuing"
+        print "Loading ",fname,"..."
+        OverlayDict(masterdict,fdic)
+        #print masterdict
+        
+    return masterdict
+
+#
+# Recursively overlay two dictionaries
+#
+def OverlayDict(olddict,newdict):
+    "Routine to recursively overlay two dictionaries"
+    for k in newdict.iterkeys():
+        if type(newdict[k])==dict:
+            if olddict.has_key(k):
+                OverlayDict( olddict[k], newdict[k] )
+            else:
+                olddict[k] = newdict[k]
+        else:
+            olddict[k] = newdict[k]

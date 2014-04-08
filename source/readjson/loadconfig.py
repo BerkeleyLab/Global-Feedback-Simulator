@@ -4,7 +4,6 @@
 #
 
 import json
-import re
 
 import linac
 import readjson_accelerator
@@ -19,6 +18,7 @@ def LoadConfig(files):
     #
     # Read the Configuration
     #
+    from readjson import ReadDict
     confdict = ReadDict(files)
     #print confdict
     #
@@ -32,55 +32,6 @@ def LoadConfig(files):
     #print confdict
 
     return confdict, linp_pylist,linp_arr,gun, bbf, nsrc
-
-#
-# Build a dictionary from a list of files
-#
-def ReadDict(files):
-    if(type(files)==str):
-        files = [files]
-    masterdict = {}
-    for fname in files:
-        #
-        # See if the filename is actually a dictionary 
-        # passed in through the command line.
-        #
-        if re.match("^{.*}$",fname):
-            fdic = json.loads(fname)
-        else:
-            f = open(fname)
-            fdic = json.load(f)
-            f.close()
-        #
-        # See if the user made any references inside of the file...
-        #
-        try:
-            includes = fdic['#include']
-            print "INCLUDING THESE FILES: ",includes
-            incdict = ReadDict(includes)
-            masterdict.update(incdict)
-        except:
-            print "No #include found... continuing"
-        print "Loading ",fname,"..."
-        OverlayDict(masterdict,fdic)
-        #print masterdict
-        
-    return masterdict
-
-
-#
-# Recursively overlay two dictionaries
-#
-def OverlayDict(olddict,newdict):
-    "Routine to recursively overlay two dictionaries"
-    for k in newdict.iterkeys():
-        if type(newdict[k])==dict:
-            if olddict.has_key(k):
-                OverlayDict( olddict[k], newdict[k] )
-            else:
-                olddict[k] = newdict[k]
-        else:
-            olddict[k] = newdict[k]
 
 #
 # Read in the Linac Accelerators from the dictionary
@@ -131,4 +82,3 @@ def ReadAccelerator(confdict):
     # But we don't actually care about the name anymore...
     
     return allaccel,linp_arr,gun
-
