@@ -1,0 +1,96 @@
+\documentclass[a4paper,12pt]{article}
+\usepackage[latin1]{inputenc} %entrada usando ISO-Latin1
+\usepackage{listings}
+\usepackage{color}
+\usepackage{a4wide}
+\usepackage{graphicx}
+\usepackage{subfig}
+\usepackage{wrapfig}
+\usepackage{hyperref}
+\usepackage{listings}
+\lstset{
+   breaklines=true,
+   basicstyle=\ttfamily}
+% \usepackage{draftwatermark}\usepackage[figurewithin=section,tablewithin=section]{caption}
+%\usepackage{subfigure}
+
+\pagestyle{headings}
+
+\title{Beam-based feedback simulations: FLASH}
+\author{Carlos Serrano, ATG@LBNL}
+
+\date{\today}
+
+\begin{document}
+\maketitle
+\setcounter{tocdepth}{1}
+% \tableofcontents
+
+% \newpage
+
+\section{Introduction}
+
+\begin{itemize}
+  \item General parameters:
+  \begin{itemize}
+   \item Nominal beam charge [Coulombs]: 0.5e-9 (range is 20pC-1nC)
+   \item Repetition Rate [Hz]:
+   \begin{itemize}
+    \item 10 Hz (pulse-to-pulse)
+    \item Intra-pulse: 1 MHz (typ.) for 0.8 ms (800 electron bunches per pulse max.)
+    \begin{itemize}
+     \item Additional: 40, 50, 100, 200, 250, 500, 1000, 3000 kHz.
+     \item With a 3 MHz repetition rate, 2400 bunches max.
+    \end{itemize}
+   \end{itemize}
+  \end{itemize}
+  \item Electron Gun parameters:
+  \begin{itemize}
+    \item Relative charge error [fraction wrt nominal beam charge]: $<$ 0.5\% (RMS),
+    \item Timing error of gun wrt RF ($<$0 is an early bunch) [s]: 50 - 80 fs (RMS),
+    \item Nominal initial rms bunch length [m]: 1.7 mm (rms)
+    \item Deviation of bunch length from nominal length [m]: $\pm$0.2 mm (RMS),
+    \item Nominal gun exit energy [eV]: 4 MeV,
+    \item Energy deviation at end of injector [eV]: ?,
+    \item Deviation of energy spread from nominal energy spread [eV]: ?,
+    \item Nominal initial incoh.energy spread at Eg [fraction wrt gun Energy]: ?.
+  \end{itemize}
+
+\end{itemize}
+
+
+\begin{table}
+\begin{center}
+  \begin{tabular}{|c||c|c|c|c|c|}
+    \hline
+      &\bf{ACC1} & \bf{ACC39} & \bf{ACC23} & \bf{ACC45} &\bf{ACC67}\\
+    \hline
+    \hline
+      \bf{Energy Gain [eV]} & 164.05e6 & -18.08e6 & 303.96e6 & 164.05e6 & 164.05e6\\
+    \hline
+      \bf{Final Energy [eV]} & 168.05e6 & 149.97e6 & 453.93e6 & 617.98e6 & 782.03e6\\
+    \hline
+    \bf{\# cavities} & 8 & 4 & 16 & 16 & 16\\
+    \hline
+     \bf{Nominal R56 [m]} & 0 & -0.1814 &-0.099369 & 0 & 0\\
+    \hline
+     \bf{Nominal T566 [m]} & 0 & 0.295682 & 0.1491 & 0 & 0\\
+    \hline
+      \bf{RF Phase [deg]} & -3.7 & 167.8 & -22.5 & -4.0 & -4.0\\
+    \hline
+      \bf{Length [m]} & 8.304 & 1.384 & 16.608 & 16.608 & 16.608\\
+    \hline
+      \bf{RF wavelength [m]} & 0.2308 & 0.0769 & 0.2308 & 0.2308 & 0.2308\\
+    \hline
+      \bf{Wake char. length [m]} & ? & ? & ? & ? & ?\\
+    \hline
+      \bf{Mean iris radius [m]} & 0.035 & 0.015 & 0.035 & 0.035 & 0.035\\
+    \hline	
+  \end{tabular}
+  \caption{FLASH Linac configuration parameters.}
+\label{tbl:linac_config}
+\end{center}
+\end{table}
+
+
+\end{document}
