@@ -2,7 +2,6 @@
 *.o
 *.so
 *.pyc
-*.png
 *.dat
 *.aux
 *.dvi
