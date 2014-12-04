@@ -99,28 +99,61 @@ void Filter_State_Deallocate(Filter_State * sf) {
   free(sf->input);
 }
 
-double complex Filter_Step(Filter * fil, double complex innow,
-			   Filter_State * filnow, Filter_State * filpast)
+void Filter_State_Clear(Filter * fil, Filter_State * sf)
 {
+  int o, m, cs;
+  for(o=0;o<fil->order;o++){
+    sf->input[o] = 0.0+0.0*_Complex_I;
+    for(m=0;m<fil->modes[o];m++) {
+      // Current state index
+      cs = fil->coeff_start[o]+m;
+      sf->state[cs] = 0.0+0.0*_Complex_I;
+    }
+  }
+}
+
+double complex Filter_Step(Filter * fil, double complex innow,
+			   Filter_State * fil_state)
+{
+  // Indeces 
   int o,m,cs;
-  double complex voltage_in, a,b,scale;
+  // Intermediate input signals
+  double complex voltage_in, prev_in;
+  // ODE coefficients
+  double complex a,b,scale;
+  // Signal connecting cascading poles (start with current input)
   double complex output = innow;
 
+  // Iterate over poles
   for(o=0;o<fil->order;o++) {
-    filnow->input[o]=output;
-    voltage_in = 0.5*(filnow->input[o] + filpast->input[o]);
+    // Previous input
+    prev_in = fil_state->input[o];
+    // Store input for next step
+    fil_state->input[o] = output;
+    voltage_in = 0.5*(fil_state->input[o] + prev_in);
 
-    
+    // Clear output of current pole
     output = 0.0;
-    for(m=0;m<fil->modes[m];m++) {
+
+    // Iterate over modes
+    for(m=0;m<fil->modes[o];m++) {
+      // Current state index
       cs = fil->coeff_start[o]+m;
+      // Grab a, b and scale coefficients for current mode
       a = fil->coeffs[3*cs+0];
       b = fil->coeffs[3*cs+1];
       scale = fil->coeffs[3*cs+2];
-      filnow->state[cs] = a*filpast->state[cs]+b*voltage_in;
-      output += filnow->state[cs]*scale;
-    }
 
-  }
+      // Store output for current mode
+      fil_state->state[cs] = a*fil_state->state[cs]+b*voltage_in;
+      
+      // Add mode's output to form pole's output
+      output += fil_state->state[cs]*scale;
+
+    } // End mode iteration
+
+  } // End pole iteration
+
+  // Filter output is the output of the last cascaded pole
   return output;
 }

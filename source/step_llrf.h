@@ -75,7 +75,7 @@ double complex step_llrf(Linac_Param *linp,
 			 Linac_State ** linss);
 
 
-
+void clear_linac(Linac_Param *linp, Linac_State * linnow);
 
 /*
  * Helper routines
@@ -93,8 +93,7 @@ double complex phase_shift(double complex in, double theta);
  * returns sig_error which does not get propograted through the block diagram.
  */
 double complex step_fpga(FPGA_Param * fpga, double complex cavity_vol,
-			 FPGA_State * stnow, FPGA_State * stpast, 
-			 int openloop);
+			 FPGA_State * stnow, int openloop);
 
 double complex step_PI_fpga(FPGA_Param * fpga,
 			    double dt, double complex cavity_vol,
@@ -108,11 +107,14 @@ double complex saturate(double complex in, double harshness);
  *                  `------.  triode ,------'
  */
 double complex step_triode(Linac_Param *linp, double complex drive_in,
-		 Linac_State * linnow, Linac_State * linpast);
+		 Linac_State * linnow);
 
+void clear_triode(Linac_Param *linp, Linac_State * linnow);
 
 double complex step_cavity(Linac_Param *linp, double delta_tz,
 			   double complex drive_in, double complex beam_charge,
-			   Linac_State * linnow, Linac_State * linpast);
+			   Linac_State * linnow);
+
+void clear_cavity(Linac_Param *linp, Linac_State * linnow);
 
 #endif

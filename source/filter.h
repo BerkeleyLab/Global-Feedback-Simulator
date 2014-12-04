@@ -9,8 +9,6 @@
  * of modes in parallel. Stored in a similator format to 
  * Compressed-Row-Sparse. 
  *
- *
- *
  */
 
 typedef struct str_filter {
@@ -23,7 +21,6 @@ typedef struct str_filter {
   double complex * coeffs;
   double complex * poles;
 } Filter;
-
 
 typedef struct str_filter_state {
   double complex * state; // of length n_coeffs
@@ -39,7 +36,7 @@ void Filter_Append_Modes(Filter * fil, double complex * poles,int ord,double dt)
 
 void Filter_State_Allocate(Filter_State * sf, Filter * fil);
 void Filter_State_Deallocate(Filter_State * sf);
-double complex Filter_Step(Filter * fil, double complex innow,
-			   Filter_State * filnow, Filter_State * filpast);
+void Filter_State_Clear(Filter * fil, Filter_State * sf);
+double complex Filter_Step(Filter * fil, double complex innow, Filter_State * fil_state);
 
 #endif

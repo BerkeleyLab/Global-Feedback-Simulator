@@ -28,7 +28,7 @@ def step_response(dt=0.002):
 
     fil = linac.Filter() #declare one in python and then set it up
     linac.Filter_Allocate_In(fil,3,3)
-    
+
     poles = linac.complexdouble_Array(1)
     poles[0] = -1.0+1.0j
     linac.Filter_Append_Modes(fil,poles,1,dt)
@@ -37,21 +37,19 @@ def step_response(dt=0.002):
 
     filnow = linac.Filter_State()
     linac.Filter_State_Allocate(filnow,fil)
-    filpast = linac.Filter_State()
-    linac.Filter_State_Allocate(filpast,fil)
 
     for i in xrange(1,nt):
-        st[i] = linac.Filter_Step(fil,1.0+0.0j,
-                        filnow,filpast)
-        tmp = filpast
-        filpast=filnow
-        filnow=tmp
-        
+        st[i] = linac.Filter_Step(fil, 1.0+0.0j, filnow)
+        # tmp = filpast
+        # filpast=filnow
+        # filnow=tmp
+
     trang = np.arange(0,tmax,dt)
     anal = 1.0-np.exp(-trang)*(np.sin(trang)+np.cos(trang))
     plt.plot(trang,st.real,'x',trang,anal,'-')
     plt.title("Step reponse compared to analytic solution")
     print "Normalized error is ", linalg.norm(st.real-anal)/linalg.norm(anal)
+    plt.show()
 
 ####################################
 #
@@ -80,14 +78,14 @@ def unit_fpga(dt=0.01):
     linac.FPGA_Config(fpgap,
                       10.0,1.5,1.0)
     print linac_pretty_print.fpgatostr(fpgap)
-    
+
     stnow = linac.FPGA_State()
     stnow.drive = 0.0
     stnow.state = 0.0
     stpast = linac.FPGA_State()
     stpast.drive = 0.0
     stpast.state =0.0
-    
+
     tmax = 10.0
     nt = int(tmax/dt)
     st = np.zeros(nt,dtype=np.complex)
@@ -99,7 +97,7 @@ def unit_fpga(dt=0.01):
     plantv = 0.0
     plantk = 10.0
     plantxa = np.zeros(nt,dtype=np.complex)
-    
+
     for i in xrange(nt):
         plantv += dt*(-plantk*plantx+stnow.drive-1.0*plantv)
         plantx += dt*plantv
@@ -107,7 +105,7 @@ def unit_fpga(dt=0.01):
                           stnow,stpast)
         drv[i] = stnow.drive
         sta[i] = stnow.state
-        
+
         plantxa[i] = plantx
         tmp = stpast
         stpast=stnow
@@ -141,16 +139,16 @@ def unit_saturate():
 def perform_tests():
     print "\n****\nPlotting a the step response to the filter (-1-1j),(-1+1j)"
     step_response()
-    
+
     plt.figure()
     print "\n****\nPlotting some phase shifts..."
     unit_phase_shift(1.0j)
     unit_phase_shift(2.0+3.0j)
-    
+
     plt.figure()
     print "\n****\nTesting the FPGA module"
     unit_fpga()
-    
+
     plt.figure()
     print "\n****\nTesting Saturate"
     unit_saturate()

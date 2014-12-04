@@ -2,7 +2,7 @@
 
 
 ############################
-# 
+#
 # unit_tests_components.py
 #
 # Unit tests for bigger components of the LLRF system
@@ -26,8 +26,8 @@ import numpy as np
 import matplotlib.pylab as plt
 
 
-# Because octave writes sqrt(-1)=i, and 
-# numpy expects sqrt(-1)=j... >.< 
+# Because octave writes sqrt(-1)=i, and
+# numpy expects sqrt(-1)=j... >.<
 # TODO: submit a patch to numpy that can handle "i"s in loading
 i2j = lambda x:np.complex(x.replace("i","j"))
 
@@ -45,13 +45,16 @@ def unit_compare(fname,cfunc,showplots=True,TOL=1.0e-14,title=None):
             delimiter=",",dtype=np.complex,converters={0:i2j,1:i2j})
     inps = octdat[:,0] #np.arange(0.0,50.0,0.2,dtype=np.complex)
     outs = np.zeros(inps.shape,dtype=np.complex)
+
     for i in xrange(len(inps)):
         outs[i] = cfunc(inps[i])
+
     if showplots:
         plt.plot(inps.real,outs.real,'b-+',label='pyreal')
         plt.plot(inps.real,outs.imag,'g-+',label='pyimag')
         plt.plot(octdat[:,0].real,octdat[:,1].real,'b-x',label='octreal')
         plt.plot(octdat[:,0].real,octdat[:,1].imag,'g-x',label='octrimag')
+
         if title==None:
             plt.title("Unit test on "+fname)
         else:
@@ -59,11 +62,11 @@ def unit_compare(fname,cfunc,showplots=True,TOL=1.0e-14,title=None):
 
         plt.legend()
         plt.show()
+
     norm = np.linalg.norm(outs-octdat[:,1])/np.linalg.norm(octdat[:,1])
     passed = norm <= TOL
 
     return [passed,norm]
-
 
 ##########################
 #
@@ -72,47 +75,48 @@ def unit_compare(fname,cfunc,showplots=True,TOL=1.0e-14,title=None):
 #
 ##########################
 def unit_triode(showplots=True,TOL=1.0e-14):
-    # Load a linac configuration file and select out the first one 
+    # Load a linac configuration file and select out the first one
     [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
     linnow = linac.Linac_State()
-    linpast = linac.Linac_State()
-    linac.Linac_State_Allocate(linnow,linp[0]);
-    linac.Linac_State_Allocate(linpast,linp[0]);
-    #print lintostr(linp[0])
-
+    linzero = linac.Linac_State()
+    linac.Linac_State_Allocate(linnow,linp[0])
+    linac.Linac_State_Allocate(linzero,linp[0])
 
     print "  Testing Triode..."
     #
-    # First Unit Test: 
-    # Keep all of the state variables at zero, 
+    # First Unit Test:
+    # Keep all of the state variables at zero,
     # and advance a timestep with a varying input signal
     #
+    def zero_out_state(x):
+        sout = linac.step_triode(linp[0],x,linnow)
+        linac.clear_triode(linp[0],linnow)
+        return sout
+
     pass_first,norm_first = unit_compare(
         "source/unit_test_data/triode_zero_load.csv",
-        lambda x: linac.step_triode(linp[0],x,linnow,linpast),
+        zero_out_state,
         showplots=showplots, TOL=TOL)
     print "   First test: ||py-oct||_2 = ",norm_first
 
+    print "Done with the 1st test..."
     #
     # Second Unit Test:
     # Fix the input signal at unity, and let the system "ride out"
     # for some number of timesteps
     #
     if showplots: plt.figure()
-    lins = [ linnow,linpast ];
+
     def ride(x):
-        
-        out = linac.step_triode(linp[0],1.0,lins[0],lins[1])
-        tmp=lins[1]
-        lins[1]=lins[0]
-        lins[0]=tmp
+        out = linac.step_triode(linp[0],1.0,linnow)
         return out
+
     pass_second,norm_second = unit_compare(
         "source/unit_test_data/triode_unity_ride.csv",
         ride, showplots=showplots, TOL=TOL)
     print "   Second test: ||py-oct||_2 = ",norm_second
 
-    
+
     if pass_first and pass_second:
         print "o Triode Unit Test Passed."
         return True
@@ -122,7 +126,7 @@ def unit_triode(showplots=True,TOL=1.0e-14):
 
 
 ################################
-# 
+#
 # Unit Tests for the response of the Cavity system, including filter
 #
 ################################
@@ -130,48 +134,62 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
 
     linnow = linac.Linac_State()
-    linpast = linac.Linac_State()
     linac.Linac_State_Allocate(linnow,linp[0]);
-    linac.Linac_State_Allocate(linpast,linp[0]);
+
 
     print "  Testing Cavity..."
-    
-    #
-    # First Unit Test: 
-    # Keep all of the state variables at zero, 
-    # and advance a timestep with a varying drive_in signal
-    #
-    pass_first,norm_first = unit_compare(
-        "source/unit_test_data/cavity_zero_drive.csv",
-        lambda x: linac.step_cavity(linp[0],0.0,x,1.0,
-                                    linnow,linpast),
-        showplots=showplots, TOL=TOL )
-    print "   First test: ||py-oct||_2 = ",norm_first
- 
 
     #
-    # Second Unit Test: 
-    # Keep all of the state variables at zero, 
+    # First Unit Test:
+    # Keep all of the state variables at zero,
+    # and advance a timestep with a varying drive_in signal
+    #
+
+    def cavity_test1(x):
+        out = linac.step_cavity(linp[0], 0.0 , x, 1.0, linnow)
+        linac.clear_cavity(linp[0], linnow)
+        return out
+
+    pass_first,norm_first = unit_compare(
+        "source/unit_test_data/cavity_zero_drive.csv",
+        cavity_test1,
+        showplots=showplots, TOL=TOL )
+    print "   First test: ||py-oct||_2 = ",norm_first
+
+
+    #
+    # Second Unit Test:
+    # Keep all of the state variables at zero,
     # and advance a timestep with a varying beam_charge signal
     #
+
+    def cavity_test2(x):
+        out = linac.step_cavity(linp[0],0.0,1.0,x, linnow)
+        linac.clear_cavity(linp[0], linnow)
+        return out
+
+
     if showplots: plt.figure()
     pass_second,norm_second = unit_compare(
         "source/unit_test_data/cavity_zero_beam.csv",
-        lambda x: linac.step_cavity(linp[0],0.0,1.0,x,
-                                    linnow,linpast),
+        cavity_test2,
         showplots=showplots, TOL=TOL )
     print "   Second test: ||py-oct||_2 = ",norm_second
 
     #
-    # Third Unit Test: 
-    # Keep all of the state variables at zero, 
+    # Third Unit Test:
+    # Keep all of the state variables at zero,
     # and advance a timestep with a varying delta_tz signal
     #
+    def cavity_test3(x):
+        out = linac.step_cavity(linp[0],1e-12*x.real,1.0,1.0,linnow)
+        linac.clear_cavity(linp[0], linnow)
+        return out
+
     if showplots: plt.figure()
     pass_third,norm_third = unit_compare(
         "source/unit_test_data/cavity_zero_deltatz.csv",
-        lambda x: linac.step_cavity(linp[0],1e-12*x.real,1.0,1.0,
-                                    linnow,linpast),
+        cavity_test3,
         showplots=showplots, TOL=TOL )
     print "   Third test: ||py-oct||_2 = ",norm_third
 
@@ -181,13 +199,11 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     # the transient response
     #
     if showplots: plt.figure()
-    lins = [linnow,linpast]
+
     def ride(x):
-        out = linac.step_cavity(linp[0],0.0,1.0,0.1,lins[0],lins[1])
-        tmp=lins[1]
-        lins[1]=lins[0]
-        lins[0]=tmp
+        out = linac.step_cavity(linp[0],0.0,1.0,0.1,linnow)
         return out
+
     pass_fourth,norm_fourth = unit_compare(
         "source/unit_test_data/cavity_unity_ride.csv",
         ride, showplots=showplots, TOL=TOL )
@@ -211,19 +227,11 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
 ################################
 
 def unit_step_llrf(showplots=True,TOL=1.0e-8):
-    # Load a linac configuration file and select out the first one 
+    # Load a linac configuration file and select out the first one
     [pa,allaccell,linp,gun, bbf,nrsc] = LoadConfig("source/configfiles/NGLS/all_config.cfg")
 
     dt = pa["Simulation"]["dt"]
-    #print lintostr(linp[0])
-    # Allocate the history array and each state
-    # linss = linac.Linac_State_Array(5);
-    # for i in xrange(5):
-    #     newlin = linac.Linac_State()
 
-    #     linac.Linac_State_Allocate(newlin,linp[0])
-    #     linss[i] = newlin
-    #     linss[i].fpga.state = 1.0*i+2.0j
     linssp = linac.make_state_arrays(5)
     linss = linac.Linac_State_Array_frompointer(linssp)
     for i in xrange(5):
@@ -233,49 +241,65 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
     # First Unit Test
     # Load on meas_d from a zero state
     #
+    def llrf_test1(x):
+        out = linac.step_llrf(linp[0],dt,0.0, x,0.0, 0,linss.cast())
+        for i in xrange(5):
+            linac.clear_linac(linp[0], linss[i])
+        return out
 
     pass_first,norm_first = unit_compare(
          "source/unit_test_data/llrf_step_beam.csv",
-         lambda x: linac.step_llrf(linp[0],dt,0.0, x,0.0, 0,
-                                   linss.cast()),
+         llrf_test1,
          showplots=showplots,TOL=TOL)
     print "   First test: ||py-oct||_2 = ",norm_first
+
+    if pass_first:
+        print "First test passed"
+    else:
+        print "First test failed"
 
     #
     # Second Unit Test
     # Load on beam_charge
     #
+    def llrf_test2(x):
+        out = linac.step_llrf(linp[0],dt, 1.0e-12*x.real, 0.1,0.1, 0, linss.cast())
+        for i in xrange(5):
+            linac.clear_linac(linp[0], linss[i])
+        return out
+
     plt.figure()
     pass_second,norm_second = unit_compare(
          "source/unit_test_data/llrf_step_deltatz.csv",
-         lambda x: linac.step_llrf(linp[0],dt, 1.0e-12*x.real, 0.1,0.1, 0,
-                                   linss.cast()),
+         llrf_test2,
          showplots=showplots,TOL=TOL)
     print "   Second test: ||py-oct||_2 = ",norm_second
 
+    if pass_second:
+        print "Second test passed"
+    else:
+        print "Second test failed"
+
+
     #
     # Third Unit Test
-    # Unity ride 
+    # Unity ride
     #
     plt.figure()
     def ride(x):
-        
-        out = linac.step_llrf(linp[0],dt,0.1e-12, 0.1, 0.0, 0,
-                                   linss.cast())
-        
-        # tmp = linss[4]
-        # for i in xrange(4):
-        #     linss[i+1]=linss[i]
-        # linss[0]=tmp
-        linac.cycle_buffer(linss.cast(),5)
+        out = linac.step_llrf(linp[0],dt,0.1e-12, 0.1, 0.0, 0, linss.cast())
         return out
 
     pass_third,norm_third = unit_compare(
          "source/unit_test_data/llrf_unity_ride.csv",
          ride,
-         showplots=showplots,TOL=TOL)
+         showplots=showplots,TOL=3e-8)
     print "   Third test: ||py-oct||_2 = ",norm_third
 
+    if pass_third:
+        print "Third test passed"
+    else:
+        print "Third test failed"
 
     #
     # Deallocate data
@@ -285,7 +309,7 @@ def unit_step_llrf(showplots=True,TOL=1.0e-8):
     for l in allaccell:
         linac.Linac_Deallocate(l)
 
-    
+
     if pass_first and pass_second and pass_third:
         print "o Step_LLRF Unit Tests Passed."
         return True

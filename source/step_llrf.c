@@ -22,8 +22,6 @@ void cycle_buffer(Linac_State** linss, int n) {
   linss[0]=tmp;
 }
 
-
-
 void Linac_State_Allocate(Linac_State * lins, Linac_Param * linp) {
   Filter_State_Allocate(&lins->RXF,    &linp->RXF);
   Filter_State_Allocate(&lins->TRF1,   &linp->TRF1);
@@ -52,8 +50,7 @@ double complex phase_shift(double complex in, double theta) {
 }
 
 double complex step_fpga(FPGA_Param * fpga, double complex cavity_vol,
-			 FPGA_State * stnow, FPGA_State * stpast, 
-			 int openloop)
+			 FPGA_State * stnow, int openloop)
 {
   double complex sig_error = cavity_vol - fpga->set_point;
   if( openloop ) {
@@ -62,13 +59,21 @@ double complex step_fpga(FPGA_Param * fpga, double complex cavity_vol,
   } else {
     double complex correction = sig_error*fpga->gain;
     
-    stnow->state = stpast->state + fpga->int_gain*correction;
+    stnow->state = stnow->state + fpga->int_gain*correction;
     if( cabs(stnow->state) > 1.0) stnow->state /= cabs(stnow->state);
     stnow->drive = stnow->state + correction;
     if( cabs(stnow->drive) > 1.0) stnow->drive /= cabs(stnow->drive);
   }
   stnow->err = sig_error;
   return sig_error;
+}
+
+void clear_fpga(FPGA_State * stnow)
+{
+  stnow-> drive = 0.0+0.0*_Complex_I;
+  stnow-> state = 0.0+0.0*_Complex_I;
+  stnow-> err = 0.0+0.0*_Complex_I;
+
 }
 
 double complex step_PI_fpga(FPGA_Param * fpga, double dt,
@@ -90,20 +95,24 @@ double complex saturate(double complex in, double harshness) {
   return in*cpow( 1.0+cpow(cabs(in),harshness) , -1.0/harshness);
 }
 
-double complex step_triode(Linac_Param *linp, double complex drive_in,
-		 Linac_State * linnow, Linac_State * linpast)
+double complex step_triode(Linac_Param *linp, double complex drive_in, Linac_State * linnow)
 {
   double complex trf1out, satout, trf2out;
-  trf1out = Filter_Step(&linp->TRF1, drive_in, &linnow->TRF1,&linpast->TRF1);
+  trf1out = Filter_Step(&linp->TRF1, drive_in, &linnow->TRF1);
   satout = saturate(trf1out,linp->saturate_c);
-  trf2out = Filter_Step(&linp->TRF2, satout, &linnow->TRF2, &linpast->TRF2);
+  trf2out = Filter_Step(&linp->TRF2, satout, &linnow->TRF2);
   return trf2out;
 }
 
+void clear_triode(Linac_Param *linp, Linac_State * linnow)
+{
+  Filter_State_Clear(&linp->TRF1, &linnow->TRF1);
+  Filter_State_Clear(&linp->TRF2, &linnow->TRF2);
+}
 
 double complex step_cavity(Linac_Param *linp, double delta_tz,
 		 double complex drive_in, double complex beam_charge,
-		 Linac_State * linnow, Linac_State * linpast)
+		 Linac_State * linnow)
 {
   double complex beam_charge_in, beam_induced_vol, voltage_in, cav_out;
   /*
@@ -134,13 +143,15 @@ double complex step_cavity(Linac_Param *linp, double delta_tz,
   /*
    % Passes signal through cavity filter, output is smoothed out
   */
-  cav_out = Filter_Step(&linp->Cav_Fil, voltage_in, 
-		       &linnow->Cav_Fil, &linpast->Cav_Fil);
-  //return beam_induced_vol;
+  cav_out = Filter_Step(&linp->Cav_Fil, voltage_in, &linnow->Cav_Fil);
+
   return cav_out;
 }
 
-
+void clear_cavity(Linac_Param *linp, Linac_State * linnow)
+{
+  Filter_State_Clear(&linp->Cav_Fil, &linnow->Cav_Fil);
+}
 
 #define CPRINTs(c) {if(cimag(c)<0) printf("%10.16e%10.16ej ",creal(c),cimag(c)); else printf("%10.16e+%10.16ej ",creal(c),cimag(c)); }
 
@@ -152,7 +163,6 @@ double complex step_llrf(Linac_Param *linp,
 			 Linac_State ** linss)
 {
   Linac_State * linnow = linss[0];
-  Linac_State * linpast = linss[1];
   double complex sig_error,cavity_meas,fpga_drive_d,
     triode_out, triode_out_d, cav_out, cav_out_d,
     rxfvoltage;
@@ -185,7 +195,7 @@ double complex step_llrf(Linac_Param *linp,
   printf("\n");
   */
   sig_error = step_fpga(&linp->fpga, cavity_meas,
-  			&linnow->fpga, &linpast->fpga, openloop);
+  			&linnow->fpga, openloop);
   /*
   printf("sig_error ");
   CPRINTs(sig_error);
@@ -207,7 +217,7 @@ double complex step_llrf(Linac_Param *linp,
    * Call Triode
    */
   triode_out = step_triode(linp, fpga_drive_d,
-	      linnow, linpast);
+	      linnow);
 
   /*
   printf("triode_out ");
@@ -227,7 +237,7 @@ double complex step_llrf(Linac_Param *linp,
    * Drive the Cavity
    */
   cav_out = step_cavity(linp, delta_tz, triode_out_d, beam_charge,
-  		   linnow,linpast);
+  		   linnow);
   
   /*
   printf("cav_out ");
@@ -236,7 +246,7 @@ double complex step_llrf(Linac_Param *linp,
   */
   linnow->cav.voltage = cav_out;
   // drift
-  cav_out_d = phase_shift( cav_out, linp->drift[2] );
+  cav_out_d = phase_shift( cav_out, linp->drift[2]);
 
   /*
   printf("cav_out_d ");
@@ -247,7 +257,7 @@ double complex step_llrf(Linac_Param *linp,
    * RXF
    */
   linnow->RXF_out = Filter_Step(&linp->RXF, cav_out_d,
-  		&linnow->RXF, &linpast->RXF);
+  		&linnow->RXF);
   
   /*
   printf("linnow->RXF_out ");
@@ -257,4 +267,14 @@ double complex step_llrf(Linac_Param *linp,
   
   return linnow->RXF_out;
 }
+
+void clear_linac(Linac_Param *linp, Linac_State * linnow)
+{
+  clear_fpga(&linnow->fpga);
+  clear_cavity(linp, linnow);
+  Filter_State_Clear(&linp->RXF, &linnow->RXF);
+  clear_triode(linp, linnow);
+  linnow->RXF_out = 0.0+0.0*_Complex_I;
+}
+
 #undef CPRINTs
