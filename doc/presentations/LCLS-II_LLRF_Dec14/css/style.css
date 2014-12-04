@@ -62,6 +62,7 @@ a:hover { color: #333;}
 .light { font-weight: 400; }
 .extralight { font-weight: 300; letter-spacing: .05em; }
 .small { display: block; padding: 20px; font-size: 20px; font-weight: 600; }
+.tiny { display: block; padding: 10px; font-size: 15px; font-weight: 400; }
 
 blockquote {
     text-align: justify;
