@@ -26,22 +26,21 @@ void Linac_State_Allocate(Linac_State * lins, Linac_Param * linp) {
   Filter_State_Allocate(&lins->RXF,    &linp->RXF);
   Filter_State_Allocate(&lins->TRF1,   &linp->TRF1);
   Filter_State_Allocate(&lins->TRF2,   &linp->TRF2);
-  Filter_State_Allocate(&lins->Cav_Fil,&linp->Cav_Fil);
-  
-  lins->fpga.drive = 0.0*I;
-  lins->fpga.state = 0.0*I;
-  
-  lins->cav.beam = 0.0*I;
-  lins->cav.voltage = 0.0*I;
+  Filter_State_Allocate(&lins->cav_state.fil_state, &linp->cav.cav_fil);
 
-  lins->RXF_out = 0.0*I;
+  lins->cav_state.voltage = 0.0 + 0.0*_Complex_I;
+  
+  lins->fpga.drive = 0.0 + 0.0*_Complex_I;
+  lins->fpga.state = 0.0 + 0.0*_Complex_I;
+
+  lins->RXF_out = 0.0 + 0.0*_Complex_I;
 }
 
 void Linac_State_Deallocate(Linac_State * lins) {
   Filter_State_Deallocate(&lins->RXF);
   Filter_State_Deallocate(&lins->TRF1);
   Filter_State_Deallocate(&lins->TRF2);
-  Filter_State_Deallocate(&lins->Cav_Fil);
+  Filter_State_Deallocate(&lins->cav_state.fil_state);
 }
 
 double complex phase_shift(double complex in, double theta) {
@@ -110,49 +109,6 @@ void clear_triode(Linac_Param *linp, Linac_State * linnow)
   Filter_State_Clear(&linp->TRF2, &linnow->TRF2);
 }
 
-double complex step_cavity(Linac_Param *linp, double delta_tz,
-		 double complex drive_in, double complex beam_charge,
-		 Linac_State * linnow)
-{
-  double complex beam_charge_in, beam_induced_vol, voltage_in, cav_out;
-  /*
-   * FROM OCTAVE CODE, Carlos Serrano Dec2011:
-   % Calculates beam charge. Note that amplitude and phase errors
-   % for beam induced voltage are added in this
-   % line. (cavity_params.nom_beam_phase is not an error, but a
-   % nominal parameter)
-  */
-  beam_charge_in = beam_charge * 
-    cexp(I*(linp->cav.nom_beam_phase + delta_tz*linp->cav.w0));
-
-  /* printf("%lf %lf   %lf %lf   %lf %lf   %lf %lf\n", */
-  /* 	 creal(beam_charge_in),cimag(beam_charge_in), */
-  /* 	 creal(linp->cav.nom_beam_phase),cimag(linp->cav.nom_beam_phase), */
-  /* 	 creal(linp->cav.w0),cimag(linp->cav.w0), */
-  /* 	 creal(beam_charge),cimag(beam_charge)); */
-  /*
-   % Calculate beam induced voltage
-   */
-  beam_induced_vol = linp->cav.k*beam_charge_in;
-  /*
-   % Add drive signal and beam induced voltage
-   % Negative sign expressing energy absorption...
-   */
-  voltage_in = drive_in*linp->cav.beta_in 
-    + beam_induced_vol*linp->cav.beta_beam;
-  /*
-   % Passes signal through cavity filter, output is smoothed out
-  */
-  cav_out = Filter_Step(&linp->Cav_Fil, voltage_in, &linnow->Cav_Fil);
-
-  return cav_out;
-}
-
-void clear_cavity(Linac_Param *linp, Linac_State * linnow)
-{
-  Filter_State_Clear(&linp->Cav_Fil, &linnow->Cav_Fil);
-}
-
 #define CPRINTs(c) {if(cimag(c)<0) printf("%10.16e%10.16ej ",creal(c),cimag(c)); else printf("%10.16e+%10.16ej ",creal(c),cimag(c)); }
 
 double complex step_llrf(Linac_Param *linp,
@@ -212,9 +168,7 @@ double complex step_llrf(Linac_Param *linp,
   printf("fpga_drive_d ");
   CPRINTs(fpga_drive_d);
   printf("\n");
-  /*
-  /*
-   * Call Triode
+  //Call Triode
    */
   triode_out = step_triode(linp, fpga_drive_d,
 	      linnow);
@@ -236,15 +190,14 @@ double complex step_llrf(Linac_Param *linp,
   /*
    * Drive the Cavity
    */
-  cav_out = step_cavity(linp, delta_tz, triode_out_d, beam_charge,
-  		   linnow);
+  cav_out = Cavity_Step(&linp->cav, delta_tz, triode_out_d, beam_charge, &linnow->cav_state);
   
   /*
   printf("cav_out ");
   CPRINTs(cav_out);
   printf("\n");
   */
-  linnow->cav.voltage = cav_out;
+  linnow->cav_state.voltage = cav_out;
   // drift
   cav_out_d = phase_shift( cav_out, linp->drift[2]);
 
@@ -271,7 +224,7 @@ double complex step_llrf(Linac_Param *linp,
 void clear_linac(Linac_Param *linp, Linac_State * linnow)
 {
   clear_fpga(&linnow->fpga);
-  clear_cavity(linp, linnow);
+  Cavity_Clear(&linp->cav, &linnow->cav_state);
   Filter_State_Clear(&linp->RXF, &linnow->RXF);
   clear_triode(linp, linnow);
   linnow->RXF_out = 0.0+0.0*_Complex_I;

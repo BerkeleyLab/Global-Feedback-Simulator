@@ -49,7 +49,7 @@ void filewrite(FILE * fp, double time, Gun_Param * gun,
   for(l=0;l<Nlinac;l++) {
     fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e   ",error_vol_a[l],error_vol_p[l],dcs->dE_E[l],dcs->dt[l], dcs->sz[l], dcs->dE_Ei[l], dcs->dE_Ei2[l]);
     
-    CPRINT(linss_array[l][0]->cav.voltage);
+    CPRINT(linss_array[l][0]->cav_state.voltage);
     CPRINT(linss_array[l][0]->fpga.err);
     CPRINT(linp_array[l]->fpga.set_point);
     CPRINT(linss_array[l][0]->fpga.drive);
@@ -128,15 +128,15 @@ void state_space_top(Gun_Param * gun, Linac_Param ** linp_array, int Nlinac,
 		linss_array[l]);
 
       // calculate those errors
-      error_vol_p[l] = carg( linss_array[l][0]->cav.voltage );
+      error_vol_p[l] = carg( linss_array[l][0]->cav_state.voltage );
       if(linp_array[l]->fpga.set_point!=0.0) {
 	error_vol_a[l] =
-	  (cabs(linss_array[l][0]->cav.voltage )
+	  (cabs(linss_array[l][0]->cav_state.voltage )
 	   - linp_array[l]->fpga.set_point)
 	  / (linp_array[l]->fpga.set_point);
       } else {
 	error_vol_a[l] =
-	  (cabs(linss_array[l][0]->cav.voltage )
+	  (cabs(linss_array[l][0]->cav_state.voltage )
 	   - linp_array[l]->fpga.set_point);
       }
     } // End loop over linacs

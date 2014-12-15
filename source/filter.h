@@ -33,7 +33,6 @@ void Filter_Deallocate(Filter * fil);
 
 void Filter_Append_Modes(Filter * fil, double complex * poles,int ord,double dt);
 
-
 void Filter_State_Allocate(Filter_State * sf, Filter * fil);
 void Filter_State_Deallocate(Filter_State * sf);
 void Filter_State_Clear(Filter * fil, Filter_State * sf);

@@ -136,7 +136,6 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     linnow = linac.Linac_State()
     linac.Linac_State_Allocate(linnow,linp[0]);
 
-
     print "  Testing Cavity..."
 
     #
@@ -146,8 +145,8 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     #
 
     def cavity_test1(x):
-        out = linac.step_cavity(linp[0], 0.0 , x, 1.0, linnow)
-        linac.clear_cavity(linp[0], linnow)
+        out = linac.Cavity_Step(linp[0].cav, 0.0 , x, 1.0, linnow.cav_state)
+        linac.Cavity_Clear(linp[0].cav, linnow.cav_state)
         return out
 
     pass_first,norm_first = unit_compare(
@@ -156,7 +155,6 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
         showplots=showplots, TOL=TOL )
     print "   First test: ||py-oct||_2 = ",norm_first
 
-
     #
     # Second Unit Test:
     # Keep all of the state variables at zero,
@@ -164,10 +162,9 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     #
 
     def cavity_test2(x):
-        out = linac.step_cavity(linp[0],0.0,1.0,x, linnow)
-        linac.clear_cavity(linp[0], linnow)
+        out = linac.Cavity_Step(linp[0].cav,0.0,1.0,x, linnow.cav_state)
+        linac.Cavity_Clear(linp[0].cav, linnow.cav_state)
         return out
-
 
     if showplots: plt.figure()
     pass_second,norm_second = unit_compare(
@@ -181,9 +178,10 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     # Keep all of the state variables at zero,
     # and advance a timestep with a varying delta_tz signal
     #
+
     def cavity_test3(x):
-        out = linac.step_cavity(linp[0],1e-12*x.real,1.0,1.0,linnow)
-        linac.clear_cavity(linp[0], linnow)
+        out = linac.Cavity_Step(linp[0].cav,1e-12*x.real,1.0,1.0,linnow.cav_state)
+        linac.Cavity_Clear(linp[0].cav, linnow.cav_state)
         return out
 
     if showplots: plt.figure()
@@ -201,7 +199,7 @@ def unit_cavity(showplots=True,TOL=1.0e-8):
     if showplots: plt.figure()
 
     def ride(x):
-        out = linac.step_cavity(linp[0],0.0,1.0,0.1,linnow)
+        out = linac.Cavity_Step(linp[0].cav,0.0,1.0,0.1,linnow.cav_state)
         return out
 
     pass_fourth,norm_fourth = unit_compare(

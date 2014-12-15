@@ -64,21 +64,22 @@ void Linac_Config(Linac_Param * linp,
   /*
    * Configure the Cavity
    */
-  Cavity_Config(&linp->cav,
-		dt,n_cav,
-		psd_llrf,w0,bunch_rep,Q_L,R_Q,
-		beta_in,beta_out,beta_beam);
   //double dE = (E - Eg)*1.0e9;
+
+
+  double complex cav_pole = -0.5*w0/Q_L;
+
+  Cavity_Config(&linp->cav,
+    dt, n_cav,
+    psd_llrf, w0, bunch_rep, Q_L, R_Q,
+    beta_in, beta_out, beta_beam,
+    cav_pole);
 
   linp->cav.nom_beam_phase = linp->phi;
   linp->cav.rf_phase = 0.0;
   linp->cav.design_voltage = dE / fabs(cos(linp->cav.nom_beam_phase));
   linp->cav.unity_voltage = n_cav*kly_max_v;
   linp->cav.k = linp->cav.k/kly_max_v;
-
-  double complex cav_p = -0.5*w0/Q_L;
-  Filter_Allocate_In(&linp->Cav_Fil,1,1);
-  Filter_Append_Modes(&linp->Cav_Fil,&cav_p,1,dt);
 
   /*
    * Configure the FPGA
@@ -89,38 +90,8 @@ void Linac_Config(Linac_Param * linp,
   double complex set_point = linp->cav.design_voltage*cexp(I*linp->cav.rf_phase)
                          / linp->cav.unity_voltage;
 
-  FPGA_Config(&linp->fpga,kp,kp*0.1,
-	      set_point);
+  FPGA_Config(&linp->fpga,kp,kp*0.1, set_point);
 
-
-}
-
-
-void Cavity_Config(Cavity * cav,
-		   double dt,int n_cav,
-		   double psd_llrf, double w0, double bunch_rep,
-		   double Q_L, double R_Q,
-		   double beta_in, double beta_out, double beta_beam)
-{
-  /*
-   * Input paramters
-   */
-  cav->psd_llrf = psd_llrf;
-  cav->w0 = w0;
-  cav->bunch_rep = bunch_rep;
-  cav->Q_L = Q_L;
-  cav->R_Q = R_Q;
-  cav->beta_in = beta_in;
-  cav->beta_out = beta_out;
-  cav->beta_beam = beta_beam;
-  /*
-   * Calculated quantities
-   */
-  cav->bandw = 0.5/dt;
-  cav->noise_rms = 1.5*sqrt( 0.5*psd_llrf*cav->bandw / (double)n_cav );
-  cav->bw_ol = w0 / Q_L;
-
-  cav->k = bunch_rep * R_Q * Q_L;
 }
 
 void FPGA_Config(FPGA_Param * fpga,
@@ -145,10 +116,9 @@ void Gun_Config(Gun_Param * gun,
   gun->Q = Q;
 }
 
-
 void Linac_Deallocate(Linac_Param * linp) {
   Filter_Deallocate(&linp->RXF);
   Filter_Deallocate(&linp->TRF1);
   Filter_Deallocate(&linp->TRF2);
-  Filter_Deallocate(&linp->Cav_Fil);
+  Filter_Deallocate(&linp->cav.cav_fil);
 }

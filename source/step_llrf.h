@@ -19,28 +19,22 @@
 #include <complex.h>
 #include "linac_param.h"
 
-
 typedef struct str_fpga_state {
   double complex drive, state, err;
 } FPGA_State;
 
-typedef struct str_cavity_state {
-  double complex beam;
-  double complex voltage;
-} Cavity_State;
-
 typedef struct str_linac_state {
 
-  Filter_State RXF, TRF1, TRF2, Cav_Fil;
+  Filter_State RXF, TRF1, TRF2;
+
+  Cavity_State cav_state;
 
   FPGA_State fpga;
-  Cavity_State cav;
 
   double complex RXF_out;
 } Linac_State;
 
 typedef Linac_State * LINS;
-
 
 Linac_State** make_state_arrays(int n);
 void cycle_buffer(Linac_State** linss, int n);
@@ -74,7 +68,6 @@ double complex step_llrf(Linac_Param *linp,
 			 int openloop,
 			 Linac_State ** linss);
 
-
 void clear_linac(Linac_Param *linp, Linac_State * linnow);
 
 /*
@@ -95,6 +88,8 @@ double complex phase_shift(double complex in, double theta);
 double complex step_fpga(FPGA_Param * fpga, double complex cavity_vol,
 			 FPGA_State * stnow, int openloop);
 
+void clear_fpga(FPGA_State * stnow);
+
 double complex step_PI_fpga(FPGA_Param * fpga,
 			    double dt, double complex cavity_vol,
 			 FPGA_State * stnow, FPGA_State * stpast);
@@ -110,11 +105,5 @@ double complex step_triode(Linac_Param *linp, double complex drive_in,
 		 Linac_State * linnow);
 
 void clear_triode(Linac_Param *linp, Linac_State * linnow);
-
-double complex step_cavity(Linac_Param *linp, double delta_tz,
-			   double complex drive_in, double complex beam_charge,
-			   Linac_State * linnow);
-
-void clear_cavity(Linac_Param *linp, Linac_State * linnow);
 
 #endif

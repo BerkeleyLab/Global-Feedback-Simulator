@@ -19,6 +19,7 @@
 
 #include <complex.h>
 #include "filter.h"
+ #include "cavity.h"
 
 /*
  * Data structure storing the paramters of the FPGA controller
@@ -28,23 +29,6 @@ typedef struct str_FPGA {
   double int_gain;
   double complex set_point;
 } FPGA_Param;
-
-/*
- * Data structure storing the paramters of the Cavity array in a linac
- */
-typedef struct str_cavity {
-  // Seemed like fixed inputs?
-  double psd_llrf, w0, bunch_rep, Q_L, R_Q;
-  double beta_in, beta_out, beta_beam;
-
-  // Calculated Quantities by cavity init
-  double bandw, noise_rms, bw_ol, k;
-
-  // Added in by the LLRF
-  double nom_beam_phase, rf_phase, design_voltage,
-    unity_voltage;
-} Cavity;
-
 
 /*
  * Data struture storing the parameters for a single linac
@@ -61,7 +45,7 @@ typedef struct str_linac_param {
   double saturate_c;
 
   /* Sub objects */
-  Filter RXF, TRF1, TRF2, Cav_Fil;
+  Filter RXF, TRF1, TRF2;
   FPGA_Param fpga;
   
   Cavity cav;
@@ -85,8 +69,6 @@ typedef struct str_gun_param {
   double E, sz0, sd0;
   double Q;
 } Gun_Param;
-
-
 
 /*
  * This routine takes all of the values read in from a file (TBD in python)
@@ -115,14 +97,6 @@ void Linac_Config(Linac_Param * linp,
 		  );
 
 void Linac_Deallocate(Linac_Param * linp);
-
-
-void Cavity_Config(Cavity * cav,
-		   double dt,int n_cav,
-		   double psd_llrf, double w0, double bunch_rep,
-		   double Q_L, double R_Q,
-		   double beta_in, double beta_out, double beta_beam);
-
 
 void FPGA_Config(FPGA_Param * fpga,
 		 double kp, double ki, double complex set_point);

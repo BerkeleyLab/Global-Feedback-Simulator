@@ -9,6 +9,7 @@
 #include "state_space_top.h"
 #include "beam_based_feedback.h"
 #include "dynamic_noise.h"
+#include "cavity.h"
 %}
 
 %include "complex.i"
@@ -32,3 +33,4 @@
 %include "state_space_top.h"
 %include "beam_based_feedback.h"
 %include "dynamic_noise.h"
+%include "cavity.h"
