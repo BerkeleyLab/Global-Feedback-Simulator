@@ -285,7 +285,48 @@ This error is passed onto a proportional and integral gain, with respective gain
 
 This new $\vec{K}_{g}$ value is sent to the cavity.
 
-\subsection{Noise sources}
+\subsubsection{Software implementation}
+
+In order to implement the PI controller in software, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below. 
+\be
+k_{i} \int_{\tau_{0}}^{t} e(\tau)d\tau
+\ee
+
+There are many ways to evaluate this integral. Most commonly utilized are right-hand, left-hand, and mid-point Riemann sums, Trapezoidal Rule, or Simpson's Rule. In our case, we will simply use a Trapezoidal Rule, which basically comes out to averaging the value of $e(t)$ at the previous and current time step. Considering a very small time step is used, this is a good approximation. Numerically, we have the following for the general case:
+\be
+\int_{\tau_{0}}^{\tau_{n}} f(\tau) d\tau \approx \Delta t
+		    \left[\frac{f(\tau_{0})}{2} + f(\tau_{1}) + f(\tau_{2}) + ...
+		      + f(\tau_{n-1}) + \frac{f(\tau_{n})}{2}\right]
+\ee
+
+where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following: 
+
+\be
+k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
+	      \left[\frac{e^{0}}{2} + e^{1} + e^{2} + ... 
+		+ e^{n-1} + \frac{e^{n}}{2} \right]
+\ee
+
+
+where again the superscript notation indicates the time step. 
+
+So the overall update for $\vec{K}_{g}$ goes as
+\be \label{eq: controller_dis}
+\vec{K}_{g}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
+\ee
+
+\subsection{Amplifier}
+
+Triode clipping is described with a harshness parameter c, such that the output signal v o from the tube based on its input vi varies according to
+
+\begin{equation}
+  \vec V_{\rm out} = \vec V_{\rm in} \cdot \left(1 + |\vec V_{\rm in}|^c\right)^{-1/c}
+\end{equation}
+
+The saturated output amplitude from this equation is 1. While some phase shift with drive level is observed, this effect is not yet included in the model. When c = 5, as provides a decent fit to measurements shown in figure 3, it takes about 1.5 (unitless) drive level from the control system to reach 97.5\% of this amplitude, 95\% of the power. This level should correspond to full scale digital output.
+
+
+\subsection{LLRF Noise}
 
 LLRF noise is dominated by ADC and preamplifier noise, which typically have broad-band (white) and 1/$f$ components. Here we only consider the broad-band component, as digital LLRF controllers (with {\it in-situ} calibration schemes) are effective at rejecting low frequency noise.
 
@@ -527,6 +568,25 @@ A_{\nu\mu} = \frac{1}{ \omega_{0_{\mu}}} \sqrt{-\frac{1}{ (R/Q)_{\mu}}  \left(\f
 
 It is perhaps an unexpected result that the cross-coupling between cavity modes ({\it e.g.}, excite the $\pi$ mode, measure $\Delta\omega$ for the $8\pi/9$ mode) is quantitatively predicted from measurements of each mode individually, with the exception of the choice of sign of the above radicals.  All that is required is confidence that mechanical modes are correctly identified and non-degenerate.
 
+\subsubsection{Software implementation}
+
+We now turn to the matrix Equation ~\ref{eq: state_space}. Two expressions appear:
+\be
+\frac{dx_{\nu}}{dt} = ax_{\nu} - by_{\nu}
+\ee
+\be
+\frac{dy_{\nu}}{dt} = bx_{\nu} + ay_{\nu} + cF_{\nu}
+\ee
+
+Discretizing as before, we find: 
+\be
+\label{eq_x}
+x^{n+1}_{\nu} = x^{n}_{\nu} + T(ax^{n}_{\nu} - by^{n}_{\nu}) = x^{n}_{\nu}(1 + Ta_{\nu}) - Tb_{\nu}y^{n}_{\nu}
+\ee
+\be
+\label{eq_y}
+y^{n+1}_{\nu} = y^{n}_{\nu} + T(bx^{n}_{\nu} + ay^{n}_{\nu} + cF^{n}_{\nu}) = y^{n}_{\nu}(1+Ta_{\nu}) + T(b_{\nu}x^{n} + cF^{n}_{\nu})
+\ee
 
 
 % 
@@ -609,75 +669,6 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 
 \subsection{Beam-based feedback model}
 
-\newpage
-
-\section{Software implementation}
-
-\subsection{Configuration}
-
-
-
-\subsubsection{Mecanical coumplings}
-
-We now turn to the matrix Equation ~\ref{eq: state_space}. Two expressions appear:
-\be
-\frac{dx_{\nu}}{dt} = ax_{\nu} - by_{\nu}
-\ee
-\be
-\frac{dy_{\nu}}{dt} = bx_{\nu} + ay_{\nu} + cF_{\nu}
-\ee
-
-Discretizing as before, we find: 
-\be
-\label{eq_x}
-x^{n+1}_{\nu} = x^{n}_{\nu} + T(ax^{n}_{\nu} - by^{n}_{\nu}) = x^{n}_{\nu}(1 + Ta_{\nu}) - Tb_{\nu}y^{n}_{\nu}
-\ee
-\be
-\label{eq_y}
-y^{n+1}_{\nu} = y^{n}_{\nu} + T(bx^{n}_{\nu} + ay^{n}_{\nu} + cF^{n}_{\nu}) = y^{n}_{\nu}(1+Ta_{\nu}) + T(b_{\nu}x^{n} + cF^{n}_{\nu})
-\ee
-
-\subsubsection{Controller}
-
-For the PI controller, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below. 
-\be
-k_{i} \int_{\tau_{0}}^{t} e(\tau)d\tau
-\ee
-
-There are many ways to evaluate this integral. Most commonly utilized are right-hand, left-hand, and mid-point Riemann sums, Trapezoidal Rule, or Simpson's Rule. In our case, we will simply use a Trapezoidal Rule, which basically comes out to averaging the value of $e(t)$ at the previous and current time step. Considering a very small time step is used, this is a good approximation. Numerically, we have the following for the general case:
-\be
-\int_{\tau_{0}}^{\tau_{n}} f(\tau) d\tau \approx \Delta t
-		    \left[\frac{f(\tau_{0})}{2} + f(\tau_{1}) + f(\tau_{2}) + ...
-		      + f(\tau_{n-1}) + \frac{f(\tau_{n})}{2}\right]
-\ee
-
-where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following: 
-
-\be
-k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
-	      \left[\frac{e^{0}}{2} + e^{1} + e^{2} + ... 
-		+ e^{n-1} + \frac{e^{n}}{2} \right]
-\ee
-
-
-where again the superscript notation indicates the time step. 
-
-So the overall update for $\vec{K}_{g}$ goes as
-\be \label{eq: controller_dis}
-\vec{K}_{g}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
-\ee
-\subsubsection{Saturation}
-
-Triode clipping is described with a harshness parameter c, such that the output signal v o from the tube based on its input vi varies according to
-
-\begin{equation}
-  \vec V_{\rm out} = \vec V_{\rm in} \cdot \left(1 + |\vec V_{\rm in}|^c\right)^{-1/c}
-\end{equation}
-
-The saturated output amplitude from this equation is 1. While some phase shift with drive level is observed, this effect is not yet included in the model. When c = 5, as provides a decent fit to measurements shown in figure 3, it takes about 1.5 (unitless) drive level from the control system to reach 97.5\% of this amplitude, 95\% of the power. This level should correspond to full scale digital output.
-
-\subsection{Unit tests}
-
 \section{Conclusions}
 
 \newpage
@@ -688,6 +679,13 @@ The saturated output amplitude from this equation is 1. While some phase shift w
 
 \subsection{ODE Integration of single-pole low-pass filter}
 \label{App:ODE_integration}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.265]{../figures/filter_step_response.png}
+\caption{Comparison between numerical and analitycal filter step response.}
+\label{fig:filter_step_response}
+\end{figure}
 
 % \begin{figure}
 % \centering
@@ -737,6 +735,10 @@ In order to preserve scaling and have unity gain at DC, Eq.~\ref{eq:exp_diff} ne
 \end{equation}
 
 which is equivalent to scaling $\vec V_{\rm out}^n$ by a factor of $|p|$ in the software implementation.
+
+This process is coded in C, and tested using a two-pole ow pass Butterworth filter. Given the transfer function $1/((s+1)^2+1)$, which has poles at (-1+1j) and (-1-1j), 
+the step response is $1 - e^{-t} (\sin x + \cos x)$, for $t > 0$. This analytically known response is plotted in Fig.~\ref{fig:filter_step_response} along with the response obtained using the numerical model.
+
 
 \end{appendix}
 
