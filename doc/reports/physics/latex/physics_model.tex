@@ -100,7 +100,7 @@ Ideally, we would like to measure the EM fields from each mode present in the ca
   \label{eq:E_probe}
 \end{equation}
 
-where $\vec{V}_{\mu}$ is a representative measure of the energy stored in each electrical mode $\mu$, designated as mode cavity voltage, and where $Q_{\rm p_{\mu}}(R/Q)_{\mu}$ is the coupling impedance of the probe port for that mode.
+\noindent where $\vec{V}_{\mu}$ is a representative measure of the energy stored in each electrical mode $\mu$, designated as mode cavity voltage, and where $Q_{\rm p_{\mu}}(R/Q)_{\mu}$ is the coupling impedance of the probe port for that mode.
 
 Alternatively, the expression for reverse (a.k.a.~reflected) wave travelling outward from the fundamental port includes a prompt reflection term, yielding
 
@@ -109,7 +109,7 @@ Alternatively, the expression for reverse (a.k.a.~reflected) wave travelling out
   \label{eq:E_reverse}
 \end{equation}
 
-where $Q_{g_{\mu}}(R/Q)_\mu$ is the coupling impedance of the drive port of mode $\mu$.
+\noindent where $Q_{g_{\mu}}(R/Q)_\mu$ is the coupling impedance of the drive port of mode $\mu$.
 
 \subsubsection{Electromagnetic eigenmode}
 
@@ -129,7 +129,7 @@ If we apply Kirchhoff's current law to the mode's RLC equivalent circuit (see fi
   \label{eq:currents}
 \end{equation}
 
-where:
+\noindent where:
 
 \begin{equation}
   \frac{d\vec I_{\rm C_{\mu}}}{dt} = C_{\mu} \cdot \frac{d^2\vec V_{\mu}}{dt^2}\text{,}\qquad \frac{d\vec I_{\rm R_{\mu}}}{dt} = \frac{1}{R_{\rm L_{\mu}}}\frac{d\vec V_{\mu}}{dt} \qquad \text{and}\qquad \frac{d\vec I_{\rm L_{\mu}}}{dt} = \vec V_{\mu}/L_{\mu}
@@ -142,7 +142,7 @@ Differentiating both sides of equation~\ref{eq:currents} and substituting using 
   \frac{d^2\vec V_{\mu}}{dt^2} + \frac{1}{R_{\rm L_{\mu}}C_{\mu}}\frac{d\vec V_{\mu}}{dt} + \frac{1}{L_{\mu}C_{\mu}}\vec V_{\mu} = \frac{1}{C_{\mu}}\frac{d\vec I_{\mu}}{dt}
 \end{equation}
 
-which can be expressed as a function of the mode's nominal resonance frequency $\omega_{0_{\mu}}$ ($1/L_{\mu}C_{\mu}=\omega_{0_{\mu}}^2$) and loaded Q ($1/R_{\rm L_{\mu}}C_{\mu}=\omega_{0_{\mu}}/Q_{\rm L_{\mu}}$):
+\noindent which can be expressed as a function of the mode's nominal resonance frequency $\omega_{0_{\mu}}$ ($1/L_{\mu}C_{\mu}=\omega_{0_{\mu}}^2$) and loaded Q ($1/R_{\rm L_{\mu}}C_{\mu}=\omega_{0_{\mu}}/Q_{\rm L_{\mu}}$):
  
 \begin{equation}
   \frac{d^2\vec V_{\mu}}{dt^2} + \frac{\omega_{0_{\mu}}}{Q_{\rm L_{\mu}}}\frac{d\vec V_{\mu}}{dt} + \omega_{0_{\mu}}^2 \vec V_{\mu} = \frac{\omega_{0_{\mu}}^2 R_{\rm L_{\mu}}}{Q_{\rm L_{\mu}}}\frac{d\vec I_{\mu}}{dt}
@@ -156,7 +156,7 @@ Taking the slowly varying envelope approximation~\cite{ref:svea} and separating 
   \label{eq:1st_order1}
 \end{equation}
 
-where $\omega_{f_{\mu}}=\omega_{0_{\mu}}/2Q_{L_{\mu}}$ is the mode's bandwidth and $\omega_{d_{\mu}}=2\pi\Delta f_{\mu}$ is the (time varying) detune frequency,  , given as $\omega_{d_{\mu}}=\omega_{0_{\mu}}-\omega_{ref}$, {\it i.e.}, the difference between actual eigenmode frequency $\omega_{0_{\mu}}$ and the accelerator's time base $\omega_{ref}$.
+\noindent where $\omega_{f_{\mu}}=\omega_{0_{\mu}}/2Q_{L_{\mu}}$ is the mode's bandwidth and $\omega_{d_{\mu}}=2\pi\Delta f_{\mu}$ is the (time varying) detune frequency,  , given as $\omega_{d_{\mu}}=\omega_{0_{\mu}}-\omega_{ref}$, {\it i.e.}, the difference between actual eigenmode frequency $\omega_{0_{\mu}}$ and the accelerator's time base $\omega_{ref}$.
 
 Transposing the cavity drive term into a combination of the RF source incident wave and beam loading (opposite sign indicating energy absortion by the beam), we can express eq.~\ref{eq:1st_order1} as:
 
@@ -165,7 +165,7 @@ Transposing the cavity drive term into a combination of the RF source incident w
   \label{eq:1st_order2}
 \end{equation}
 
-where $\vec K_{\rm g}$ is the incident wave amplitude in $\sqrt{\rm Watts}$, $R_{\rm g_{\mu}}=Q_{\rm g_{\mu}}(R/Q)_{\mu}$ is the coupling impedance of the drive port, $\vec I_{\rm beam}$ is the beam current, and $R_{\rm b_{\mu}}=Q_{\rm L_{\mu}}(R/Q)_{\mu}$ is the coupling impedance to the beam.
+\noindent where $\vec K_{\rm g}$ is the incident wave amplitude in $\sqrt{\rm Watts}$, $R_{\rm g_{\mu}}=Q_{\rm g_{\mu}}(R/Q)_{\mu}$ is the coupling impedance of the drive port, $\vec I_{\rm beam}$ is the beam current, and $R_{\rm b_{\mu}}=Q_{\rm L_{\mu}}(R/Q)_{\mu}$ is the coupling impedance to the beam.
 
 The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{g_{\mu}}+1/Q_{p_{\mu}}$, where $1/Q_{0_{\mu}}$ represents losses to the cavity walls, $1/Q_{g_{\mu}}$ represents coupling to the input coupler, and $1/Q_{p_{\mu}}$ represents coupling to the field probe. $(R/Q)_{\mu}$ is the shunt impedance of the mode in Ohms, a pure geometry term computable for each particular eigenmode using E\&M codes like Superfish. Physically, shunt impedance relates a mode's stored energy $U_{\mu}$ to the accelerating voltage it produces, according to 
 
@@ -183,7 +183,7 @@ The $\frac{\omega_{d_\mu}}{\omega_{f}}\vec{V}_{\mu}$ term in \ref{eq:1st_order2}
 \label{eq Gov_S}
 \end{equation}
 
-The governing equation for the mode's accelerating voltage can thus be written as a set of two first order differential equations
+\noindent The governing equation for the mode's accelerating voltage can thus be written as a set of two first order differential equations
 
 \begin{equation}
 \frac{d\theta_{\mu}}{dt} = \omega_{d_\mu}
@@ -217,7 +217,7 @@ Note that there are two aspects represented in Fig.~\ref{fig:RF_cavity_block_dia
  \vec K_{\rm g_{rfl}}(s) = \vec K_{\rm g}(s) \cdot TF_{\rm wg}(s)
 \end{equation}
 
-where the minus sign of the reflection on the cavity coupler is represented in the summing junction. This transformation takes into account the propagation of the reflection of the incident wave back to the directional coupler.
+\noindent where the minus sign of the reflection on the cavity coupler is represented in the summing junction. This transformation takes into account the propagation of the reflection of the incident wave back to the directional coupler.
 The cavity probe and reverse path also follow a similar transformation but in this case represented by a phase shift through the coaxial cable from the cavity probe and reverse ports and their respective ADCs in the LLRF. These phase shifts are represented by the $e^{j\varphi_{\rm rev_{\mu}}}$ and $e^{j\varphi_{\rm p_{\mu}}}$ terms in Fig.~\ref{fig:RF_cavity_block_diagram}, which are frequency dependent due to dispersion in the coaxial cable and it is therefore convinient to apply at this stage of the computation (before the summing junction).
 
 The second aspect which has not been covered yet is the numerical discretization of the first-order low-pass filter in the cavity response, represented by the blocks labeled $LPF@\omega_{f_{\mu}}$ in Fig.~\ref{fig:RF_cavity_block_diagram}. The ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equation~\ref{eq: dS_dt} can be written as Equation~\ref{eq:exp_diff2}, where
@@ -226,7 +226,7 @@ The second aspect which has not been covered yet is the numerical discretization
  \vec V_{\rm out} = \vec S_{\mu} \mbox{ , } p = -\omega_f \mbox{ and, } \vec V_{\rm in} = e^{-j\theta_{\mu}} \left(2\vec{K}_g\sqrt{R_{g_{\mu}}} - R_{b_{\mu}}\vec{I}_{\rm beam}\right)
 \end{equation}
 
-as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. 
+\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. 
 
 In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diagram} (couplings, rotations, etc.) combined with the numerical discretization of the cavity filter described in Appendix~\ref{App:ODE_integration} applied every discrete simulation step, we can obtain time-series simulated data representing signal propagation through the multi-cell RF cavity, including the different eigenmodes and dispersion through cables and waveguides.
 
@@ -272,20 +272,27 @@ A Proportional-Integrator (PI) Controller is generally used in RF cavities for p
 \caption{Flow chart of the PI controller}
 \end{figure}
 
-A set point $\vec{E}_{\rm sp}$ is chosen as a target prior to simulation. The error $e(t)$ is defined as the set point value minus the current $\vec{E}_{\rm probe}$ value. 
+A set point $\vec{E}_{\rm sp}$ is chosen as a target prior to simulation. The error $e(t)$ is defined as the set point value minus the current $\vec{E}_{\rm probe}$ value:
 
 \be
 e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 \ee
 
-This error is passed onto a proportional and integral gain, with respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the incident wave amplitude $\vec{K}_{g}$ is altered according to: 
+\noindent This error is passed onto a proportional and integral gain, with respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the incident wave amplitude $\vec{K}_{g}$ is altered according to: 
 \be \label{eq: controller}
 \vec{K}_{g} = k_{p} e(t) + k_{i} \int_{\tau_{0}}^{t} e(t) d\tau
 \ee
 
-This new $\vec{K}_{g}$ value is sent to the cavity.
+\noindent This new $\vec{K}_{g}$ value is sent to the cavity.
 
 \subsubsection{Software implementation}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.35]{../figures/fpga_unit_test.png}
+\caption{FPGA unit test.}
+\label{fig:fpga_unit_test}
+\end{figure}
 
 In order to implement the PI controller in software, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below. 
 \be
@@ -299,7 +306,7 @@ There are many ways to evaluate this integral. Most commonly utilized are right-
 		      + f(\tau_{n-1}) + \frac{f(\tau_{n})}{2}\right]
 \ee
 
-where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following: 
+\noindent where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following: 
 
 \be
 k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
@@ -307,15 +314,23 @@ k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
 		+ e^{n-1} + \frac{e^{n}}{2} \right]
 \ee
 
+\noindent where again the superscript notation indicates the time step. 
 
-where again the superscript notation indicates the time step. 
-
-So the overall update for $\vec{K}_{g}$ goes as
+The overall update for $\vec{K}_{g}$ can then be expressed as:
 \be \label{eq: controller_dis}
 \vec{K}_{g}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
 \ee
 
+Fig.~\ref{fig:fpga_unit_test} shows the result of a unit tests performed using the software implementation of eq.~\ref{eq: controller_dis}. The input signal and set-point are initially set to 0 and the FPGA routine is excercised individually, in absence of a plant or feedback loop. After 0.1 seconds of simulation, a step is introduced in the set-point (going from 0 to 1) and the drive signal is analyzed. Before any error signal is present in the integrator state, the drive signal is modulated by the set-point by a factor of $k_{\rm p}$. From that point the integrator behaviour can be observed, where the slope of the drive signal is given by $k_{\rm i}$. The settings and the measured values of the controller constants are indicated in Fig.~\ref{fig:fpga_unit_test}. 
+
 \subsection{Amplifier}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.35]{../figures/saturation_test.png}
+\caption{Amplifier saturation test.}
+\label{fig:saturation_test}
+\end{figure}
 
 Triode clipping is described with a harshness parameter c, such that the output signal v o from the tube based on its input vi varies according to
 
@@ -325,6 +340,22 @@ Triode clipping is described with a harshness parameter c, such that the output 
 
 The saturated output amplitude from this equation is 1. While some phase shift with drive level is observed, this effect is not yet included in the model. When c = 5, as provides a decent fit to measurements shown in figure 3, it takes about 1.5 (unitless) drive level from the control system to reach 97.5\% of this amplitude, 95\% of the power. This level should correspond to full scale digital output.
 
+\subsection{Phase Shifter}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.315]{../figures/phase_shift_test.png}
+\caption{Phase shift test.}
+\label{fig:phase_shfiter_test}
+\end{figure}
+
+Phase shifts are encountered at several stages of the model. A phase shifter module (not necessarily explicitly represented in block diagrams) is present in the software implemention and performs a phase shift of an input signal by an angle $\theta$ according to:
+
+\begin{equation}
+  \vec V_{\rm out} = \vec V_{\rm in} \cdot e^{j\theta}
+\end{equation}
+
+Fig.~\ref{fig:phase_shfiter_test} shows results of a unit tests performed on the phase shifter, where a sample signal is shifted by different angles and the phase differences are measured and compared with the phase angle parameter provided to the phase shifter software routine.
 
 \subsection{LLRF Noise}
 
@@ -348,7 +379,7 @@ The total normalized noise power in a bandwidth $B$ is then
   \label{eq:PSD_to_noise}
 \end{equation}
 
-If we use $1\thinspace\mu s$ simulation steps ($\Delta t_{sim}$):
+\noindent If we use $1\thinspace\mu s$ simulation steps ($\Delta t_{sim}$):
 \begin{equation}
   \centering B = \frac{1}{2} \cdot \frac{1}{\Delta t_{\rm sim}}=\frac{1}{2} \cdot 1\thinspace {\rm MHz} = 500\thinspace {\rm kHz}
 \end{equation}
@@ -358,7 +389,7 @@ LLRF systems typically sample the cavity field faster than 1\thinspace MHz. Taki
   \centering B = \frac{1}{2} \cdot f_S \cdot \frac{1}{n} = \frac{1}{2} \cdot 100\thinspace{\rm MHz} \cdot \frac{1}{100} = 500\thinspace{\rm kHz}
 \end{equation}
 
-This means that we can use the simulation step to calculate the bandwidth, independent of the actual sampling rate.  While the choice of the latter has important practical implications, it doesn't affect the noise performance at this abstract level.
+\noindent This means that we can use the simulation step to calculate the bandwidth, independent of the actual sampling rate.  While the choice of the latter has important practical implications, it doesn't affect the noise performance at this abstract level.
 
 Once we know the bandwidth, we can obtain LLRF noise from the PSD using Eq.~\eqref{eq:PSD_to_noise}, which can be expressed as:
 \begin{equation}
@@ -444,7 +475,7 @@ F_\nu = \sum_\mu A_{\nu\mu} V_\mu^2 + \sum_\kappa B_{\nu\kappa}V_\kappa
 \omega_\mu = \sum_\nu C_{\mu\nu} x_\nu~~~,
 \end{equation}
 
-where $A$, $B$, and $C$ are constant matrices.
+\noindent where $A$, $B$, and $C$ are constant matrices.
 
 These expressions are understood to apply at every time instant; the quantities $V$, $F$, $x$, and $\omega$ all vary with time. The differential equation governing the dynamics of each mechanical eigenmode is that of a textbook second order low-pass filter.  In Laplace form,
 
@@ -452,7 +483,7 @@ These expressions are understood to apply at every time instant; the quantities 
 k_\nu x_\nu = \frac{F_\nu}{ \displaystyle 1 + \frac{1}{Q_\nu}\frac{s}{\omega_\nu} + \left(\frac{s}{\omega_\nu}\right)^2}~~~,
 \end{equation}
 
-where $k_\nu$ is the spring constant. For computational purposes, we want it expressed in terms of the state-space formulation
+\noindent where $k_\nu$ is the spring constant. For computational purposes, we want it expressed in terms of the state-space formulation
 
 \begin{equation}
 \frac{d}{dt} \begin{pmatrix}
@@ -474,7 +505,7 @@ where $k_\nu$ is the spring constant. For computational purposes, we want it exp
 \label{eq: state_space}
 \end{equation}
 
-where a scaled velocity coordinate $y_{\nu}$ has been introduced. Convert the latter equation to Laplace form and solve to get
+\noindent where a scaled velocity coordinate $y_{\nu}$ has been introduced. Convert the latter equation to Laplace form and solve to get
 
 \begin{equation}
   \begin{pmatrix}
@@ -493,13 +524,13 @@ where a scaled velocity coordinate $y_{\nu}$ has been introduced. Convert the la
   \end{pmatrix}
 \end{equation}
 
-Analytically invert that $2\times 2$ matrix, and multiply out to get
+\noindent Analytically invert that $2\times 2$ matrix, and multiply out to get
 
 \begin{equation}
 x_{\nu} = \frac{-b_{\nu}c_{\nu}F_{\nu}}{ (a_{\nu}-s)^2 + b_{\nu}^2}~~~.
 \end{equation}
 
-Equate coefficients with the earlier low-pass filter form, in the case $Q > \frac{1}{2}$, to get
+\noindent Equate coefficients with the earlier low-pass filter form, in the case $Q > \frac{1}{2}$, to get
 
 \begin{equation}
 a_{\nu}\pm jb_{\nu} = \omega_{\nu}\left( \frac{-1}{2Q_{\nu}} \pm j\sqrt{1-\frac{1}{4Q_{\nu}^2}}\right)
@@ -524,25 +555,25 @@ Suppose a mechanical eigenmode $\nu$ involves small deflections $x_{\nu}\cdot \v
    \vec n(\vec r) \cdot \vec\xi(\vec r) dS ~~~,
 \end{equation}
 
-where $\vec n(\vec r)$ is the normal vector to the cavity surface $S$, and $F_{\mu}$ directly gives the force. Note in particular the subtraction of $E$ and $H$ terms, contrasted with the addition in the energy integral.  Also notice the dot product of the deflection shape with the surface normal.  Then
+\noindent where $\vec n(\vec r)$ is the normal vector to the cavity surface $S$, and $F_{\mu}$ directly gives the force. Note in particular the subtraction of $E$ and $H$ terms, contrasted with the addition in the energy integral.  Also notice the dot product of the deflection shape with the surface normal.  Then
 
 \begin{equation}
 \Delta\omega_{\mu} = -x\omega_{0_{\mu}} \left(\frac{F}{U}\right)_{\mu}
 \end{equation}
 
-and
+\noindent and
 
 \begin{equation}
 F_{\mu} = \left(\frac{F}{U}\right)_{\mu} \cdot \frac{1}{(R/Q)_{\mu}\omega_{0_{\mu}}}  V_{\mu}^2~~~,
 \end{equation}
 
-where $\left(F/U\right)_{\mu}$ is a property of the electrical eigenmode, independent of amplitude, with units of~\hbox{m$^{-1}$}. Thus 
+\noindent where $\left(F/U\right)_{\mu}$ is a property of the electrical eigenmode, independent of amplitude, with units of~\hbox{m$^{-1}$}. Thus 
 
 \begin{equation}
 A_{\nu\mu} = \left(\frac{F}{U}\right)_{\mu} \cdot \frac{1}{(R/Q)_{\mu}\omega_{0_{\mu}}}~~~,
 \end{equation}
 
-and 
+\noindent and 
 
 \begin{equation}
 C_{\mu\nu} = -\omega_{0_{\mu}} \left(\frac{F}{U}\right)_{\mu}
@@ -554,7 +585,7 @@ Slater's analysis above lets us express the static Lorentz response as
  \left(\frac{\Delta \omega}{ V^2}\right)_{\nu \mu} = \frac{C_{\mu\nu} A_{\nu\mu}}{ k_\nu} = - \left(\frac{F}{U}\right)_{\mu}^2 \cdot \frac{1}{k_\nu (R/Q)_{\mu}}
 \end{equation}
 
-correctly showing that this constant is always negative: the mode's static resonant frequency gets lower as it is filled. Summing over all mechanical modes $\nu$ gives the total DC response, often quoted in units of \hbox{Hz/(MV/m)$^2$}.
+\noindent correctly showing that this constant is always negative: the mode's static resonant frequency gets lower as it is filled. Summing over all mechanical modes $\nu$ gives the total DC response, often quoted in units of \hbox{Hz/(MV/m)$^2$}.
 
 Using electrical measurements alone, it's not possible to constrain the scaling of $x_\nu$. It is therefore helpful to rescale $x_\nu$ and $F_\nu$ each by a factor of $\sqrt{k_\nu}$, and eliminate $k_\nu$ from the equations.  Instead of conventional units (m and N) for $x$ and $F$, they now both have units of $\sqrt{\rm Joules}$, so that $x\cdot F$ still represents energy. In this rescaled no-$k$ case,
 
@@ -700,7 +731,7 @@ Start with the first order differential equation for a single-pole low pass filt
  TF(s)=\frac{\vec V_{\rm out}(s)}{\vec V_{\rm in}(s)} = \frac{1}{s-p}
 \end{equation}
 
-where $\vec V_{\rm in}$ and $\vec V_{\rm out}$ are the input and output signals, and $p$ is the pole location. Make the differentiation explicit, and rearrange to get a form consistent with state-variable numerical ODE integration,
+\noindent where $\vec V_{\rm in}$ and $\vec V_{\rm out}$ are the input and output signals, and $p$ is the pole location. Make the differentiation explicit, and rearrange to get a form consistent with state-variable numerical ODE integration,
 
 \begin{equation}
  \frac{d\vec V_{\rm out}(t)}{dt} = \vec V_{\rm in}(t) + p\cdot \vec V_{\rm out}(t)
@@ -713,7 +744,7 @@ The simplest expression for a 'next' value at step $n$ in a discrete time \emph{
  \vec V_{\rm out}^n = \left( 1 + \Delta t \cdot p\right) \vec V_{\rm out}^{n-1} + \Delta t \cdot V_{\rm in}^n
 \end{equation}
 
-To improve convergence properties in the case where $\Delta t \cdot p$ is not tiny, approximate the trajectory of $\vec V_{\rm in}$ and $\vec V_{\rm out}$ as linear within a single time step. Specifically, assume that $\vec V_{\rm out}$ changes from $\vec V_{\rm out}^{n-1}$ to $\vec V_{\rm out}^n$, and $\vec V_{\rm in}$ changes from $\vec V_{\rm in}^{n-1}$ to $\vec V_{\rm in}^n$.
+\noindent To improve convergence properties in the case where $\Delta t \cdot p$ is not tiny, approximate the trajectory of $\vec V_{\rm in}$ and $\vec V_{\rm out}$ as linear within a single time step. Specifically, assume that $\vec V_{\rm out}$ changes from $\vec V_{\rm out}^{n-1}$ to $\vec V_{\rm out}^n$, and $\vec V_{\rm in}$ changes from $\vec V_{\rm in}^{n-1}$ to $\vec V_{\rm in}^n$.
 
 Using what is essentially the Trapezoidal Formula~\cite{ref:trapezoid}, our rendition of the discrete time approximation to the above differential equation becomes
 
@@ -725,7 +756,7 @@ Using what is essentially the Trapezoidal Formula~\cite{ref:trapezoid}, our rend
 	\nonumber \mbox{where} \quad a=\frac{1+ \frac{1}{2} \Delta t \cdot p}{1-\frac{1}{2}\Delta t \cdot p}, \quad \mbox{and} \quad b=\frac{\Delta t}{1-\frac{1}{2}\Delta t \cdot p}
 \end{eqnarray}
 
-$\Delta t$ is the simulation step duration, and $p$ is the pole location (a complex number). Cavity detuning is represented by a slight pole shifting into the imaginary direction.
+\noindent $\Delta t$ is the simulation step duration, and $p$ is the pole location (a complex number). Cavity detuning is represented by a slight pole shifting into the imaginary direction.
 
 In order to preserve scaling and have unity gain at DC, Eq.~\ref{eq:exp_diff} needs to be scaled by a factore of p, such that
 
@@ -734,7 +765,7 @@ In order to preserve scaling and have unity gain at DC, Eq.~\ref{eq:exp_diff} ne
 \label{eq:exp_diff2}
 \end{equation}
 
-which is equivalent to scaling $\vec V_{\rm out}^n$ by a factor of $|p|$ in the software implementation.
+\noindent which is equivalent to scaling $\vec V_{\rm out}^n$ by a factor of $|p|$ in the software implementation.
 
 This process is coded in C, and tested using a two-pole ow pass Butterworth filter. Given the transfer function $1/((s+1)^2+1)$, which has poles at (-1+1j) and (-1-1j), 
 the step response is $1 - e^{-t} (\sin x + \cos x)$, for $t > 0$. This analytically known response is plotted in Fig.~\ref{fig:filter_step_response} along with the response obtained using the numerical model.
