@@ -1,0 +1,149 @@
+{
+    "c": 2.99792458E8,
+    "pi": 3.141592653589793,
+    "Qe": 1.602177E-19,
+    "mu0": "(4*pi)*1e-7",
+
+    "f0": 1300e6,
+    "lam_beam": "c/f0",
+
+    "Z0_real":"mu0*c",
+    "Z0": "120*pi",
+
+	"d_Amplifier": {
+        "type":"filter",
+	    "name":"Amplifier",
+
+	    "PAmax" : {
+            "value": 6e3,
+            "units": "W",
+            "description": "RF amplifier maximum power"
+        },
+        "PAbw" : {
+            "value": 1.5e6,
+            "units": "Hz",
+            "description": "Power amplifier bandwidth"
+        },
+        "Clip" : {
+            "value": 5,
+            "units": "",
+            "description": "Clipping harshness parameter"
+        }
+    },
+
+    "d_adc": {
+        "type":"adc",
+        "name":"ADC",
+
+	    "adc_max" : {
+			"value": 0.0,
+			"units": "sqrt(W)",
+			"description": ""
+		},
+        "prompt_phase":
+        {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Phase shift for prompt coupling between Amplifier and ADC"
+        },
+        "adc_off" : {
+			"value": 0,
+			"units": "",
+			"description" : ""
+        },
+        "psd_llrf": {
+            "value": "10**(-13.5)",
+            "units": "",
+            "description": ""
+        }
+
+    },
+
+    "d_RXF": {
+        "type":"filter",
+        "name":"RXF",
+        "order": {
+            "value": 3,
+            "units": "",
+            "description": ""
+	    },
+	    "nmodes": {
+            "value": [1,1,1],
+            "units": "",
+            "description": ""
+	    },
+	    "poles": {
+            "value": [["-18+0j"],["-9.5+15j"],["-9.5-15j"]],
+            "units": "",
+            "description": ""
+	    }
+	},
+
+    "d_Controller": {
+        "type":"PI_CONT",
+		"name":"PI control",
+		"stable_gbw": {
+			"value": 50e3,
+			"units": "",
+			"description": ""
+		}
+	},
+
+	"d_Cavity": {
+        "type": "Cavity",
+        "name": "Cavity",
+
+        "L": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Length"
+        },
+        "nomgrad": {
+            "value": 16.301e6,
+            "units": "V/m",
+            "description": "Nominal gradient"
+        },
+
+        "elec_modes" : ["d_ElecMode"]
+    },
+
+    "d_Chicane": {
+        "type": "chicane",
+        "name": "chicane1",
+        "R56": {
+            "value": 0.0,
+            "units": "",
+            "description": ""
+	    },
+	    "T566": {
+            "value": 0.0,
+            "units": "",
+            "description": ""
+	    }
+	},
+
+    "d_Gun": {
+        "type": "gun",
+        "name":"d_Gun",
+        "Q": {
+            "value": -3.0E-10,
+            "units": "",
+            "description": ""
+        },
+        "sz0": {
+            "value": 0.548,
+            "units": "",
+            "description": ""
+        },
+        "sd0": {
+            "value": 0.0,
+            "units": "",
+            "description": ""
+        },
+        "E": {
+            "value": 0.00075,
+            "units": "",
+            "description": ""
+        }
+    }
+}

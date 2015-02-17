@@ -1,0 +1,12 @@
+{
+
+        "Simulation":{
+                "Tstep": {
+                        "value": 1e-6
+                }
+        },
+
+ 		"Cavity0": {
+        	"elec_mode_connect" : ["ElecMode0", "ElecMode1", "ElecMode2"]
+ 		}
+}

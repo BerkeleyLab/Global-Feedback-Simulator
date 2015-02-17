@@ -1,0 +1,17 @@
+{
+    "Simulation":{
+    	"Tstep": {
+        	"value": 1e-6
+        }
+    },
+
+ 	"Cavity0": {
+    	"elec_mode_connect" : ["ElecMode2"]
+ 	},
+ 	
+ 	"ElecMode2": {
+ 		"foffset": {
+           	"value": 0.0
+    	}
+    }
+}
