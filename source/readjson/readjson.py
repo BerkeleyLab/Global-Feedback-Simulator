@@ -1,6 +1,6 @@
 import re
-   
-def jsontodict(filename, defaultfile="default.cfg", Verbose=False):
+
+def jsontodict(filename, defaultfile="default.json", Verbose=False):
     #
     #a little helper routine for reading in a json file and a optionally
     # a default file and return a python dictionary
@@ -21,37 +21,24 @@ def jsontodict(filename, defaultfile="default.cfg", Verbose=False):
         print "No default parameters read"
         print str(e)
         a={}
-    
+
     #add the new to the defualt overwriteing changed defualt values
     a.update(nondefault)
 
     return a
 
 
-def readentry(dictin,entry,localdic=None, safedic={}):
-#Daniel Driver
-#Alejandro Quiruga
-#LBL 2013
-
 #function the recursive read and evaluate the entries in a dictionaty
+def readentry(dictin,entry,localdic=None, safedic={}):
 
 #inputs-
-    #dictin : dicitionary to be searched if entry cannot be
-    #         evaluated
-    #entry : the dicitionary value you would like to get
-    #localdic: optional input to pass perviously found
-    #          dictionary entrys down the recursive chain
- 
+    # dictin :   dicitionary to be searched if entry cannot be evaluated
+    # entry :    the dicitionary value you would like to get
+    # localdic:  optional input to pass perviously found dictionary entrys down the recursive chain
+
 #outputs-
-    #value of entry is return as float if is can be evaluated using the
-    #       in the dicitonary and otherwise it returns the string
-
-
-#
-# TODO: Insert license
-#
-
-
+    # value of entry is return as float if is can be evaluated using the
+    # in the dicitonary and otherwise it returns the string
 
     #replace localdic with an empty dictionary in nothing passed
     if localdic is None:
@@ -59,17 +46,16 @@ def readentry(dictin,entry,localdic=None, safedic={}):
 
     #try to evluate the entry to interest
     try:
-       
         out=eval(str(entry),{},safedic)
         if isinstance(out,str) or isinstance(out,int) or isinstance(out, unicode):
             out = float(out)
         elif isinstance(out,list):
             out = [float(x) if isinstance(x,int) or isinstance(x,str) or isinstance(x,unicode) else x for x in out]
-    
-    #if the entry can not be evaluated look at error to get missing entry     
-    except NameError as e: 
+
+    #if the entry can not be evaluated look at error to get missing entry
+    except NameError as e:
         #pull out the missing variable from the expression
-        name=str(e).split("'")[1] 
+        name=str(e).split("'")[1]
         print 'Looking for {0}'.format(name)
 
         #search the dictionary for the entry
@@ -83,15 +69,15 @@ def readentry(dictin,entry,localdic=None, safedic={}):
                 print '{0} has no numeric evaluation in dictionary'.format(name)
                 newentry = str(name)
 
-        safedic[name]=readentry(dictin,newentry,None,localdic) 
+        safedic[name]=readentry(dictin,newentry,None,localdic)
         out=readentry(dictin,entry,localdic,safedic)
 
         #except Exception:
             #go down the dictionary until a value cannot be found
             #print out what value is missing and return failed entry
             #print '{0} has no numeric evaluation in dictionary'.format(name)
-            #out = entry   
-   
+            #out = entry
+
     except TypeError as e:
         print 'Oops! TypeError: ' + str(e)
         return entry
@@ -101,14 +87,14 @@ def readentry(dictin,entry,localdic=None, safedic={}):
 #
 # Build a dictionary from a list of files
 #
-def ReadDict(files):
+def ReadDict(files, Verbose=True):
     import json
     if(type(files)==str):
         files = [files]
     masterdict = {}
     for fname in files:
         #
-        # See if the filename is actually a dictionary 
+        # See if the filename is actually a dictionary
         # passed in through the command line.
         #
         if re.match("^{.*}$",fname):
@@ -122,15 +108,15 @@ def ReadDict(files):
         #
         try:
             includes = fdic['#include']
-            print "INCLUDING THESE FILES: ",includes
+            if Verbose: print "INCLUDING THESE FILES: ",includes
             incdict = ReadDict(includes)
             masterdict.update(incdict)
         except:
-            print "No #include found... continuing"
-        print "Loading ",fname,"..."
+            # print "No #include found... continuing"
+            pass
+        if Verbose: print "Loading ",fname,"..."
         OverlayDict(masterdict,fdic)
         #print masterdict
-        
     return masterdict
 
 #

@@ -1,259 +1,947 @@
-import linac
-from readjson import *
+#!/usr/bin/python
 
-def readgun(a,Verbose=False):
-    #get the name of the gun object, return defualt if not found
-    GUN=a["Accelerator"].get("Gun","d_Gun")
-    if(Verbose):
-        print "reading linac called {0}".format(a[GUN]["name"])
-    
-    #update the gun object with accelerator specific values
-    a[GUN]=dict(a['d_Gun'].items()+a[GUN].items())
+#
+# Accelerator-specific configuration file:
+#    Defines all the Python classes involved in the simulation.
+#    Parses configuration information from a dictionary and instantiates Python objects with the configuration values.
+#
+# Classes defined:
+#   Simulation
+#   Accelerator
+#   Cavity
+#   ElecMode
+#   MechMode
+#   Piezo
+#
+# Call the readConfiguration function in order to get a full collection of instances for a simulation run.
+#
+# readjson_accelerator.py
+#
 
-    #read gun output properties
-    E=readentry(a,a[GUN]["E"])*1e9       #[GeV]->[Ev]
-    sz0=readentry(a,a[GUN]["sz0"])*1e-3  #[mm]->[m]
-    sd0=readentry(a,a[GUN]["sd0"])*1e-2  #[%]->fraction 
-    Q=readentry(a,a[GUN]["Q"])
+from readjson import readentry
+from math import pi
 
-    #create and load the c array
-    gun=linac.Gun_Param()
-    linac.Gun_Config(gun,
-                     E,sz0,sd0,Q)
-    return gun, E
+# Define Simulation time step as global
+Tstep_global = 0.0
 
-def readlinac(a,linac_key,Elast,Verbose=False):
-    #routine intializes the c data structures for a linac,
-    #reads all the parameters out of the dictionary(subsituting defualts)
-    #and inserts the values into the c data structures using the 
-    #Linac_Config routine which can be found in linac_param.c
+class Simulation:
+    """ Simulation class: contains parameters specific to a simulation run"""
 
-    from numpy import pi
-    if(Verbose):
-        print "reading linac called {0}".format(a[linac_key]['name'])
-    
-    #read in default blocks to use in linac and overwrite if 
-    #run specific object given
-    a[linac_key]=dict(a['d_linac'].items()+a[linac_key].items()) 
-    
-    #pull out object names (step is for convienence)
-    TRF1=a[linac_key]["TRF1"]
-    CLIP=a[linac_key]["CLIP"]
-    TRF2=a[linac_key]["TRF2"]
-    CAV=a[linac_key]["CAV"]
-    RXF=a[linac_key]["RXF"]
-    CHIC=a[linac_key]["Chicane"]
-    CONT=a[linac_key]["Controller"]
+    def __init__(self, name, comp_type, Tstep, time_steps, nyquist_sign, synthesis):
+        self.name = name
+        self.type = comp_type
+        self.Tstep = Tstep
+        self.time_steps = time_steps
+        self.nyquist_sign = nyquist_sign
+        self.synthesis = synthesis
+
+        # Assign Tstep to the global variable
+        global Tstep_global
+        Tstep_global = Tstep['value']
+
+    def __str__ (self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Simulation Object--\n"
+         + "name: " + self.name  + "\n"
+         + "type: " + self.type  + "\n"
+         + "Tstep: " + str(self.Tstep) + "\n"
+         + "time_steps: " + str(self.time_steps) + "\n"
+         + "nyquist_sign: " + str(self.nyquist_sign) + "\n"
+         + "synthesis: " + str(self.synthesis) + "\n")
+
+def readSimulation(confDict):
+    """ readSimulation: Takes the global configuration dictionary and
+    returns a Simulation object with the configuration values filled in"""
+
+    # Read name and component type (strings, no need to go through readentry)
+    name = confDict["Simulation"]["name"]
+    comp_type = confDict["Simulation"]["type"]
+
+    # Read rest of configuration parameters
+    Tstep = readentry(confDict, confDict["Simulation"]["Tstep"])
+    time_steps = readentry(confDict, confDict["Simulation"]["time_steps"])
+    nyquist_sign = readentry(confDict,confDict["Simulation"]["nyquist_sign"])
+
+    # Check if simulation dictionary has a Synthesis entry, and if so parse it
+    if confDict["Simulation"].has_key("Synthesis"):
+        synthesis = readSynthesis(confDict["Simulation"])
+    else:
+        synthesis = None
+
+    # Instantiate Simulation object and return
+    simulation = Simulation(name, comp_type, Tstep, time_steps, nyquist_sign, synthesis)
+
+    return simulation
+
+class Synthesis:
+    """ Synthesis class: contains parameters specific to a Synthesis run.
+    The parameters in this class are not run-time configurable. They therefore
+    need to mirror the synthesizable Verilog and are used to compute FPGA
+    register settings.
+    """
+
+    def __init__(self, name, comp_type, n_mech_modes, df_scale):
+        self.name = name
+        self.type = comp_type
+        self.n_mech_modes = n_mech_modes
+        self.df_scale = df_scale
+
+    def __str__ (self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Synthesis Object--\n"
+         + "name: " + self.name  + "\n"
+         + "type: " + self.type  + "\n"
+         + "n_mech_modes: " + str(self.n_mech_modes) + "\n"
+         + "df_scale: " + str(self.df_scale) + "\n")
+
+def readSynthesis(simDict):
+    """ readSynthesis: Takes the global configuration dictionary and
+    returns a Synthesis object with the configuration values filled in"""
+
+    # Read name and component type (strings, no need to go through readentry)
+    name = simDict["Synthesis"]["name"]
+    comp_type = simDict["Synthesis"]["type"]
+
+    # Read rest of configuration parameters
+    n_mech_modes = readentry(simDict, simDict["Synthesis"]["n_mech_modes"])
+    df_scale = readentry(simDict, simDict["Synthesis"]["df_scale"])
+
+    # Instantiate Synthesis object and return
+    synthesis = Synthesis(name, comp_type, n_mech_modes, df_scale)
+
+    return synthesis
+
+class Cavity:
+    """ Cavity class: contains parameters specific to a cavity,
+            including a nested list of electrical modes"""
+    def __init__(self, name, comp_type, param_dic, elec_modes):
+        """ Cavity constructor:
+            Inputs:
+                name: Cavity instance name,
+                comp_type: component type (Cavity),
+                param_dic: dictionary containing all the Cavity parameters.
+                elec_modes: list of ElecMode objects (one per electrical mode).
+            Output: Cavity object."""
+
+        # Name and component type (strings, no need to go through readentry)
+        self.name = name
+        self.type = comp_type
+
+        # Rest of configuration parameters
+        self.L = param_dic["L"]
+        self.nom_grad = param_dic["nom_grad"]
+        self.nom_beam_phase = param_dic["nom_beam_phase"]
+        self.rf_phase = param_dic["rf_phase"]
+        self.design_voltage = param_dic["design_voltage"]
+        self.unity_voltage = param_dic["unity_voltage"]
+
+        # List of electrical mode (ElecMode) instances (objects)
+        self.elec_modes = elec_modes
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Cavity Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "L: " + str(self.L) + "\n"
+        + "nom_grad: " + str(self.nom_grad) + "\n"
+        + "nom_beam_phase: " + str(self.nom_beam_phase) + "\n"
+        + "rf_phase: " + str(self.rf_phase) + "\n"
+        + "design_voltage: " + str(self.design_voltage) + "\n"
+        + "unity_voltage: " + str(self.unity_voltage) + "\n"
+        + "electrical modes: " + '\n'.join(str(x) for x in self.elec_modes))
+
+    def Configure_C(self):
+        import accelerator as acc
+        # First count number of Electrical Modes and Allocate Array
+        n_modes = len(self.elec_modes) 
+        elecMode_net = acc.ElecMode_Allocate_Array(n_modes)
+
+        # Allocate each Electrical Mode and append it to the elecMode_net
+        for idx, mode in enumerate(self.elec_modes):
+            elecMode = acc.ElecMode_Allocate_New(mode.RoverQ['value'], \
+                mode.foffset['value'], mode.omega_0_mode['value'], \
+                mode.Q_0['value'], mode.Q_drive['value'], mode.Q_probe['value'], \
+                self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], 
+                Tstep_global)
+
+            acc.ElecMode_Append(elecMode_net, elecMode, idx)
+
+        # Find the fundamental mode based on coupling to the beam
+        ## Criterium here is that the fundamental mode is defined as that with the highest shunt impedance (R/Q)
         
-    #read in defaults and replace with run specific values
-    a[TRF1]=dict(a['d_TRF1'].items()+a[TRF1].items())
-    a[CLIP]=dict(a['d_CLIP'].items()+a[CLIP].items())  
-    a[TRF2]=dict(a['d_TRF2'].items()+a[TRF2].items())
-    a[CAV]=dict(a['d_CAV'].items()+a[CAV].items())
-    a[CHIC]=dict(a['d_Chicane'].items()+a[CHIC].items()) 
-    a[RXF]=dict(a['d_RXF'].items()+a[RXF].items())
-    a[CONT]=dict(a['d_Controller'].items()+a[CONT].items())
+        # Sort the list of Electrical Mode order in descending order of (R/Q)s
+        self.elec_modes.sort(key=lambda x : x.RoverQ['value'], reverse=True)
+        # Claim the fundamental w0 and Q_L
+        fund_w0 = self.elec_modes[0].omega_0_mode['value']
+        fund_Q_L = 1/(1/self.elec_modes[0].Q_0['value'] + 1/self.elec_modes[0].Q_drive['value'] + 1/self.elec_modes[0].Q_probe['value'])
+
+        # Define the cavity's open-loop bandwidth as that of the fundamental mode
+        open_loop_bw = fund_w0/(2.0*fund_Q_L);
+
+        L = self.L['value']
+        nom_grad = self.nom_grad['value']
+        nom_beam_phase = self.nom_beam_phase['value']
+        rf_phase = self.rf_phase['value']
+        design_voltage = self.design_voltage['value']
+        unity_voltage = self.unity_voltage['value']
+
+        # Get a C-pointer to a Cavity structure
+        cavity = acc.Cavity_Allocate_New(elecMode_net, n_modes, L, nom_grad, \
+            nom_beam_phase, rf_phase, design_voltage, unity_voltage, \
+            open_loop_bw)
+
+        cavity_state = acc.Cavity_State()
+        acc.Cavity_State_Allocate(cavity_state, cavity)
+
+        return cavity, cavity_state
+
+class ElecMode:
+    def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_dic):
+        """ ElecMode class: contains parameters specific to an electrical mode,
+            including a dictionary specifying the mechanical couplings.
+            Note the absence of a readElecMode method, the process for parsing
+            the global configuration dictionary and creating ElecMode objects
+            is done recursively in Cavity.readCavity(...)"""
+
+        self.name = name
+        self.type = comp_type
+        self.mode_name = mode_name
+
+        self.RoverQ = param_dic["RoverQ"]
+        self.foffset = param_dic["foffset"]
+        self.peakV = param_dic["peakV"]
+        self.Q_0 = param_dic["Q_0"]
+        self.Q_drive = param_dic["Q_drive"]
+        self.Q_probe = param_dic["Q_probe"]
+        self.phase_rev = param_dic["phase_rev"]
+        self.phase_probe = param_dic["phase_probe"]
+        ## Add (replicate) a parameter that will be filled after object instance
+        self.omega_0_mode = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
+
+        self.mech_couplings_dic = mech_couplings_dic
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--ElecMode Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "mode_name: " + str(self.mode_name) + "\n"
+        + "RoverQ: " + str(self.RoverQ) + "\n"
+        + "foffset: " + str(self.foffset) + "\n"
+        + "peakV: " + str(self.peakV) + "\n"
+        + "Q_0: " + str(self.Q_0) + "\n"
+        + "Q_drive: " + str(self.Q_drive) + "\n"
+        + "Q_probe: " + str(self.Q_probe) + "\n"
+        + "phase_rev: " + str(self.phase_rev) + "\n"
+        + "phase_probe: " + str(self.phase_probe) + "\n"
+        + "mech_couplings_dic: " + str(self.mech_couplings_dic))
+
+class MechMode:
+    """ MechMode class: contains parameters specific to a mechanical mode.
+        Information concerning couplings with electrical modes and Piezos is
+        contained in ElecMode and Piezo objects respectively."""
+
+    def __init__(self, name, comp_type, param_dic):
+        self.name = name
+        self.type = comp_type
+
+        self.f0 = param_dic["f0"]
+        self.Q = param_dic["Q"]
+        self.full_scale= param_dic["full_scale"]
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--MechMode Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "f0: " + str(self.f0) + "\n"
+        + "Q: " + str(self.Q) + "\n"
+        + "full_scale: " + str(self.full_scale) + "\n")
+
+class Piezo:
+    """ Piezo class: contains couplings between the Piezo and each
+    one of the mechanical modes (MechMode instances)."""
+
+    def __init__(self, name, comp_type, mech_couplings_dic, VPmax):
+        self.name = name
+        self.type = comp_type
+
+        self.VPmax = VPmax
+        self.mech_couplings_dic = mech_couplings_dic
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Piezo Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "VPmax: " + str(self.VPmax) + "\n"
+        + "mech_couplings_dic: " + str(self.mech_couplings_dic))
+
+def readMechMode(confDict, mech_mode_entry):
+    """ readMechMode: Takes the global configuration dictionary and
+    returns a MechMode object with the configuration values filled in
+    Inputs:
+        confDict: Global configuration dictionary,
+        mech_mode_entry: Name of the mechanical mode to be read (string)
+    Output:
+        mech_mode: MechMode object"""
+
+    # Read name and component type
+    name = confDict[mech_mode_entry]['name']
+    comp_type = confDict[mech_mode_entry]['type']
+
+    # Read the rest of the configuration parameters and store in a dictionary
+    param_dic = {}
+
+    param_dic["f0"] = readentry(confDict,confDict[mech_mode_entry]["f0"])
+    param_dic["Q"] = readentry(confDict,confDict[mech_mode_entry]["Q"])
+    param_dic["full_scale"] = readentry(confDict,confDict[mech_mode_entry]["full_scale"])
+
+    # Create and return a mechanical mode (MechMode) instance
+    mech_mode = MechMode(name, comp_type, param_dic)
+
+    return mech_mode
+
+def readCouplings(confDict, mech_couplings, module_entry):
+    """ readCouplings: Takes the global configuration dictionary and a dictionary containing non-zero
+    values for the mechanical couplings (i.e. coupling between electrical modes or piezos and mechanical modes).
+    The module_entry input is necessary in order to access the proper module's mechanical mode list.
+    The length of the coupling vector used in the simulation code must be equal to the number of mechanical modes (M).
+    The mech_couplings input is supposed to contain non-zero values from the configuration file,
+    and readCouplings always returns a dictionary of M elements, where the couplings not specified in
+    the input file are filled with 0s.
+    Inputs:
+        confDict: Global configuration dictionary,
+        mech_couplings: dictionary containing couplings defined in the configuration file (0 to M elements).
+        module_entry: Module entry in global dictionary in order to access the proper modules mechanical mode list.
+    Output:
+        mech_couplings: dictionary containing mechanical couplings for an electrical mode or piezo (length M)."""
+
+    # Grab the full list of mechanical modes in the Module
+    mech_net = confDict[module_entry]["mechanical_mode_connect"]
+    # Convert list of strings to a 0.0 valued set of dictionary entries as a place holder for the mechanical couplings
+    mech_dic = {x: 0.0 for x in mech_net}
+
+    # Check for consistency between coupling list and list of mechanical modes
+    if all(mech_modes in mech_couplings for mech_modes in mech_dic):
+        # Merge dictionaries
+        mech_coupling_dic = dict(mech_dic, **mech_couplings)
+        # Return resulting dictionary
+        return mech_coupling_dic
+    else:
+        # Dictionary consistency check failed
+        raise Exception("Mechanical mode not found in list of mechanical couplings!")
+        return mech_couplings
+
+def readCavity(confDict, cav_entry, module_entry):
+    """ readCavity: Takes the global configuration dictionary and returns a Cavity object
+    with the configuration values filled in. The process includes a recursive read of
+    electrical modes in each cavity, where ElecMode objects are created for each electrical mode
+    and contained as a list of ElecMode objects in the Cavity object.
+    Inputs:
+        confDict: Global configuration dictionary,
+        cav_entry: Name of the cavity to be read (string).
+        module_entry: Module entry in global dictionary in order to access the proper module's
+            mechanical mode list, wich is used as a consistency check to generate mechanical
+            coupling vectors for each electrical mode.
+    Output:
+        cavity: Cavity object."""
+
+    # Read name and component type
+    name = confDict[cav_entry]['name']
+    cav_comp_type = confDict[cav_entry]['type']
+
+    # Read and store the rest of the parameters in a dictionary
+    cav_param_dic = {}
+
+    cav_param_dic["L"] = readentry(confDict,confDict[cav_entry]["L"])
+    cav_param_dic["nom_grad"] = readentry(confDict,confDict[cav_entry]["nom_grad"])
     
-    #read in the filter poles for TRF1,TRF2,RXF
-    scale=1e6  #scale pole values to [Hz] from [MHz]
-    p_TRF1 = linac.complexdouble_Array(2)
-    p_TRF1[0] = readentry(a,a[TRF1]['poles'][0][0],localdic=a[TRF1])*scale
-    p_TRF1[1] = readentry(a,a[TRF1]['poles'][1][0],localdic=a[TRF1])*scale
-    p_TRF2 = linac.complexdouble_Array(1)
-    p_TRF2[0] = readentry(a,a[TRF2]['poles'][0][0],localdic=a[TRF2])*scale
-    p_RXF = linac.complexdouble_Array(3)
-    p_RXF[0] = readentry(a,a[RXF]['poles'][0][0],localdic=a[RXF])*scale
-    p_RXF[1] = readentry(a,a[RXF]['poles'][1][0],localdic=a[RXF])*scale
-    p_RXF[2] = readentry(a,a[RXF]['poles'][2][0],localdic=a[RXF])*scale
-
-    #CLIP parameters
-    saturate_c=readentry(a,a[CLIP]['sat_c'],localdic=a[CLIP])
-    kly_max_v=readentry(a,a[CLIP]['kly_max_v'],localdic=a[CLIP])
-
-    #Cavity parameters
-    E=readentry(a,a[CAV]['E'],localdic=a[CAV])*1e9 #[Gev]->[ev]
-    dE=(E-Elast)
-    phi=readentry(a,a[CAV]['phi'],localdic=a[CAV])*pi/180  #[deg]->[rad]
-    lam=readentry(a,a[CAV]['lam'],localdic=a[CAV])         #[m]
-    s0=readentry(a,a[CAV]['s0'],localdic=a[CAV])*1e-3      #[mm]->[m]
-    aper=readentry(a,a[CAV]['a'],localdic=a[CAV])*1e-3  #[mm]->[m]  
-    # named aper because a already used
-    L=readentry(a,a[CAV]['L'],localdic=a[CAV])          #[m]
-    nom_grad=readentry(a,a[CAV]['nomgrad'],localdic=a[CAV])
-    psd_llrf=readentry(a,a[CAV]['psd_llrf'],localdic=a[CAV])
-    w0=readentry(a,a[CAV]['w0'],localdic=a[CAV])     #[rad/s]
-    bunch_rep=readentry(a,a[CAV]['bunch_rep'],localdic=a[CAV])
-    Q_L=readentry(a,a[CAV]['Q_L'],localdic=a[CAV])
-    R_Q=readentry(a,a[CAV]['R_Q'],localdic=a[CAV])
-    beta_in=readentry(a,a[CAV]['beta_in'],localdic=a[CAV])
-    beta_out=readentry(a,a[CAV]['beta_out'],localdic=a[CAV])
-    beta_beam=readentry(a,a[CAV]['beta_beam'],localdic=a[CAV])
-    
-    #chicane parameters
-    R56=readentry(a,a[CHIC]['R56'],localdic=a[CHIC])
-    T566=readentry(a,a[CHIC]['T566'],localdic=a[CHIC])
-    
-    #linac properties
-    n_cav=int(readentry(a,a[linac_key]['n_cav'],localdic=a[linac_key]))
-
-    #controller parameters
-    stable_gbw=readentry(a,a[CONT]['stable_gbw'],localdic=a[CONT])
-        
-    #sim paramters
-    dt=readentry(a,a["Simulation"]['dt'],localdic=a["Simulation"])
-
-    #initialize the c data strucutre for a linac and call Linac_Config
-    # to insert the values
-    lin = linac.Linac_Param()
-    linac.Linac_Config(lin,
-                   dt,
-                   dE,R56,T566,phi,
-                   lam,s0,aper,L,
-                   saturate_c,
-                   p_TRF1,p_TRF2,p_RXF,
-                   int(n_cav), nom_grad,
-                   psd_llrf,w0,bunch_rep,
-                   Q_L,R_Q,
-                   beta_in,beta_out,beta_beam,
-                   kly_max_v,stable_gbw
-                   )
-    
-    return lin,E
+    cav_param_dic["nom_beam_phase"] = readentry(confDict,confDict[cav_entry]["nom_beam_phase"])
+    cav_param_dic["rf_phase"] = readentry(confDict,confDict[cav_entry]["rf_phase"])
+    cav_param_dic["design_voltage"] = readentry(confDict,confDict[cav_entry]["design_voltage"])
+    cav_param_dic["unity_voltage"] = readentry(confDict,confDict[cav_entry]["unity_voltage"])
 
 
-def loadaccelerator(filename, defaultfile="default.cfg", Verbose=False):
-    #
-    #this routine is used only in the unit tests for double compress and dc_matrix
-    #In the main code it has been replaced by ReadAccelerator in loadconfig.py
-    #
+    # Grab the list of electrical modes
+    elec_mode_connect = confDict[cav_entry]["elec_mode_connect"]
+    n_elec_modes = len(elec_mode_connect) # Number of electrical modes
 
-    import json
-    import pydot
+    elec_mode_list = []
 
-    #read in file of interest
-    f=open(filename)
-    nondefault=json.load(f)
-    f.close()
+    ## Start of loop through electrical modes
+    # Cycle through electrical modes, read parameters from global dictionary and append to list of modes.
+    for m in range(n_elec_modes):
+        # Take mth element of mode list
+        elec_mode_now = elec_mode_connect[m]
 
-    #look for a default file
-    try:
-        f=open(defaultfile)
-        a=json.load(f)
-        f.close()
-    except Exception,e:
-        print "No default parameters read"
-        print str(e)
-        a={}
-    
-    #add the new to the defualt overwriteing changed defualt values
-    a.update(nondefault)
-    #print a
-    #start a pydot graph for display
-    graph = pydot.Dot(graph_type='digraph',rankdir="LR")
-    
+        # Read component name and type
+        elec_mode_name = confDict[elec_mode_now]['name']
+        elec_comp_type = confDict[elec_mode_now]['type']
 
+        # Identifier for mode
+        mode_name = confDict[elec_mode_now]['mode_name']
 
-    #read in the gun parameters
-    gun,Elast=readgun(a)
-    
-    #find the acclerator connectivty and read in parameters
+        # Create dictionary to store electrical mode parameters
+        elec_param_dic = {}
 
-    net=a['Accelerator']["connect"]
-    allaccel=[] #array to store linac points temporarily
-    for k in range(len(net)):
+        # Read rest of parameters and store in dictionary
+        elec_param_dic["RoverQ"] = readentry(confDict,confDict[elec_mode_now]["RoverQ"])
+        elec_param_dic["foffset"] = readentry(confDict,confDict[elec_mode_now]["foffset"])
+        elec_param_dic["peakV"] = readentry(confDict,confDict[elec_mode_now]["peakV"])
+        elec_param_dic["Q_0"] = readentry(confDict,confDict[elec_mode_now]["Q_0"])
+        elec_param_dic["Q_drive"] = readentry(confDict,confDict[elec_mode_now]["Q_drive"])
+        elec_param_dic["Q_probe"] = readentry(confDict,confDict[elec_mode_now]["Q_probe"])
+        elec_param_dic["phase_rev"] = readentry(confDict,confDict[elec_mode_now]["phase_rev"])
+        elec_param_dic["phase_probe"] = readentry(confDict,confDict[elec_mode_now]["phase_probe"])
 
-        if (k<len(net)-1):
-            edge=pydot.Edge(a[net[k]]['name'],a[net[k+1]]['name'])
-            graph.add_edge(edge)
+        # Read dictionary of couplings from global configuration dictionary
+        mech_couplings = readentry(confDict,confDict[elec_mode_now]["mech_couplings"]["value"])
 
-        elem=a[net[k]]
-        t=elem['type']
-        if (t=="linac"):
-            #print t
-            linout,Elast=readlinac(a,net[k],Elast,graph)
-            allaccel.append(linout)
-        elif (t=="chicane"):
-            print t
-            #readchicance()
+        # Check consistency of coupling entries with the list of mechanical modes,
+        # and get a coupling dictionary of length M (number of mechanical modes)
+        mech_couplings_dic = readCouplings(confDict, mech_couplings, module_entry)
+
+        # Instantiate ElecMode object
+        elec_mode = ElecMode(elec_mode_name, elec_comp_type, mode_name, elec_param_dic, mech_couplings_dic)
+
+        # Append to list of electrical modes
+        elec_mode_list.append(elec_mode)
+    ## End of loop through electrical modes
+
+    # Instantiate Cavity object and return
+    cavity = Cavity(name, cav_comp_type, cav_param_dic, elec_mode_list)
+
+    return cavity
+
+def readPiezo(confDict, piezo_entry, module_entry):
+    """ readPiezo: Takes the global configuration dictionary and returns a Piezo object
+    with the configuration parameters and the couplings with each one of the the mechanical
+    modes values filled in.
+    Inputs:
+        confDict: Global configuration dictionary,
+        piezo_entry: Name of the Piezo to be read (string).
+        module_entry: Module entry in global dictionary in order to access the proper module's
+            mechanical mode list, wich is used as a consistency check to generate mechanical
+            coupling vectors for each Piezo.
+    Output:
+        piezo: Piezo object."""
+
+    # Read name and component type
+    name = confDict[piezo_entry]['name']
+    piezo_comp_type = confDict[piezo_entry]['type']
+
+    # Read dictionary of couplings from global configuration dictionary
+    mech_couplings = readentry(confDict,confDict[piezo_entry]["mech_couplings"]["value"])
+
+    # Check consistency of coupling entries with the list of mechanical modes,
+    # and get a coupling dictionary of length M (number of mechanical modes)
+    mech_couplings_dic = readCouplings(confDict, mech_couplings, module_entry)
+
+    # Read rest of parameters
+    VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
+
+    # Create a Piezo instance and return
+    piezo = Piezo(name, piezo_comp_type, mech_couplings_dic, VPmax)
+
+    return piezo
+
+def readList(confDict, list_in, readFunction, module_entry=None):
+    """ readList: Generic function to read list of componentns.
+    Takes the global configuration dictionary, cycles through the list of components
+    (list of names, list_in), uses the names to identify the configuration entries in
+    the global dictionary, calls the proper read function for each component (readFunction),
+    and returns a list of instances (objects).
+    Inputs:
+        confDict: Global configuration dictionary,
+        list_in: list of components to cycle through (list of strings),
+        readFunction: name of the read function for the component,
+        module_entry: necessary in some cases in order to pass along module entry information,
+            needed by readStation and readPiezo in order to find the mechanical modes in
+            their corresponding Module.
+    Output:
+        list_out: List of component objects"""
+
+    # Create empty list for component instances
+    list_out = []
+
+    # Cycle through list of component names
+    for k in range(len(list_in)):
+        # Read component configuration and create component instance
+        if module_entry == None:
+            component = readFunction(confDict, list_in[k])
         else:
-            print ("type called {0} not supported".format(t))
-        
+            component = readFunction(confDict, list_in[k], module_entry)
+        # Append object to the component list
+        list_out.append(component)
+
+    # Return list
+    return list_out
+
+class Controller:
+    """ Controller class: contains parameters specific to a Controller configuration"""
+
+    def __init__(self, name, comp_type, stable_gbw):
+        self.name = name
+        self.type = comp_type
+
+        self.stable_gbw = stable_gbw
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Controller Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "stable_gbw: " + str(self.stable_gbw) + "\n")
+
+def readController(confDict, controller_entry):
+
+     # Read name and component type
+    name = confDict[controller_entry]['name']
+    controller_comp_type = confDict[controller_entry]['type']
+
+    # Read the rest of parameters
+    stable_gbw = readentry(confDict,confDict[controller_entry]["stable_gbw"])
+
+    # Create a Controller instance and return
+    controller = Controller(name, controller_comp_type, stable_gbw)
+
+    return controller
+
+class ZFilter:
+    """ ZFilter class: contains parameters specific to a Filter configuration"""
+
+    def __init__(self, name, comp_type, order, nmodes, poles):
+        self.name = name
+        self.type = comp_type
+
+        self.order = order
+        self.nmodes = nmodes
+        self.poles = poles
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--ZFilter Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "order: " + str(self.order) + "\n"
+        + "nmodes: " + str(self.nmodes) + "\n"
+        + "poles: " + str(self.poles) + "\n")
+
+def readZFilter(confDict, zfilter_entry):
+
+    # Read name and component type
+    name = confDict[zfilter_entry]['name']
+    zfilter_comp_type = confDict[zfilter_entry]['type']
+
+    # Read the rest of parameters
+    order = readentry(confDict,confDict[zfilter_entry]["order"])
+    nmodes = readentry(confDict,confDict[zfilter_entry]["nmodes"])
+    poles = readentry(confDict,confDict[zfilter_entry]["poles"])
+
+    # Create a ZFilter instance and return
+    zfilter =  ZFilter(name, zfilter_comp_type, order, nmodes, poles)
+
+    return zfilter
+
+class ADC:
+    """ ADC class: contains parameters specific to a ADC configuration"""
+
+    def __init__(self, name, comp_type, adc_max, adc_off, psd_llrf):
+        self.name = name
+        self.type = comp_type
+
+        self.adc_max = adc_max
+        self.adc_off = adc_off
+        self.psd_llrf = psd_llrf
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--ADC Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "adc_max: " + str(self.adc_max) + "\n"
+        + "adc_off: " + str(self.adc_off) + "\n"
+        + "psd_llrf: " + str(self.psd_llrf) + "\n")
+
+def readADC(confDict, adc_entry):
+
+    # Read name and component type
+    name = confDict[adc_entry]['name']
+    adc_comp_type = confDict[adc_entry]['type']
+
+    # Read the rest of parameters
+    adc_max = readentry(confDict,confDict[adc_entry]["adc_max"])
+    adc_off = readentry(confDict,confDict[adc_entry]["adc_off"])
+    psd_llrf = readentry(confDict,confDict[adc_entry]["psd_llrf"])
+
+    # Create an ADC instance and return
+    adc = ADC(name, adc_comp_type, adc_max, adc_off, psd_llrf)
+
+    return adc
 
 
-    #move pointers in allaccel into c array
-    linp_arr=linac.Linac_Param_Array(len(allaccel))
-    for l in range(len(allaccel)):
-        linp_arr[l]=allaccel[l]
+class Amplifier:
+    """ Amplifier class: contains parameters specific to a Amplifier configuration"""
+
+    def __init__(self, name, comp_type, PAmax, PAbw, Clip):
+        self.name = name
+        self.type = comp_type
+
+        self.PAmax = PAmax
+        self.PAbw = PAbw
+        self.Clip = Clip
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Amplifier Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "PAmax: " + str(self.PAmax) + "\n"
+        + "PAbw: " + str(self.PAbw) + "\n"
+        + "Clip: " + str(self.Clip) + "\n")
+
+def readAmplifier(confDict, amplifier_entry):
+
+    # Read name and component type
+    name = confDict[amplifier_entry]['name']
+    amplifier_comp_type = confDict[amplifier_entry]['type']
+
+    # Read the rest of parameters
+    PAmax = readentry(confDict,confDict[amplifier_entry]["PAmax"])
+    PAbw = readentry(confDict,confDict[amplifier_entry]["PAbw"])
+    Clip = readentry(confDict,confDict[amplifier_entry]["Clip"])
+
+    # Create an Amplifier instance and return
+    amplifier = Amplifier(name, amplifier_comp_type, PAmax, PAbw, Clip)
+
+    return amplifier
+
+class Station:
+    """ Station class: contains parameters specific to a Station configuration"""
+
+    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, controller, cav_adc, fwd_adc, rfl_adc, piezo_list):
+        self.name = name
+        self.type = comp_type
+
+        self.amplifier = amplifier
+        self.cavity = cavity
+        self.rx_filter = rx_filter
+        self.controller = controller
+        self.cav_adc = cav_adc
+        self.fwd_adc = fwd_adc
+        self.rfl_adc = rfl_adc
+        self.piezo_list = piezo_list
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Station Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+
+        + "amplifier: " + str(self.amplifier) + "\n"
+        + "cavity: " + str(self.cavity) + "\n"
+        + "rx_filter: " + str(self.rx_filter) + "\n"
+        + "controller: " + str(self.controller) + "\n"
+        + "cav_adc: " + str(self.cav_adc) + "\n"
+        + "fwd_adc: " + str(self.fwd_adc) + "\n"
+        + "rfl_adc: " + str(self.rfl_adc) + "\n"
+        + "piezo_list: " + '\n'.join(str(x) for x in self.piezo_list))
+
+def readStation(confDict, station_entry, module_entry):
+
+    # Read name and component type
+    name = confDict[station_entry]['name']
+    station_comp_type = confDict[station_entry]['type']
+
+    # Read all the station components
+    amplifier_entry = confDict[station_entry]['Amplifier']
+    amplifier = readAmplifier(confDict, amplifier_entry)
+
+    cavity_entry = confDict[station_entry]['Cavity']
+    cavity = readCavity(confDict, cavity_entry, module_entry)
+
+    rx_filter_entry = confDict[station_entry]['Rx_filter']
+    rx_filter = readZFilter(confDict, rx_filter_entry)
+
+    controller_entry = confDict[station_entry]['Controller']
+    controller = readController(confDict, controller_entry)
+
+    cav_adc_entry = confDict[station_entry]['cav_adc']
+    cav_adc = readADC(confDict, cav_adc_entry)
+
+    rfl_adc_entry = confDict[station_entry]['rfl_adc']
+    rfl_adc = readADC(confDict, rfl_adc_entry)
+
+    fwd_adc_entry = confDict[station_entry]['fwd_adc']
+    fwd_adc = readADC(confDict, fwd_adc_entry)
+
+    piezo_connect = confDict[station_entry]['piezo_connect']
+    piezo_list = readList(confDict, piezo_connect, readPiezo, module_entry)
+
+    # Create a Station instance and return
+    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, controller, cav_adc, fwd_adc, rfl_adc, piezo_list)
+
+    return station
+
+class Chicane:
+    """ Chicane class: contains parameters specific to a Chicane configuration"""
+
+    def __init__(self, comp_type, name, R56, T566):
+        self.name = name
+        self.type = comp_type
+
+        self.R56 = R56
+        self.T566 = T566
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Module Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+
+        + "R56: " + str(self.R56) + "\n"
+        + "T566: " + str(self.T566) + "\n")
+
+def readChicane(confDict, chicane_entry):
+
+    # Read name and component type
+    name = confDict[chicane_entry]['name']
+    chicane_comp_type = confDict[chicane_entry]['type']
+
+    # Read parameters
+    R56 = readentry(confDict,confDict[chicane_entry]["R56"])
+    T566 = readentry(confDict,confDict[chicane_entry]["T566"])
+
+    # Create a Chicane instance and return
+    chicane = Chicane(name, chicane_comp_type, R56, T566)
+
+    return chicane
+
+class Module:
+    """ Module class: contains parameters specific to a Module configuration"""
+
+    def __init__(self, name, comp_type, station_list, mechanical_mode_list, lp_shift):
+        self.name = name
+        self.type = comp_type
+
+        self.station_list = station_list
+        self.mechanical_mode_list = mechanical_mode_list
+        self.lp_shift = lp_shift
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Module Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "station_list: " + '\n'.join(str(x) for x in self.station_list)
+        + "mechanical_mode_list: " + '\n'.join(str(x) for x in self.mechanical_mode_list)
+        + "lp_shift: " + str(self.lp_shift) + "\n")
+
+def readModule(confDict, module_entry):
+
+    # Read name and component type
+    name = confDict[module_entry]['name']
+    module_comp_type = confDict[module_entry]['type']
+
+    # Read the station and mechanical mode connectivity
+    station_connect = confDict[module_entry]['station_connect']
+    mechanical_mode_connect = confDict[module_entry]['mechanical_mode_connect']
+
+    # Read list of stations and mechanical modes recursively
+    station_list = readList(confDict, station_connect, readStation, module_entry)
+    mechanical_mode_list = readList(confDict, mechanical_mode_connect, readMechMode)
+
+    # Read lp_shift
+    lp_shift = readentry(confDict,confDict[module_entry]["lp_shift"])
+
+    # Create a Module instance and return
+    module = Module(name, module_comp_type, station_list, mechanical_mode_list, lp_shift)
+
+    return module
+
+class Linac:
+    """ Linac class: contains parameters specific to a Linac configuration"""
+
+    def __init__(self, name, comp_type, param_dic, module_list, chicane):
+        self.name = name
+        self.type = comp_type
+
+        self.f0 = param_dic["f0"]
+        self.lam = param_dic["lam"]
+        self.s0 = param_dic["s0"]
+        self.dds_numerator = param_dic["dds_numerator"]
+        self.dds_denominator = param_dic["dds_denominator"]
+
+        self.module_list = module_list
+        self.chicane = chicane
+
+        # Need to manually propagate the value of f0 down to the Electrical Mode level
+        for module in module_list:
+            for station in module.station_list:
+                for mode in station.cavity.elec_modes:
+                    mode.omega_0_mode["value"] = 2*pi*(self.f0["value"] + mode.foffset["value"]) 
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Linac Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+
+        + "f0: " + str(self.f0) + "\n"
+        + "lam: " + str(self.lam) + "\n"
+        + "s0: " + str(self.s0) + "\n"
+        + "dds_numerator: " + str(self.dds_numerator) + "\n"
+        + "dds_denominator: " + str(self.dds_denominator) + "\n"
+        + "chicane: " + str(self.chicane) + "\n"
+
+        + "module_list: " + '\n'.join(str(x) for x in self.module_list))
+
+def readLinac(confDict, linac_entry):
+
+    # Read name and component type
+    name = confDict[linac_entry]['name']
+    linac_comp_type = confDict[linac_entry]['type']
+
+    # Read and store the rest of the parameters in a dictionary
+    linac_param_dic = {}
+
+    linac_param_dic["f0"] = readentry(confDict,confDict[linac_entry]["f0"]) # Resonance frequency [Hz]
+    linac_param_dic["lam"] = readentry(confDict,confDict[linac_entry]["lam"])
+    linac_param_dic["lam"] = readentry(confDict,confDict[linac_entry]["lam"])
+    linac_param_dic["s0"] = readentry(confDict,confDict[linac_entry]["s0"])
+    linac_param_dic["iris_rad"] = readentry(confDict,confDict[linac_entry]["iris_rad"])
+    linac_param_dic["dds_numerator"] = readentry(confDict,confDict[linac_entry]["dds_numerator"])
+    linac_param_dic["dds_denominator"] = readentry(confDict,confDict[linac_entry]["dds_denominator"])
+
+    # Read the module connectivity
+    module_connect = confDict[linac_entry]['module_connect']
+
+    # Read list of modules recursively
+    module_list = readList(confDict, module_connect, readModule)
+
+    # Read the chicane
+    chicane_name = confDict[linac_entry]["Chicane"]
+    chicane = readChicane(confDict, chicane_name)
+
+    # Instantiate Linac object and return
+    linac = Linac(name, linac_comp_type, linac_param_dic, module_list, chicane)
+
+    return linac
+
+class Accelerator:
+    """ Accelerator class: contains parameters specific to an accelerator configuration"""
+
+    def __init__(self, name, comp_type, bunch_rate, gun, linac_list):
+        self.name = name
+        self.type = comp_type
+        self.bunch_rate = bunch_rate
+        self.gun = gun
+        self.linac_list = linac_list
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Accelerator Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "bunch_rate: " + str(self.bunch_rate) + "\n"
+        + "gun: " + str(self.gun) + "\n"
+        + "linac_list: " + '\n'.join(str(x) for x in self.linac_list))
+
+class Gun:
+    """ Gun class: contains parameters specific to an Gun configuration"""
+
+    def __init__(self, name, comp_type, Q, sz0, sd0, E):
+        self.name = name
+        self.type = comp_type
+
+        self.Q = Q
+        self.sz0 = sz0
+        self.sd0 = sd0
+        self.E = E
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Gun Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "Q: " + str(self.Q) + "\n"
+        + "sz0: " + str(self.sz0) + "\n"
+        + "sd0: " + str(self.sd0) + "\n"
+        + "E: " + str(self.E) + "\n")
+
+def readGun(confDict):
+
+    # Read name and component type
+    gun_entry = confDict["Accelerator"]['gun']
+
+    name = confDict[gun_entry]['name']
+    gun_comp_type = confDict[gun_entry]['type']
+
+    Q = readentry(confDict,confDict[gun_entry]["Q"])
+    sz0 = readentry(confDict,confDict[gun_entry]["sz0"])
+    sd0 = readentry(confDict,confDict[gun_entry]["sd0"])
+    E = readentry(confDict,confDict[gun_entry]["E"])
+
+    # Instantiate Linac object and return
+    gun = Gun(name, gun_comp_type, Q, sz0, sd0, E)
+
+    return gun
 
 
+def readAccelerator(confDict):
+    """ readAccelerator : Takes the global configuration dictionary and
+    returns an Accelerator object with the configuration values filled in"""
 
-    #find accelerator name else use generic name
-    try:
-        name=a['Accelerator']['name']
-    except:
-        name="Accelerator"
+    # Read name and component type
+    name = confDict["Accelerator"]["name"]
+    comp_type = confDict["Accelerator"]["type"]
 
-    graph.write_png("{0}_graph.png".format(name))
-    return a,allaccel,linp_arr,gun
+    # Read other parameters
+    bunch_rate = readentry(confDict,confDict["Accelerator"]["bunch_rate"])
 
+    # Read Accelerator components (Gun + series of linacs)
+    # # Read gun
+    gun = readGun(confDict)
 
-########
-#
-#Old or broken stuff which we do not think is currently used
-#
-#######
-def readfilter(a,f,graph):
-    
-    #
-    #
-    #currently unused-probably does not work
-    #
-    #
-    
-    print "in readfilter"
-    #
-    # Create a Filter
-    #
-    #fil = linac.Filter_Allocate_New(3,3) #this uses malloc, lets avoid this 
-    fil = linac.Filter() #declare one in python and then set it up
-    linac.Filter_Allocate_In(fil,3,3)
-    
-    #push in some random poles
+    # # Read connectivity of linacs
+    linac_connect = confDict["Accelerator"]["linac_connect"]
+    # # Read linacs recursively
+    linac_list = readList(confDict, linac_connect, readLinac)
 
-    poles = linac.complexdouble_Array(3)
-    poles[0] = 1.0
-    poles[1] = 1.0-2.0j
-    poles[2] = 2.5j
-    linac.Filter_Append_Modes(fil,poles,3)
-    
-    poles = linac.complexdouble_Array(1)
-    poles[0] = -1.0-1.5j
-    linac.Filter_Append_Modes(fil,poles,1)
-    poles[0] = -1.0-2.5j
-    linac.Filter_Append_Modes(fil,poles,1)
+    # Get Accelerator instance and return
+    accelerator = Accelerator(name, comp_type, bunch_rate, gun, linac_list)
 
-    poles = linac.complexdouble_Array(2)
-    poles[0] = -1.0-3.5j
-    poles[1] = 2.1
-    linac.Filter_Append_Modes(fil,poles,2)
-    
-     # Use the swig carrays.i to get handles to the pointer arrays
-    
-    fil.A_modes = linac.intArray_frompointer(fil.modes)
-    fil.A_coeff_start = linac.intArray_frompointer(fil.coeff_start)
-    fil.A_coeffs = linac.complexdouble_Array_frompointer(fil.coeffs)
-    fil.A_poles = linac.complexdouble_Array_frompointer(fil.poles)
+    return accelerator
 
+def readConfiguration(confDict):
+    """ readConfiguration : Takes the global configuration dictionary and
+    returns Simulation and Accelerator objects. This routine is to be called
+    from upper level programs in order to obtain the necessary instances
+    to run a full simulation """
 
-    return 0
+    # Read Simulation parameters and create an instance
+    simulation = readSimulation(confDict)
 
-def loadall(acceleratorfile,bbffile,noisefile="noise_test.cfg",default_acc="default.cfg",default_bbf="bbf_default.cfg",Verbose=False):
-    #
-    #old routine that was used during to development to read in json files for testing
-    #I do not think any routine still uses this routine
-    #
-    bbf_conf=jsontodict(bbffile,defaultfile=default_bbf, Verbose=Verbose)
-    noise_conf=jsontodict(noisefile)
-    a,allaccel,linp_arr,gun=loadaccelerator(acceleratorfile,defaultfile=default_acc, Verbose=Verbose)
-    
-    return a,allaccel,linp_arr,gun,bbf_conf,noise_conf
+    # Read Accelerator parameters (and recursively all of its components) and create an instance
+    accelerator = readAccelerator(confDict)
+
+    # Return Simulation and accelerator instances
+    return simulation, accelerator
