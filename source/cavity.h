@@ -37,7 +37,6 @@ typedef struct str_cavity{
 	double nom_grad;
 	int n_modes;
 	ElecMode_dp elecMode_net;
-	double complex v_probe, v_rev;
 } Cavity;
 
 typedef struct str_cavity_state{
