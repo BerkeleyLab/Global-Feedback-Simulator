@@ -119,6 +119,8 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
     # Initialize vectors for test
     cav_v_drive = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
     cav_v_beam = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
+    E_probe = np.zeros(nt,dtype=np.complex)   # Cavity field probe
+    E_reverse = np.zeros(nt,dtype=np.complex)   # Reverse field port
     
     # Drive signal
     drive_in_d = np.ones(nt,dtype=np.complex)
@@ -133,6 +135,8 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
     # Run Numerical Simulation
     for i in xrange(1,nt):
         cav_v_drive[i] = acc.Cavity_Step(cav, delta_tz, drive_in_d[i], beam_charge_d[i], cav_state);
+        E_probe[i] = cav_state.E_probe
+        E_reverse[i] = cav_state.E_reverse
 
     # Fit cavity step response
     drive_step = cavity_curve_fit(Tstep, drive_in_d, cav_v_drive, beam_charge_d)
@@ -151,7 +155,7 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
     mode_dict = modes_config[0]
     # Return results
     # drive_step and beam_step contain: [a, b, c, cav_v_meas, bw_meas, cav_v]
-    return trang, drive_step, beam_step, mode_dict
+    return trang, drive_step, beam_step, mode_dict, E_probe, E_reverse
 
 def run_cavity_freq_test(Tmax, test_file):
 
@@ -170,7 +174,7 @@ def run_cavity_freq_test(Tmax, test_file):
 
     # Initialize vectors for test
     cav_v = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
-    
+
     # Drive signal
     drive_in = np.ones(nt,dtype=np.complex)
     
@@ -181,7 +185,7 @@ def run_cavity_freq_test(Tmax, test_file):
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v[i] = acc.Cavity_Step(cav, delta_tz, drive_in[i], beam_charge[i], cav_state);
+        cav_v[i] = acc.Cavity_Step(cav, delta_tz, drive_in[i], beam_charge[i], cav_state)
 
     # Pass along the 1st mode configuration dictionary (useful for single mode tests)
     mode_dict = modes_config[0]
@@ -201,8 +205,6 @@ def show_cavity_step(title):
     plt.xlabel('Time [s]', fontsize=30)
     plt.ylabel(r'$| \vec V_{\rm acc}|$ [V]', fontsize=30)
 
-    # max_cav = max(np.abs(cav_v))
-    # plt.text(0.12, max_cav*0.2, error_text, verticalalignment='top' , fontsize=30)
     plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
     
     plt.rc('font',**{'size':20})
@@ -223,6 +225,8 @@ def cavity_test_step():
     drive_steps = []
     beam_steps = []
     mode_dicts = []
+    E_probes = []
+    E_reverses = []
 
     # Pass/FAIL boolean for curve fits
     # True = curve fit RMS error are under threshold
@@ -230,10 +234,14 @@ def cavity_test_step():
     fit_threshold = 1e-3
 
     for test_file in test_files:
-        trang, drive_step, beam_step, mode_dict = run_cavity_step_test(Tmax, test_file)
+        trang, drive_step, beam_step, mode_dict, E_probe, E_reverse = run_cavity_step_test(Tmax, test_file)
         drive_steps.append(drive_step)
         beam_steps.append(beam_step)
         mode_dicts.append(mode_dict)
+        E_probes.append(E_probe)
+        E_reverses.append(E_reverse)
+
+    drive_in = np.ones(len(trang),dtype=np.complex)
     
     print "\n**** Step drive signal at modes' frequencies...\n"
     for idx, mode_dict in enumerate(mode_dicts):
@@ -251,11 +259,16 @@ def cavity_test_step():
         print "  Drive coupling: Measured = {:.2e}, Set to = {:.2e}".format(k_drive_meas, np.abs(mode_dict['k_drive']))
         
         # Calculate error RMS on curve fit
-        fit_error = linalg.norm(np.abs(drive_steps[idx][5])-np.abs(drive_steps[idx][3]))/linalg.norm(np.abs(drive_steps[idx][5]))
-        print '  Fit RMS error is {:.2e}'.format(fit_error)
+        cav_fit_error = linalg.norm(np.abs(drive_steps[idx][5])-np.abs(drive_steps[idx][3]))/linalg.norm(np.abs(drive_steps[idx][5]))
+        E_probe_fit_error = linalg.norm(np.abs(E_probes[idx])-mode_dicts[idx]['k_probe']*np.abs(drive_steps[idx][5]))/linalg.norm(np.abs(drive_steps[idx][5]))
+        E_reversre_fit_error = linalg.norm(np.abs(E_reverses[idx] - mode_dicts[idx]['k_em']*drive_steps[idx][5] + drive_in))/linalg.norm(np.abs(E_reverses[idx]))
+        
+        print '  Cavity accelerating field fit RMS error is {:.2e}'.format(cav_fit_error)
+        print '  Cavity probe fit RMS error is {:.2e}'.format(E_probe_fit_error)
+        print '  Cavity reverse fit RMS error is {:.2e}'.format(E_reversre_fit_error)
         
         # Compare error to threshold and establish PASS/FAIL
-        if fit_error < fit_threshold: this_fit_pass = True
+        if ((cav_fit_error < fit_threshold) & (E_probe_fit_error < fit_threshold) & (E_reversre_fit_error < 3e-3)): this_fit_pass  = True
         else: this_fit_pass = False
         fit_pass = fit_pass & this_fit_pass
 

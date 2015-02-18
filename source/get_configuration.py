@@ -14,11 +14,15 @@ def Compute_ElecModes(cav, Tstep):
         w0 = mode.omega_0_mode['value']
         foffset = mode.foffset['value']
         RoverQ = mode.RoverQ['value']
+
+        k_probe = np.exp(1j*mode.phase_probe['value'])/np.sqrt(mode.Q_probe['value']*RoverQ);
+        k_em = np.exp(1j*mode.phase_rev['value'])/np.sqrt(mode.Q_drive['value']*RoverQ);
+
         Q_L = 1/(1/mode.Q_0['value'] + 1/mode.Q_drive['value'] + 1/mode.Q_probe['value'])
         bw = w0/(2.0*Q_L);
         k_beam = RoverQ*Q_L*np.exp(-1j*beam_phase)/Tstep;
         k_drive = 2*np.sqrt(mode.Q_drive['value']*RoverQ);
-        mode_dict = {"mode_name": mode_name,"w0": w0, "beam_phase": beam_phase, "RoverQ": RoverQ, "foffset": foffset, "Q_L": Q_L, "bw": bw, "k_beam": k_beam, "k_drive": k_drive}
+        mode_dict = {"mode_name": mode_name,"w0": w0, "beam_phase": beam_phase, "RoverQ": RoverQ, "foffset": foffset, "Q_L": Q_L, "bw": bw, "k_beam": k_beam, "k_drive": k_drive, "k_probe": k_probe, "k_em": k_em}
         modes_out.append(mode_dict)
 
     return modes_out
