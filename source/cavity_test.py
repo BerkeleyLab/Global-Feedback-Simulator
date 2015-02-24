@@ -194,7 +194,7 @@ def run_cavity_freq_test(Tmax, test_file):
     curve_fit = cavity_curve_fit(Tstep, drive_in, cav_v, beam_charge)
 
     # Measure mode's offset frequency
-    foffset_meas = np.imag(curve_fit[2])/(Tstep*2.0*np.pi)
+    foffset_meas = -np.imag(curve_fit[2])/(Tstep*2.0*np.pi)
 
     # Return results
     # drive_step and beam_step contain: [a, b, c, cav_v_meas, bw_meas, cav_v]

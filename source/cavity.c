@@ -50,15 +50,12 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Mode's angular frequency (accelerator angular frequency + offset)
   elecMode -> omega_0_mode = omega_0_mode;
 
-  // 
-  elecMode -> drive_mod_theta = 2*M_PI*foffset*Tstep;
-
   // Mode's open-loop bandwidth 
   elecMode -> omega_f = omega_0_mode/(2*Q_L);
   
   // Mode's single-pole, low-pass filter allocation
   // Calculate pole (mode's bandwidth)
-  double complex mode_p = -elecMode -> omega_f + I*2*M_PI*foffset;
+  double complex mode_p = -elecMode -> omega_f - I*2*M_PI*foffset;
 
   // Append mode to cavity filter
   Filter_Append_Modes(&elecMode->fil, &mode_p, 1, Tstep);
@@ -97,7 +94,6 @@ void ElecMode_Deallocate(ElecMode * elecMode)
 void ElecMode_State_Allocate(ElecMode_State *elecMode_state, ElecMode *elecMode)
 {
   elecMode_state -> delta_omega = 0.0;
-  elecMode_state -> drive_mod = (double complex) 1.0;
   Filter_State_Allocate(&elecMode_state->fil_state, &elecMode->fil);
 }
 
@@ -149,9 +145,8 @@ double complex ElecMode_Step(ElecMode *elecMode,
   // Beam-induced voltage (convert charge to voltage and add timing noise)
   v_beam = beam_charge * elecMode -> k_beam * cexp(-I*omega_now*delta_tz);  // k_beam = Tstep * (R/Q) * Q_L
 
-  // Shift drive by mode's frequency offset (frequency modulation)
-  // elecMode_state -> drive_mod = elecMode_state -> drive_mod * cexp(-I*cos(-I*elecMode->drive_mod_theta));
-  v_drive = Kg_fwd * elecMode_state->drive_mod * elecMode -> k_drive; // Drive term (k_drive = 2*sqrt(Q_drive*(R/Q))
+  // RF drive term
+  v_drive = Kg_fwd * elecMode -> k_drive; // Drive term (k_drive = 2*sqrt(Q_drive*(R/Q))
 
   // Integrate detuning angular frequency to obtain phase
   d_phase_now = elecMode_state-> d_phase + elecMode_state->delta_omega * elecMode->Tstep;
@@ -162,11 +157,7 @@ double complex ElecMode_Step(ElecMode *elecMode,
   // That term implies the unity gain at DC: normalization takes place in Filter_Step.
   v_in = (v_drive + v_beam)*cexp(-I*d_phase_now);
 
-  // Combine phase shifts from cavity frequency offset and detuning
-  double phase_out = d_phase_now + elecMode->drive_mod_theta;
-
   // Apply first-order low-pass filter
-  // v_out = Filter_Step(&(elecMode->fil), v_in, &(elecMode_state->fil_state))*cexp(I*d_phase_now)*cexp(I*cos(I*elecMode->drive_mod_theta));
   v_out = Filter_Step(&(elecMode->fil), v_in, &(elecMode_state->fil_state))*cexp(I*d_phase_now);
 
   // Calculate outputs based on v_vout

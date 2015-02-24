@@ -9,7 +9,7 @@
 
 
 typedef struct str_elecmode{
-	double omega_0_mode, drive_mod_theta, omega_f;
+	double omega_0_mode, omega_f;
 	double complex k_drive, k_beam, k_probe, k_em;
 	double Tstep;
 	Filter fil;
@@ -21,7 +21,6 @@ typedef ElecMode ** ElecMode_dp;
 
 typedef struct str_elecmode_state{
 	Filter_State fil_state;
-	double complex drive_mod;
 	double delta_omega;
 	double d_phase;
 	double complex v_2;
