@@ -263,8 +263,11 @@ def cavity_test_step():
         E_probe_fit_error = linalg.norm(np.abs(E_probes[idx])-mode_dicts[idx]['k_probe']*np.abs(drive_steps[idx][5]))/linalg.norm(np.abs(drive_steps[idx][5]))
         E_reversre_fit_error = linalg.norm(np.abs(E_reverses[idx] - mode_dicts[idx]['k_em']*drive_steps[idx][5] + drive_in))/linalg.norm(np.abs(E_reverses[idx]))
         
+        k_probe_meas = max(np.abs(E_probes[idx]))/k_drive_meas
+
         print '  Cavity accelerating field fit RMS error is {:.2e}'.format(cav_fit_error)
         print '  Cavity probe fit RMS error is {:.2e}'.format(E_probe_fit_error)
+        print "  Cavity probe coupling: Measured = {:.2e}, Set to = {:.2e}".format(k_probe_meas, np.abs(mode_dict['k_probe']))
         print '  Cavity reverse fit RMS error is {:.2e}'.format(E_reversre_fit_error)
         
         # Compare error to threshold and establish PASS/FAIL
