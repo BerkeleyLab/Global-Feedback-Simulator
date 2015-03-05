@@ -148,6 +148,7 @@ double complex Filter_Step(Filter * fil, double complex innow,
       fil_state->state[cs] = a*fil_state->state[cs]+b*voltage_in;
       
       // Add mode's output to form pole's output
+      // (and scale to keep unity gain at DC)
       output += fil_state->state[cs]*scale;
 
     } // End mode iteration

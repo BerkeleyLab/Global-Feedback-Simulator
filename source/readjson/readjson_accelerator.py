@@ -140,6 +140,16 @@ class Cavity:
         # List of electrical mode (ElecMode) instances (objects)
         self.elec_modes = elec_modes
 
+        # Find the fundamental mode based on coupling to the beam
+        ## Criterium here is the fundamental mode being defined as that with the highest shunt impedance (R/Q)
+        self.elec_modes.sort(key=lambda x : x.RoverQ['value'], reverse=True)
+        RoverQs = map(lambda x: x.RoverQ['value'],self.elec_modes)
+
+        fund_index = RoverQs.index(max(RoverQs))
+
+        # Store the index of the fundamental mode
+        self.fund_index = {"value" : fund_index, "units" : "N/A", "description" : "Index of the fundamental mode in array"}
+
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
@@ -154,7 +164,7 @@ class Cavity:
         + "unity_voltage: " + str(self.unity_voltage) + "\n"
         + "electrical modes: " + '\n'.join(str(x) for x in self.elec_modes))
 
-    def Configure_C(self):
+    def Get_C_Pointer(self):
         import accelerator as acc
         # First count number of Electrical Modes and Allocate Array
         n_modes = len(self.elec_modes) 
@@ -165,22 +175,10 @@ class Cavity:
             elecMode = acc.ElecMode_Allocate_New(mode.RoverQ['value'], \
                 mode.foffset['value'], mode.omega_0_mode['value'], \
                 mode.Q_0['value'], mode.Q_drive['value'], mode.Q_probe['value'], \
-                self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], 
+                self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], \
                 Tstep_global)
 
             acc.ElecMode_Append(elecMode_net, elecMode, idx)
-
-        # Find the fundamental mode based on coupling to the beam
-        ## Criterium here is that the fundamental mode is defined as that with the highest shunt impedance (R/Q)
-        
-        # Sort the list of Electrical Mode order in descending order of (R/Q)s
-        self.elec_modes.sort(key=lambda x : x.RoverQ['value'], reverse=True)
-        # Claim the fundamental w0 and Q_L
-        fund_w0 = self.elec_modes[0].omega_0_mode['value']
-        fund_Q_L = 1/(1/self.elec_modes[0].Q_0['value'] + 1/self.elec_modes[0].Q_drive['value'] + 1/self.elec_modes[0].Q_probe['value'])
-
-        # Define the cavity's open-loop bandwidth as that of the fundamental mode
-        open_loop_bw = fund_w0/(2.0*fund_Q_L);
 
         L = self.L['value']
         nom_grad = self.nom_grad['value']
@@ -188,16 +186,24 @@ class Cavity:
         rf_phase = self.rf_phase['value']
         design_voltage = self.design_voltage['value']
         unity_voltage = self.unity_voltage['value']
+        fund_index = self.fund_index['value']
 
         # Get a C-pointer to a Cavity structure
         cavity = acc.Cavity_Allocate_New(elecMode_net, n_modes, L, nom_grad, \
             nom_beam_phase, rf_phase, design_voltage, unity_voltage, \
-            open_loop_bw)
+            fund_index)
+
+        return cavity
+
+    @staticmethod
+    def Get_State_Pointer(cavity_C_pointer):
+        import accelerator as acc
 
         cavity_state = acc.Cavity_State()
-        acc.Cavity_State_Allocate(cavity_state, cavity)
+        acc.Cavity_State_Allocate(cavity_state, cavity_C_pointer)
 
-        return cavity, cavity_state
+        return cavity_state
+
 
 class ElecMode:
     def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_dic):
@@ -240,6 +246,30 @@ class ElecMode:
         + "phase_rev: " + str(self.phase_rev) + "\n"
         + "phase_probe: " + str(self.phase_probe) + "\n"
         + "mech_couplings_dic: " + str(self.mech_couplings_dic))
+
+    def Compute_ElecMode(self, Tstep, nom_beam_phase):
+        import numpy as np
+    
+        # Initialize an empty list to return
+        modes_out = []
+
+        beam_phase = nom_beam_phase
+
+        mode_name = self.mode_name
+        w0 = self.omega_0_mode['value']
+        foffset = self.foffset['value']
+        RoverQ = self.RoverQ['value']
+
+        k_probe = np.exp(1j*self.phase_probe['value'])/np.sqrt(self.Q_probe['value']*RoverQ);
+        k_em = np.exp(1j*self.phase_rev['value'])/np.sqrt(self.Q_drive['value']*RoverQ);
+
+        Q_L = 1/(1/self.Q_0['value'] + 1/self.Q_drive['value'] + 1/self.Q_probe['value'])
+        bw = w0/(2.0*Q_L);
+        k_beam = RoverQ*Q_L*np.exp(-1j*beam_phase)/Tstep;
+        k_drive = 2*np.sqrt(self.Q_drive['value']*RoverQ);
+        mode_dict = {"mode_name": mode_name,"w0": w0, "beam_phase": beam_phase, "RoverQ": RoverQ, "foffset": foffset, "Q_L": Q_L, "bw": bw, "k_beam": k_beam, "k_drive": k_drive, "k_probe": k_probe, "k_em": k_em}
+
+        return mode_dict
 
 class MechMode:
     """ MechMode class: contains parameters specific to a mechanical mode.
@@ -594,13 +624,14 @@ def readADC(confDict, adc_entry):
 class Amplifier:
     """ Amplifier class: contains parameters specific to a Amplifier configuration"""
 
-    def __init__(self, name, comp_type, PAmax, PAbw, Clip):
+    def __init__(self, name, comp_type, PAmax, PAbw, Clip, top_drive):
         self.name = name
         self.type = comp_type
 
         self.PAmax = PAmax
         self.PAbw = PAbw
         self.Clip = Clip
+        self.top_drive = top_drive
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -610,7 +641,37 @@ class Amplifier:
         + "type: " + self.type + "\n"
         + "PAmax: " + str(self.PAmax) + "\n"
         + "PAbw: " + str(self.PAbw) + "\n"
-        + "Clip: " + str(self.Clip) + "\n")
+        + "Clip: " + str(self.Clip) + "\n"
+        + "top_drive: " + str(self.top_drive) + "\n")
+
+    def Get_Saturation_Limit(self):
+        """Get_Saturation_Limit: Calculate (measure) the output drive limit from the FPGA controller
+        based on the clipping parameter of the saturation function and the maximum output power 
+        percentage level setting. Returns maximum input value to the saturation function in order
+        to reach the percentage of the maximum amplifier output power indicated by top_drive."""
+
+        import numpy as np
+        import accelerator as acc
+        # Input vector
+        inp = np.arange(0.0,10.0,0.1,dtype=np.complex)
+        # Output vector
+        oup = np.zeros(inp.shape,dtype=np.complex)
+
+        # Boolean indicating finding percentile reach
+        found = False
+        V_sat = max(inp)
+
+        c = self.Clip['value']
+        top_drive = float(self.top_drive['value'])/100
+
+        # Sweep input
+        for i in xrange(len(inp)):
+            oup[i] = acc.Saturate(inp[i],c)
+            if (found == False) and (oup[i].real >= top_drive): 
+                V_sat = inp[i]
+                found = True
+
+        return V_sat.real
 
 def readAmplifier(confDict, amplifier_entry):
 
@@ -622,23 +683,27 @@ def readAmplifier(confDict, amplifier_entry):
     PAmax = readentry(confDict,confDict[amplifier_entry]["PAmax"])
     PAbw = readentry(confDict,confDict[amplifier_entry]["PAbw"])
     Clip = readentry(confDict,confDict[amplifier_entry]["Clip"])
+    top_drive = readentry(confDict,confDict[amplifier_entry]["top_drive"])
 
     # Create an Amplifier instance and return
-    amplifier = Amplifier(name, amplifier_comp_type, PAmax, PAbw, Clip)
+    amplifier = Amplifier(name, amplifier_comp_type, PAmax, PAbw, Clip, top_drive)
 
     return amplifier
 
 class Station:
     """ Station class: contains parameters specific to a Station configuration"""
 
-    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, controller, cav_adc, fwd_adc, rfl_adc, piezo_list):
+    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list):
         self.name = name
         self.type = comp_type
 
         self.amplifier = amplifier
         self.cavity = cavity
         self.rx_filter = rx_filter
+        self.tx_filter1 = tx_filter1
+        self.tx_filter2 = tx_filter2
         self.controller = controller
+        self.loop_delay_size = loop_delay_size
         self.cav_adc = cav_adc
         self.fwd_adc = fwd_adc
         self.rfl_adc = rfl_adc
@@ -654,11 +719,55 @@ class Station:
         + "amplifier: " + str(self.amplifier) + "\n"
         + "cavity: " + str(self.cavity) + "\n"
         + "rx_filter: " + str(self.rx_filter) + "\n"
+        + "tx_filter1: " + str(self.tx_filter1) + "\n"
+        + "tx_filter2: " + str(self.tx_filter2) + "\n"
         + "controller: " + str(self.controller) + "\n"
+        + "loop_delay_size: " + str(self.loop_delay_size) + "\n"
         + "cav_adc: " + str(self.cav_adc) + "\n"
         + "fwd_adc: " + str(self.fwd_adc) + "\n"
         + "rfl_adc: " + str(self.rfl_adc) + "\n"
         + "piezo_list: " + '\n'.join(str(x) for x in self.piezo_list))
+
+    def Get_C_Pointer(self):
+
+        import accelerator as acc
+        import numpy as np
+
+        p_RXF = acc.complexdouble_Array(3)
+        p_RXF[0] = complex(self.rx_filter.poles['value'][0][0])*1e6
+        p_RXF[1] = complex(self.rx_filter.poles['value'][1][0])*1e6
+        p_RXF[2] = complex(self.rx_filter.poles['value'][2][0])*1e6
+
+        p_TRF1 = acc.complexdouble_Array(2)
+        p_TRF1[0] = complex(self.tx_filter1.poles['value'][0][0])*1e6
+        p_TRF1[1] = complex(self.tx_filter1.poles['value'][1][0])*1e6
+        
+        p_TRF2 = acc.complexdouble_Array(1)
+        p_TRF2[0] = complex(self.tx_filter2.poles['value'][0][0])*1e6
+
+        Clip = self.amplifier.Clip['value']
+        PAmax = self.amplifier.PAmax['value']
+        PAscale = np.sqrt(PAmax)*(float(self.amplifier.top_drive['value'])/100) # [sqrt(W)]
+
+        FPGA_out_sat = self.amplifier.Get_Saturation_Limit()*PAscale
+
+        stable_gbw = self.controller.stable_gbw['value']
+        loop_delay_size = self.loop_delay_size['value']
+
+        cavity_pointer = self.cavity.Get_C_Pointer()
+
+        rf_station = acc.RF_Station_Allocate_New(Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size)
+
+        return rf_station
+
+    def Get_State_Pointer(self, RF_Station_C_Pointer):
+        import accelerator as acc
+
+        rf_state = acc.RF_State()
+
+        acc.RF_State_Allocate(rf_state, RF_Station_C_Pointer)
+
+        return rf_state
 
 def readStation(confDict, station_entry, module_entry):
 
@@ -676,8 +785,16 @@ def readStation(confDict, station_entry, module_entry):
     rx_filter_entry = confDict[station_entry]['Rx_filter']
     rx_filter = readZFilter(confDict, rx_filter_entry)
 
+    tx_filter1_entry = confDict[station_entry]['Tx_filter1']
+    tx_filter1 = readZFilter(confDict, tx_filter1_entry)
+    
+    tx_filter2_entry = confDict[station_entry]['Tx_filter2']
+    tx_filter2 = readZFilter(confDict, tx_filter2_entry)
+
     controller_entry = confDict[station_entry]['Controller']
     controller = readController(confDict, controller_entry)
+
+    loop_delay_size = readentry(confDict, confDict[station_entry]['loop_delay_size'])
 
     cav_adc_entry = confDict[station_entry]['cav_adc']
     cav_adc = readADC(confDict, cav_adc_entry)
@@ -692,7 +809,7 @@ def readStation(confDict, station_entry, module_entry):
     piezo_list = readList(confDict, piezo_connect, readPiezo, module_entry)
 
     # Create a Station instance and return
-    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, controller, cav_adc, fwd_adc, rfl_adc, piezo_list)
+    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list)
 
     return station
 

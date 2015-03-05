@@ -28,6 +28,51 @@
             "value": 5,
             "units": "",
             "description": "Clipping harshness parameter"
+        },
+        "top_drive" : {
+            "value": 95,
+            "units": "%",
+            "description": "Maximum amplifier output drive setting"
+        }
+    },
+
+    "d_TRF1": {
+        "type":"filter",
+        "name":"TRF1",
+        "order": {
+            "value": 2,
+            "units": "",
+            "description": ""
+        },
+        "nmodes": {
+            "value": [1,1],
+            "units": "",
+            "description": ""
+        },
+        "poles": {
+            "value": [["-7.5+2.7j"],["-7.5-2.7j"]],
+            "units": "",
+            "description": ""
+        }
+    },
+
+    "d_TRF2": {
+        "type":"filter",
+        "name":"TRF2",
+        "order": {
+            "value": 1,
+            "units": "",
+            "description": ""
+        },
+        "nmodes": {
+            "value": [1],
+            "units": "",
+            "description": ""
+        },
+        "poles": {
+            "value": [["-9."]],
+            "units": "",
+            "description": ""
         }
     },
 
@@ -83,7 +128,7 @@
         "type":"PI_CONT",
 		"name":"PI control",
 		"stable_gbw": {
-			"value": 50e3,
+			"value": 20e3,
 			"units": "",
 			"description": ""
 		}

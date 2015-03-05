@@ -29,7 +29,7 @@ typedef struct str_elecmode_state{
 typedef struct str_cavity{
 	// XXX Check if used in the future: Inherited properties
 	double nom_beam_phase, rf_phase, design_voltage, unity_voltage;
-	double open_loop_bw;
+	int fund_index;
 	// XXX
 
 	double L;
@@ -40,6 +40,7 @@ typedef struct str_cavity{
 
 typedef struct str_cavity_state{
 	double complex E_probe, E_reverse;
+  double complex Kg;
 	ElecMode_State **elecMode_state_net;
 } Cavity_State;
 
@@ -47,12 +48,12 @@ void Cavity_Allocate_In(Cavity *cav,
   ElecMode_dp elec_mode_net, int n_modes,
   double L, double nom_grad, 
   double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
-  double open_loop_bw);
+  int fund_index);
 
 Cavity * Cavity_Allocate_New(ElecMode_dp elec_mode_net, int n_modes, 
   double L, double nom_grad,
   double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
-  double open_loop_bw);
+  int fund_index);
 void Cavity_Deallocate(Cavity *cav);
 
 double complex Cavity_Step(Cavity *cav, double delta_tz, double complex drive_in, double complex beam_charge, Cavity_State *cav_state);

@@ -3,8 +3,6 @@
 #include <stdio.h>
 #include <string.h>
 
-#define CPRINTs(c) {if(cimag(c)<0) printf("%10.16e%10.16ej ",creal(c),cimag(c)); else printf("%10.16e+%10.16ej ",creal(c),cimag(c)); }
-
 ElecMode_dp ElecMode_Allocate_Array(int n)
 {
   ElecMode_dp elecMode_net = calloc(n, sizeof(ElecMode *));
@@ -108,6 +106,7 @@ void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav)
 
   cav_state -> E_probe = (double complex) 0.0;
   cav_state -> E_reverse = (double complex) 0.0;
+  cav_state -> Kg = (double complex) 0.0;
   cav_state -> elecMode_state_net = (ElecMode_State**)calloc(cav->n_modes,sizeof(ElecMode_State*));
 
   int i;
@@ -176,7 +175,7 @@ void Cavity_Allocate_In(Cavity *cav,
   double L, double nom_grad,
   // XXX
   double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
-  double open_loop_bw)
+  int fund_index)
   // XXX
 {
   // XXX Check if used in the future: Inherited properties
@@ -184,7 +183,7 @@ void Cavity_Allocate_In(Cavity *cav,
   cav -> rf_phase = rf_phase;
   cav -> design_voltage = design_voltage;
   cav -> unity_voltage = unity_voltage;
-  cav -> open_loop_bw = open_loop_bw;
+  cav -> fund_index = fund_index;
   /// XXX
 
   cav -> L = L;
@@ -197,7 +196,7 @@ Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
   double L, double nom_grad,
    // XXX
   double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
-  double open_loop_bw)
+  int fund_index)
   // XXX
 {
   Cavity *cav;
@@ -205,7 +204,7 @@ Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
 
   Cavity_Allocate_In(cav, elecMode_net, n_modes, L, nom_grad, 
     nom_beam_phase, rf_phase, design_voltage, unity_voltage, 
-    open_loop_bw);
+    fund_index);
 
   return cav;
 }
@@ -230,6 +229,7 @@ double complex Cavity_Step(Cavity *cav, double delta_tz,
 
   // Propagate high-power drive signal to cavity coupler through waveguide
   double complex Kg_fwd = Kg; // Instantaneous propagation through perfect waveguide for now
+  cav_state->Kg = Kg; // Instantaneous propagation through perfect waveguide for now
 
   int i;
   // Iterate over Electrical Modes and add up

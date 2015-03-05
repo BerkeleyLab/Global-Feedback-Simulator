@@ -33,8 +33,8 @@ if __name__ == "__main__":
     print "===== RF Station tests >>> " + result + " =====\n"
     
     # print "===== LLRF Components: unit_tests_components.py ====="
-    # plt.figure()
     # utc = unit_tests_components.perform_tests()
+    # plt.figure()
     # print "===== BBF tests: unit_test_bbf.py ====="
     # utb = unit_test_bbf.perform_tests()
 

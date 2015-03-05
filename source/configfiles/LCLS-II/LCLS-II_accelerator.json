@@ -4,7 +4,7 @@
         "type": "simulation",
         "name": "test_simulation",
         "Tstep": {
-            "value": 10e-9,
+            "value": 10e-6,
             "units": "s",
             "description": "Simulation step size"
         },
@@ -107,6 +107,8 @@
         "Amplifier": "d_Amplifier",
         "Cavity": "Cavity0",
         "Rx_filter":"d_RXF",
+        "Tx_filter1":"d_TRF1",
+        "Tx_filter2":"d_TRF2",
         "Controller": "d_Controller",
         "E": {
             "value": 0.0,
@@ -118,6 +120,12 @@
             "units": "deg",
             "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
         },
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+
         "piezo_connect": ["Piezo0", "Piezo1"],
 
         "cav_adc" : "cav_adc0",
@@ -173,7 +181,7 @@
             "description": "Shunt impedance (R/Q)"
         },
         "foffset": {
-            "value": 5.0,
+            "value": 1.0,
             "units": "Hz",
             "description": "Nominal frequency offset"
         },
@@ -268,7 +276,7 @@
         }
     },
 
-        "ElecMode2":{
+    "ElecMode2":{
         "type": "elec_mode",
         "name": "ElecMode2",
         "mode_name": "pi/9",
@@ -279,7 +287,7 @@
             "description": "Shunt impedance (R/Q)"
         },
         "foffset": {
-            "value": 10.0,
+            "value": 20.0,
             "units": "Hz",
             "description": "Nominal frequency offset"
         },

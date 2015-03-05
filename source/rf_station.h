@@ -20,6 +20,8 @@ typedef struct str_FPGA {
   double kp;
   double ki;
   double complex set_point;
+  double out_sat;
+  double state_sat;
   double Tstep;
 } FPGA;
 
@@ -27,10 +29,10 @@ typedef struct str_fpga_state {
   double complex drive, state, err;
 } FPGA_State;
 
-void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double Tstep);
+void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double out_sat, double Tstep);
 // double complex FPGA_Step(FPGA * fpga, double complex cavity_vol, FPGA_State * stnow, int openloop);
 void FPGA_Clear(FPGA_State * stnow);
-double complex step_PI_fpga(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow, int openloop);
+double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow, int openloop);
 
 /*
  * Delay
@@ -57,7 +59,8 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state);
 typedef struct str_RF_Station {
 
   double nom_grad;	// Nominal Cavity gradient
-  double saturate_c;	// Saturation parameter
+  double Clip;  // Saturation parameter
+  double PAscale;	// Amplifier scaling (from unitless to sqrt(W))
 
   Filter RXF;	// Anti-alias filter
   Filter TRF1, TRF2;	// Triode Filters
@@ -83,9 +86,28 @@ typedef RF_State * RF_State_p;
 RF_State** make_rf_state_array(int n);
 
 void RF_Station_Allocate_In(RF_Station * rf_station,
-   double Tstep, double saturate_c,  double kly_max_v,  
-   double complex * p_TRF1, double complex * p_TRF2,  double complex * p_RXF,  
-   Cavity *cav, double stable_gbw,  int loop_delay_size);
+  double Tstep,
+  double Clip,
+  double PAmax,
+  double PAscale,
+  double complex * p_TRF1, double complex * p_TRF2,
+  double complex * p_RXF,
+  Cavity *cav,
+  double stable_gbw,
+  double FPGA_out_sat,
+  int loop_delay_size);
+
+RF_Station * RF_Station_Allocate_New(
+  double Tstep,
+  double Clip,
+  double PAmax,
+  double PAscale,
+  double complex * p_TRF1, double complex * p_TRF2,
+  double complex * p_RXF,
+  Cavity *cav,
+  double stable_gbw,
+  double FPGA_out_sat,
+  int loop_delay_size);
 
 void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station);
 void RF_State_Deallocate(RF_State *rf_state, RF_Station *rf_station);
