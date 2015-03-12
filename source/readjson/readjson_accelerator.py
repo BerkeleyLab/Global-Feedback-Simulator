@@ -142,7 +142,6 @@ class Cavity:
 
         # Find the fundamental mode based on coupling to the beam
         ## Criterium here is the fundamental mode being defined as that with the highest shunt impedance (R/Q)
-        self.elec_modes.sort(key=lambda x : x.RoverQ['value'], reverse=True)
         RoverQs = map(lambda x: x.RoverQ['value'],self.elec_modes)
 
         fund_index = RoverQs.index(max(RoverQs))
@@ -167,16 +166,21 @@ class Cavity:
     def Get_C_Pointer(self):
         import accelerator as acc
         # First count number of Electrical Modes and Allocate Array
-        n_modes = len(self.elec_modes) 
+        n_modes = len(self.elec_modes)
         elecMode_net = acc.ElecMode_Allocate_Array(n_modes)
 
         # Allocate each Electrical Mode and append it to the elecMode_net
         for idx, mode in enumerate(self.elec_modes):
+            n_mech = len(mode.mech_couplings_list)
+            mech_couplings = acc.double_Array(n_mech)
+            for m in xrange(n_mech):
+                mech_couplings[m] = mode.mech_couplings_list[m]
+
             elecMode = acc.ElecMode_Allocate_New(mode.RoverQ['value'], \
                 mode.foffset['value'], mode.omega_0_mode['value'], \
                 mode.Q_0['value'], mode.Q_drive['value'], mode.Q_probe['value'], \
                 self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], \
-                Tstep_global)
+                Tstep_global, mech_couplings, n_mech)
 
             acc.ElecMode_Append(elecMode_net, elecMode, idx)
 
@@ -206,7 +210,7 @@ class Cavity:
 
 
 class ElecMode:
-    def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_dic):
+    def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_list):
         """ ElecMode class: contains parameters specific to an electrical mode,
             including a dictionary specifying the mechanical couplings.
             Note the absence of a readElecMode method, the process for parsing
@@ -228,7 +232,7 @@ class ElecMode:
         ## Add (replicate) a parameter that will be filled after object instance
         self.omega_0_mode = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
 
-        self.mech_couplings_dic = mech_couplings_dic
+        self.mech_couplings_list = mech_couplings_list
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -245,11 +249,11 @@ class ElecMode:
         + "Q_probe: " + str(self.Q_probe) + "\n"
         + "phase_rev: " + str(self.phase_rev) + "\n"
         + "phase_probe: " + str(self.phase_probe) + "\n"
-        + "mech_couplings_dic: " + str(self.mech_couplings_dic))
+        + "mech_couplings_list: " + str(self.mech_couplings_list))
 
     def Compute_ElecMode(self, Tstep, nom_beam_phase):
         import numpy as np
-    
+
         # Initialize an empty list to return
         modes_out = []
 
@@ -298,12 +302,12 @@ class Piezo:
     """ Piezo class: contains couplings between the Piezo and each
     one of the mechanical modes (MechMode instances)."""
 
-    def __init__(self, name, comp_type, mech_couplings_dic, VPmax):
+    def __init__(self, name, comp_type, mech_couplings_list, VPmax):
         self.name = name
         self.type = comp_type
 
         self.VPmax = VPmax
-        self.mech_couplings_dic = mech_couplings_dic
+        self.mech_couplings_list = mech_couplings_list
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -312,7 +316,7 @@ class Piezo:
         + "name: " + self.name + "\n"
         + "type: " + self.type + "\n"
         + "VPmax: " + str(self.VPmax) + "\n"
-        + "mech_couplings_dic: " + str(self.mech_couplings_dic))
+        + "mech_couplings_list: " + str(self.mech_couplings_list))
 
 def readMechMode(confDict, mech_mode_entry):
     """ readMechMode: Takes the global configuration dictionary and
@@ -352,23 +356,17 @@ def readCouplings(confDict, mech_couplings, module_entry):
         mech_couplings: dictionary containing couplings defined in the configuration file (0 to M elements).
         module_entry: Module entry in global dictionary in order to access the proper modules mechanical mode list.
     Output:
-        mech_couplings: dictionary containing mechanical couplings for an electrical mode or piezo (length M)."""
+        mech_couplings_list: ordered list containing mechanical couplings for an electrical mode or piezo (length M).
+            Order corresponds to the order of appearance of the mechanical mode in mech_net."""
 
     # Grab the full list of mechanical modes in the Module
     mech_net = confDict[module_entry]["mechanical_mode_connect"]
-    # Convert list of strings to a 0.0 valued set of dictionary entries as a place holder for the mechanical couplings
-    mech_dic = {x: 0.0 for x in mech_net}
 
-    # Check for consistency between coupling list and list of mechanical modes
-    if all(mech_modes in mech_couplings for mech_modes in mech_dic):
-        # Merge dictionaries
-        mech_coupling_dic = dict(mech_dic, **mech_couplings)
-        # Return resulting dictionary
-        return mech_coupling_dic
-    else:
-        # Dictionary consistency check failed
-        raise Exception("Mechanical mode not found in list of mechanical couplings!")
-        return mech_couplings
+    # Make an ordered list of size M (where M is the total number of mechanical modes, length of mech_net)
+    # Fill with 0s if no coupling is specified in mech_couplings by the user
+    mech_couplings_list = [mech_couplings[m] if m in mech_couplings else 0.0 for m in mech_net]
+
+    return mech_couplings_list
 
 def readCavity(confDict, cav_entry, module_entry):
     """ readCavity: Takes the global configuration dictionary and returns a Cavity object
@@ -393,7 +391,7 @@ def readCavity(confDict, cav_entry, module_entry):
 
     cav_param_dic["L"] = readentry(confDict,confDict[cav_entry]["L"])
     cav_param_dic["nom_grad"] = readentry(confDict,confDict[cav_entry]["nom_grad"])
-    
+
     cav_param_dic["nom_beam_phase"] = readentry(confDict,confDict[cav_entry]["nom_beam_phase"])
     cav_param_dic["rf_phase"] = readentry(confDict,confDict[cav_entry]["rf_phase"])
     cav_param_dic["design_voltage"] = readentry(confDict,confDict[cav_entry]["design_voltage"])
@@ -435,12 +433,12 @@ def readCavity(confDict, cav_entry, module_entry):
         # Read dictionary of couplings from global configuration dictionary
         mech_couplings = readentry(confDict,confDict[elec_mode_now]["mech_couplings"]["value"])
 
-        # Check consistency of coupling entries with the list of mechanical modes,
-        # and get a coupling dictionary of length M (number of mechanical modes)
-        mech_couplings_dic = readCouplings(confDict, mech_couplings, module_entry)
+        # Get a coupling list of length M (number of mechanical modes),
+        # filled with 0s if no coupling is specified by user
+        mech_couplings_list = readCouplings(confDict, mech_couplings, module_entry)
 
         # Instantiate ElecMode object
-        elec_mode = ElecMode(elec_mode_name, elec_comp_type, mode_name, elec_param_dic, mech_couplings_dic)
+        elec_mode = ElecMode(elec_mode_name, elec_comp_type, mode_name, elec_param_dic, mech_couplings_list)
 
         # Append to list of electrical modes
         elec_mode_list.append(elec_mode)
@@ -473,13 +471,13 @@ def readPiezo(confDict, piezo_entry, module_entry):
 
     # Check consistency of coupling entries with the list of mechanical modes,
     # and get a coupling dictionary of length M (number of mechanical modes)
-    mech_couplings_dic = readCouplings(confDict, mech_couplings, module_entry)
+    mech_couplings_list = readCouplings(confDict, mech_couplings, module_entry)
 
     # Read rest of parameters
     VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
 
     # Create a Piezo instance and return
-    piezo = Piezo(name, piezo_comp_type, mech_couplings_dic, VPmax)
+    piezo = Piezo(name, piezo_comp_type, mech_couplings_list, VPmax)
 
     return piezo
 
@@ -646,7 +644,7 @@ class Amplifier:
 
     def Get_Saturation_Limit(self):
         """Get_Saturation_Limit: Calculate (measure) the output drive limit from the FPGA controller
-        based on the clipping parameter of the saturation function and the maximum output power 
+        based on the clipping parameter of the saturation function and the maximum output power
         percentage level setting. Returns maximum input value to the saturation function in order
         to reach the percentage of the maximum amplifier output power indicated by top_drive."""
 
@@ -667,7 +665,7 @@ class Amplifier:
         # Sweep input
         for i in xrange(len(inp)):
             oup[i] = acc.Saturate(inp[i],c)
-            if (found == False) and (oup[i].real >= top_drive): 
+            if (found == False) and (oup[i].real >= top_drive):
                 V_sat = inp[i]
                 found = True
 
@@ -741,7 +739,7 @@ class Station:
         p_TRF1 = acc.complexdouble_Array(2)
         p_TRF1[0] = complex(self.tx_filter1.poles['value'][0][0])*1e6
         p_TRF1[1] = complex(self.tx_filter1.poles['value'][1][0])*1e6
-        
+
         p_TRF2 = acc.complexdouble_Array(1)
         p_TRF2[0] = complex(self.tx_filter2.poles['value'][0][0])*1e6
 
@@ -787,7 +785,7 @@ def readStation(confDict, station_entry, module_entry):
 
     tx_filter1_entry = confDict[station_entry]['Tx_filter1']
     tx_filter1 = readZFilter(confDict, tx_filter1_entry)
-    
+
     tx_filter2_entry = confDict[station_entry]['Tx_filter2']
     tx_filter2 = readZFilter(confDict, tx_filter2_entry)
 
@@ -911,7 +909,7 @@ class Linac:
         for module in module_list:
             for station in module.station_list:
                 for mode in station.cavity.elec_modes:
-                    mode.omega_0_mode["value"] = 2*pi*(self.f0["value"] + mode.foffset["value"]) 
+                    mode.omega_0_mode["value"] = 2*pi*(self.f0["value"] + mode.foffset["value"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""

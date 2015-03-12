@@ -21,8 +21,8 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   double RoverQ, double foffset, double omega_0_mode,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
-  double Tstep
-  // ,double *mech_couplings
+  double Tstep,
+  double *mech_couplings, int n_mech
   )
 {
 
@@ -58,32 +58,40 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Append mode to cavity filter
   Filter_Append_Modes(&elecMode->fil, &mode_p, 1, Tstep);
 
-  // Mechanical couplings
-  // elecMode -> mech_couplings = mech_couplings;
+  // Electro-Mechanical couplings
+  // First allocate memory for A and C matrices
+  elecMode -> C = calloc(n_mech, sizeof(double));
+  elecMode -> A = calloc(n_mech, sizeof(double));
+
+  // Fill in coefficients given mechanical couplings
+  for(int i=0; i<n_mech;i++){
+    // mech_couplings (Hz/(MV/m)^2) are always negative but sometimes referred to as positive quantities
+    // Take the absolute value to let user configuration the freedom of expressing it either way 
+    elecMode -> A[i] = (1/omega_0_mode)*sqrt(abs(mech_couplings[i]/RoverQ));
+    elecMode -> C[i] = -(omega_0_mode)*sqrt(abs(mech_couplings[i]*RoverQ));  }
 }
 
 ElecMode * ElecMode_Allocate_New(
   double RoverQ, double foffset, double omega_0_mode,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
-  double Tstep
-  // ,double *mech_couplings
+  double Tstep,
+  double *mech_couplings, int n_mech
   )
 {
   ElecMode * elecMode = calloc(1,sizeof(ElecMode));
 
   // Allocate single-pole, n_mode Filter
   Filter_Allocate_In(&elecMode->fil,1,1);
-  ElecMode_Allocate_In(elecMode, RoverQ, foffset, omega_0_mode, Q_0, Q_drive, Q_probe, beam_phase,  phase_rev, phase_probe, Tstep
-    // ,mech_couplings
-    );
+  ElecMode_Allocate_In(elecMode, RoverQ, foffset, omega_0_mode, Q_0, Q_drive, Q_probe, beam_phase,  phase_rev, phase_probe, Tstep ,mech_couplings, n_mech);
 
   return elecMode;
 }
 
 void ElecMode_Deallocate(ElecMode * elecMode)
 {
-  free(elecMode->mech_couplings);
+  free(elecMode->A);
+  free(elecMode->C);
   Filter_Deallocate(&elecMode->fil);
   free(elecMode);
 }

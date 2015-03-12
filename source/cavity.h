@@ -13,7 +13,10 @@ typedef struct str_elecmode{
 	double complex k_drive, k_beam, k_probe, k_em;
 	double Tstep;
 	Filter fil;
-	double *mech_couplings;
+  // Matrix coefficients: Convert square of accelerating voltage to Force
+  double *A;
+  // Matrix coefficients: Convert displacement to frequency shift
+	double *C;
 } ElecMode;
 
 typedef ElecMode * ElecMode_p;
@@ -66,16 +69,16 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   double RoverQ, double foffset, double omega_0_mode,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
-  double Tstep
-  // , double *mech_couplings
+  double Tstep,
+  double *mech_couplings, int n_mech
   );
 
 ElecMode *ElecMode_Allocate_New(
   double RoverQ, double foffset, double omega_0_mode,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
-  double Tstep
-  // , double *mech_couplings
+  double Tstep,
+  double *mech_couplings, int n_mech
   );
 void ElecMode_Deallocate(ElecMode * elecMode);
 
