@@ -2,13 +2,18 @@
 
 #include <math.h>
 
-RF_State** make_rf_state_array(int n) {
-  RF_State** rf_state_net = calloc(n, sizeof(RF_State *));
-  int i;
-  for(i=0;i<n;i++) {
-    rf_state_net[i] = calloc(1,sizeof(RF_State));
-  }
+RF_State_dp RF_State_Allocate_Array(int n)
+{
+  RF_State_dp rf_state_net = calloc(n, sizeof(RF_State *));
+  
   return rf_state_net;
+}
+
+RF_Station_dp RF_Station_Allocate_Array(int n)
+{
+  RF_Station_dp RF_Station_net = calloc(n, sizeof(RF_Station *));
+  
+  return RF_Station_net;
 }
 
 /*
@@ -246,7 +251,7 @@ double complex Saturate(double complex in, double harshness) {
   return in*cpow(1.0+cpow(cabs(in),harshness), -1.0/harshness);
 }
 
-double complex Triode_Step(RF_Station *rf_station, double complex drive_in, RF_State *rf_state)
+double complex SSA_Step(RF_Station *rf_station, double complex drive_in, RF_State *rf_state)
 {
   double complex trf1out, satout, trf2out;
   
@@ -261,11 +266,11 @@ double complex Triode_Step(RF_Station *rf_station, double complex drive_in, RF_S
   // Apply output filter (TRF2)
   trf2out = Filter_Step(&rf_station->TRF2, satout, &rf_state->TRF2);
 
-  // Return triode output
+  // Return SSA output
   return trf2out;
 }
 
-void Triode_Clear(RF_Station *rf_station, RF_State * rf_state)
+void SSA_Clear(RF_Station *rf_station, RF_State * rf_state)
 {
   Filter_State_Clear(&rf_station->TRF1, &rf_state->TRF1);
   Filter_State_Clear(&rf_station->TRF2, &rf_state->TRF2);
@@ -300,8 +305,8 @@ double complex RF_Station_Step(
   // // FPGA
   sig_error = FPGA_Step(&rf_station->fpga,E_probe_lp, &rf_state->fpga_state, openloop);
 
-  // // Triode (includes Tx filters and saturation)
-  Kg = Triode_Step(rf_station, rf_state->fpga_state.drive, rf_state);
+  // // SSA (includes Tx filters and saturation)
+  Kg = SSA_Step(rf_station, rf_state->fpga_state.drive, rf_state);
 
   // Cavity
   V_acc = Cavity_Step(rf_station->cav, delta_tz, Kg, beam_charge, &rf_state->cav_state);
@@ -315,6 +320,6 @@ void RF_Station_Clear(RF_Station *rf_station, RF_State * rf_state)
   FPGA_Clear(&rf_state->fpga_state);
   Cavity_Clear(rf_station->cav, &rf_state->cav_state);
   Filter_State_Clear(&rf_station->RXF, &rf_state->RXF);
-  Triode_Clear(rf_station, rf_state);
+  SSA_Clear(rf_station, rf_state);
   Delay_Clear(&rf_station->loop_delay, &rf_state->loop_delay_state);
 }

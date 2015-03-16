@@ -207,16 +207,16 @@ def unit_saturate():
     plt.show()
 
 #
-# Unit test for Triode
+# Unit test for SSA
 #
-def unit_triode(showplots=True,TOL=1.0e-14):
+def unit_SSA(showplots=True,TOL=1.0e-14):
 
      # Import JSON parser module
     from get_configuration import Get_SWIG_RF_Station
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    test_file = "source/configfiles/unit_tests/triode_test.json"
+    test_file = "source/configfiles/unit_tests/SSA_test.json"
 
     # Get SWIG-wrappped C handles for RF Station
     rf_station, rf_state, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
@@ -238,12 +238,12 @@ def unit_triode(showplots=True,TOL=1.0e-14):
 
     # Run numerical simulation    
     for i in xrange(1,nt):
-            sout[i] = acc.Triode_Step(rf_station,drive,rf_state)
+            sout[i] = acc.SSA_Step(rf_station,drive,rf_state)
 
     # Format plot
-    plt.plot(trang,np.abs(sout),'-', label='Triode output', linewidth=3)
+    plt.plot(trang,np.abs(sout),'-', label='SSA output', linewidth=3)
     plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
-    plt.title('Triode Test', fontsize=40, y=1.01)
+    plt.title('SSA Test', fontsize=40, y=1.01)
     plt.xlabel('Time [s]', fontsize=30)
     plt.ylabel('Amplitude '+r'[$\sqrt{W}$]', fontsize=30)
     plt.legend(loc='upper right')
@@ -343,8 +343,8 @@ def perform_tests():
     print ">>> (Visual inspection only)\n" 
 
     # This is not a PASS/FAIL test
-    print "\n****\nTesting Triode..."
-    unit_triode()
+    print "\n****\nTesting SSA..."
+    unit_SSA()
     print ">>> (Visual inspection only)\n" 
     
     plt.figure()

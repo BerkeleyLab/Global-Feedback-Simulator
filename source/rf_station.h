@@ -63,13 +63,18 @@ typedef struct str_RF_Station {
   double PAscale;	// Amplifier scaling (from unitless to sqrt(W))
 
   Filter RXF;	// Anti-alias filter
-  Filter TRF1, TRF2;	// Triode Filters
+  Filter TRF1, TRF2;	// SSA Filters
   FPGA fpga;	// FPGA Controller
   Cavity *cav;	// Cavity
 
   Delay loop_delay; // Loop Delay
 
 } RF_Station;
+
+typedef RF_Station * RF_Station_p;
+typedef RF_Station ** RF_Station_dp;
+
+RF_Station_dp RF_Station_Allocate_Array(int n);
 
 typedef struct str_RF_Station_State {
 
@@ -80,10 +85,10 @@ typedef struct str_RF_Station_State {
 
 } RF_State;
 
-
 typedef RF_State * RF_State_p;
+typedef RF_State ** RF_State_dp;
 
-RF_State** make_rf_state_array(int n);
+RF_State_dp RF_State_Allocate_Array(int n);
 
 void RF_Station_Allocate_In(RF_Station * rf_station,
   double Tstep,
@@ -134,13 +139,13 @@ double complex Phase_Shift(double complex in, double theta);
 double complex Saturate(double complex in, double harshness);
 
 /*
- * Step a linac's triode configuration in time, 
+ * Step a linac's SSA configuration in time, 
  * drive_in -> [[ TRF1 -> saturate_c -> TRF2 ]] -> TRF2_OUTPUT_D
  *                  `------.  triode ,------'
  */
-double complex Triode_Step(RF_Station *rf_station, double complex drive_in,
+double complex SSA_Step(RF_Station *rf_station, double complex drive_in,
 		 RF_State *rf_state);
 
-void Triode_Clear(RF_Station *rf_station, RF_State *rf_state);
+void SSA_Clear(RF_Station *rf_station, RF_State *rf_state);
 
 #endif
