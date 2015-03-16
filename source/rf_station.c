@@ -200,7 +200,7 @@ void FPGA_Allocate_In(FPGA * fpga,
   
   // Saturation limits
   fpga->out_sat = out_sat;
-  fpga->state_sat = cabs(out_sat/ki);
+  fpga->state_sat = out_sat;
 
   fpga->Tstep = Tstep;
 }
@@ -227,14 +227,14 @@ double complex FPGA_Step(FPGA *fpga,
     stnow->state = fpga->set_point;
   } else {  //Closed loop
     // Integrator state
-    state = stnow->state + fpga->Tstep*err;
+    state = stnow->state + fpga->Tstep*err*fpga->ki;
     // Compare state magnitude and saturation limit
     scale = cabs(state)/fpga->state_sat;
     // Clip integrator state if above limit
     stnow->state = (scale > 1.0) ? state/scale : state;
     
     // Drive signal
-    drive = stnow->state*fpga->ki + fpga->kp*err;
+    drive = stnow->state + fpga->kp*err;
     // Compare output drive magnitude with saturation limit
     scale = cabs(drive)/fpga->out_sat;
     // Clip drive output if above limit

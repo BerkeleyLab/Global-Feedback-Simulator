@@ -144,8 +144,8 @@ def unit_fpga(Tstep=0.01):
     plt.ylim([-2.2,13])
 
     # Add text with results on plot
-    plt.text(1,6, kp_text, verticalalignment='top', fontsize=30)
-    plt.text(1,4, ki_text, verticalalignment='top', fontsize=30)
+    plt.text(1,6.5, kp_text, verticalalignment='top', fontsize=30)
+    plt.text(1,5.5, ki_text, verticalalignment='top', fontsize=30)
     plt.rc('font',**{'size':15})
 
     plt.show()
