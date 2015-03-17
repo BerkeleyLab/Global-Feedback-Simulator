@@ -171,6 +171,10 @@
                 <a href="http://fpga-server.lbl.gov:8080" target="_blank"><img src="img/simulator_screenshot.png" />
         </div>
 
+        <div id="how-imgs" class="step" data-x="1000" data-y="1400" data-rotate-x="-90" data-scale="1">
+            <img width="100%" src="img/Model_hierarchy.png" />
+        </div>
+
         <div id="how-imgs-zoom" class="step" data-x="1000" data-y="1500" data-z="-2000" data-scale="1">
                 <img width="110%" src="img/Linac_block_diagram.png" />
         </div>
@@ -184,7 +188,7 @@
         </div>
 
         <div id="how-imgs-zoom-cav" class="step" data-x="1000" data-y="1500" data-z="-6000" data-scale="1">
-                <img width="110%" src="img/Station_rf_blocks.png" />
+                <img width="100%" src="img/Station_rf_blocks.png" />
         </div>
         
         <div id="how-imgs-zoom-cav" class="step" data-x="1000" data-y="1500" data-z="-7000" data-rotate-x="-90" data-scale="1">
@@ -208,38 +212,42 @@
         </div>
 
         <div id="how-imgs-zoom-extra" class="step" data-x="2000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
+                <div class="big">
+                Building blocks & <strong>RF Station</strong>
+            </div>
+        </div>
+        
+        <div id="how-imgs-zoom-extra" class="step" data-x="1000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
                 <img width="110%" src="img/filter_step_response.png" />
         </div>
 
-        <div id="how-imgs-zoom-extra" class="step" data-x="1000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
-                <img width="110%" src="img/saturation_test.png" />
-        </div>
-
         <div id="how-imgs-zoom-extra" class="step" data-x="0" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
-                <img width="110%" src="img/SSA_test.png" />
+                <img width="110%" src="img/fpga_unit_test.png" />
         </div>
 
         <div id="how-imgs-zoom-extra" class="step" data-x="-1000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
-                <img width="100%" src="img/phase_shift_test.png" />
+                <img width="110%" src="img/saturation_test.png" />
         </div>
 
         <div id="how-imgs-zoom-extra" class="step" data-x="-2000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
+                <img width="110%" src="img/SSA_test.png" />
+        </div>
+
+        <div id="how-imgs-zoom-extra" class="step" data-x="-3000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
+                <img width="100%" src="img/phase_shift_test.png" />
+        </div>
+
+        <div id="how-imgs-zoom-extra" class="step" data-x="-4000" data-y="1500" data-z="-10000" data-rotate-y="90" data-scale="1">
                 <img width="100%" src="img/rf_station_test.png" />
         </div>
 
-        <div id="how-imgs-zoom-web1" class="step" data-x="3000" data-y="1000" data-z="-3000" data-scale="1">
-        </div>
-
-        <div id="how-text" class="step" data-x="1000" data-y="1800" data-scale="1">
-			<div class="big bold subtitle">
+        <div id="tools" class="step" data-x="1000" data-y="1800" data-scale="1">
+            <div class="big bold subtitle">
                 Tools
             </div>
         </div>
 
-        <div id="how-text-bg" class="step" data-x="1000" data-y="2200" data-scale="1">
-            <img src="img/architecture.png" />
-        </div>
-        <div id="how-text-engine" class="step" data-x="1000" data-y="2200" data-scale="1">
+        <div id="tools" class="step" data-x="1000" data-y="2200" data-scale="1">
             <p>
                 <div class="big bold">C</div>
                 <div class="description">Computationally efficient back-end</div>
@@ -257,21 +265,56 @@
                 <div class="description">Front-end</div>
             </p>
         </div>
+
+        <div id="tools-bg" class="step" data-x="1000" data-y="2200" data-scale="1">
+                <img src="img/architecture.png" />
+        </div>
+
         <div id="how-text-tests" class="step" data-x="1000" data-y="2200" data-scale="1">
             <div class="big">
                 There are even <strong>unit tests!</strong>
             </div>
         </div>
 
-
-		<div id="wrap-up" class="step" data-x="2280" data-y="1100" data-scale="1">
+        <div id="features" class="step" data-x="2280" data-y="1100" data-scale="1">
+            <div class="big bold subtitle">Features</div>
+            <p>
+                <div class="big bold">Back-end</div>
+                <div class="description">Computationally efficient</div>
+            </p>
+            <p>
+                <div class="big bold">Topology</div>
+                <div class="description">Flexibility to run many kinds of studies</div>
+            </p>
+            <p>
+                <div class="big bold">User friendly</div>
+                <div class="description">Modern user interfaces and configuration schemes</div>
+            </p>
+        </div>
+        
+        <div id="features" class="step" data-x="2280" data-y="1100" data-rotate-x="-90" data-scale="1">
+            <div class="big bold subtitle">Studies</div>
+            <p>
+                <div class="big bold">Noise budgets</div>
+                <div class="description">What's the effect of LLRF noise on energy errors?</div>
+            </p>
+            <p>
+                <div class="big bold">RF System</div>
+                <div class="description">How fast can the RF recover from a trip?</div>
+            </p>
+            <p>
+                <div class="big bold">Beam-based feedback</div>
+                <div class="description">What would be the benefits of doing BBF 10x faster?</div>
+            </p>
+        </div>
+		<div id="wrap-up" class="step" data-x="2280" data-y="1800" data-scale="1">
 			<div id="where-learn" class="big">Progress!</div>
 			<div class="extralight">
                 Well, how much done and left to do..
 			</div>
 		</div>
 
-        <div id="wrap-up" class="step" data-x="2280" data-y="1100" data-rotate-y="-90" data-scale="1">
+        <div id="wrap-up" class="step" data-x="2280" data-y="1800" data-rotate-y="-90" data-scale="1">
             <div class="big">
                 <strong>Q1</strong> C Back-end (74%)
             </div>
@@ -306,37 +349,7 @@
         </div>
 
 		
-		<div id="tdb" class="step" data-x="2280" data-y="1800" data-scale="1">
-            <div class="big bold subtitle">Features</div>
-            <p>
-                <div class="big bold">Back-end</div>
-                <div class="description">Computationally efficient</div>
-            </p>
-            <p>
-                <div class="big bold">Topology</div>
-                <div class="description">Flexibility to run many kinds of studies</div>
-            </p>
-            <p>
-                <div class="big bold">User friendly</div>
-                <div class="description">Modern user interfaces and configuration schemes</div>
-            </p>
-		</div>
 		
-        <div id="tdb" class="step" data-x="2280" data-y="1800" data-rotate-x="-90" data-scale="1">
-            <div class="big bold subtitle">Studies</div>
-            <p>
-                <div class="big bold">Noise budgets</div>
-                <div class="description">What's the effect of LLRF noise on energy errors?</div>
-            </p>
-            <p>
-                <div class="big bold">RF System</div>
-                <div class="description">How fast can the RF recover from a trip?</div>
-            </p>
-            <p>
-                <div class="big bold">Beam-based feedback</div>
-                <div class="description">What would be the benefits of doing BBF 10x faster?</div>
-            </p>
-        </div>
         
 
 	<div class="step" id="acks" data-x="0" data-y="0" data-rotate-x="-90" data-scale=".1">
