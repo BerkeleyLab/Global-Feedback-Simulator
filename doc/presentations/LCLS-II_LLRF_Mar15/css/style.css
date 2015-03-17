@@ -152,9 +152,18 @@ blockquote .author {
 #what-features { letter-spacing: 19px; font-size: 37px; position: relative; left: 10px; }
 
 #how-imgs-zoom:not(.active) { opacity: 0; }
+#how-imgs-zoom:not(.active) { opacity: 0; }
+#how-imgs-acc:not(.active) { opacity: 0; }
+#how-imgs-zoom-linac:not(.active) { opacity: 0; }
+#how-imgs-zoom-cryo:not(.active) { opacity: 0; }
+#how-imgs-zoom-rf:not(.active) { opacity: 0; }
+#how-imgs-zoom-extra:not(.active) { opacity: 0; }
 #how-imgs-zoom-web1:not(.active) { opacity: 0; }
 #how-imgs-zoom-web2:not(.active) { opacity: 0; }
 #how-text-tests:not(.active) { opacity: 0; }
+#wrap-up-status:not(.active) { opacity: 0; }
+#tools-bg:not(.active) { opacity: 0; }
+#features-bg:not(.active) { opacity: 0; }
 
 #how-text-bg:not(.active) { opacity: 0.1; }
 #how-text-engine:not(.active) { opacity: 0.01; }
