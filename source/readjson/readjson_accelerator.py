@@ -177,7 +177,7 @@ class Cavity:
                 mech_couplings[m] = mode.mech_couplings_list[m]
 
             elecMode = acc.ElecMode_Allocate_New(mode.RoverQ['value'], \
-                mode.foffset['value'], mode.omega_0_mode['value'], \
+                mode.foffset['value'], mode.LO_w0['value'], \
                 mode.Q_0['value'], mode.Q_drive['value'], mode.Q_probe['value'], \
                 self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], \
                 Tstep_global, mech_couplings, n_mech)
@@ -230,7 +230,7 @@ class ElecMode:
         self.phase_rev = param_dic["phase_rev"]
         self.phase_probe = param_dic["phase_probe"]
         ## Add (replicate) a parameter that will be filled after object instance
-        self.omega_0_mode = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
+        self.LO_w0 = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
 
         self.mech_couplings_list = mech_couplings_list
 
@@ -260,8 +260,9 @@ class ElecMode:
         beam_phase = nom_beam_phase
 
         mode_name = self.mode_name
-        w0 = self.omega_0_mode['value']
+        LO_w0 = self.LO_w0['value']
         foffset = self.foffset['value']
+        w0 = LO_w0 + 2.0*pi*foffset
         RoverQ = self.RoverQ['value']
 
         k_probe = np.exp(1j*self.phase_probe['value'])/np.sqrt(self.Q_probe['value']*RoverQ);
@@ -909,7 +910,7 @@ class Linac:
         for module in module_list:
             for station in module.station_list:
                 for mode in station.cavity.elec_modes:
-                    mode.omega_0_mode["value"] = 2*pi*(self.f0["value"] + mode.foffset["value"])
+                    mode.LO_w0["value"] = 2*pi*self.f0["value"]
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""

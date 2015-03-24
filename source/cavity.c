@@ -18,7 +18,7 @@ void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int index)
 
 
 void ElecMode_Allocate_In(ElecMode *elecMode,
-  double RoverQ, double foffset, double omega_0_mode,
+  double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
   double Tstep,
@@ -45,9 +45,10 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Emitted port impedance (includes phase shift between cavity cell and reverse ADC)
   elecMode -> k_em = cexp(I*phase_rev)/sqrt(Q_drive*RoverQ);
 
-  // Mode's angular frequency (accelerator angular frequency + offset)
-  elecMode -> omega_0_mode = omega_0_mode;
+  // Linac nominal angular frequency
+  elecMode -> LO_w0 = LO_w0;
 
+  double omega_0_mode = LO_w0 + 2*M_PI*foffset;
   // Mode's open-loop bandwidth 
   elecMode -> omega_f = omega_0_mode/(2*Q_L);
   
@@ -72,7 +73,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
 }
 
 ElecMode * ElecMode_Allocate_New(
-  double RoverQ, double foffset, double omega_0_mode,
+  double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
   double Tstep,
@@ -83,7 +84,7 @@ ElecMode * ElecMode_Allocate_New(
 
   // Allocate single-pole, n_mode Filter
   Filter_Allocate_In(&elecMode->fil,1,1);
-  ElecMode_Allocate_In(elecMode, RoverQ, foffset, omega_0_mode, Q_0, Q_drive, Q_probe, beam_phase,  phase_rev, phase_probe, Tstep ,mech_couplings, n_mech);
+  ElecMode_Allocate_In(elecMode, RoverQ, foffset, LO_w0, Q_0, Q_drive, Q_probe, beam_phase,  phase_rev, phase_probe, Tstep ,mech_couplings, n_mech);
 
   return elecMode;
 }
@@ -146,11 +147,8 @@ double complex ElecMode_Step(ElecMode *elecMode,
   double complex v_beam, v_drive, v_in, v_out;
   double omega_now, d_phase_now;
 
-  // Instantaneous mode's angular frequency (including time-varying detuning)
-  omega_now = elecMode -> omega_0_mode + elecMode_state->delta_omega;
-
   // Beam-induced voltage (convert charge to voltage and add timing noise)
-  v_beam = beam_charge * elecMode -> k_beam * cexp(-I*omega_now*delta_tz);  // k_beam = Tstep * (R/Q) * Q_L
+  v_beam = beam_charge * elecMode -> k_beam * cexp(-I*elecMode->LO_w0*delta_tz);  // k_beam = Tstep * (R/Q) * Q_L
 
   // RF drive term
   v_drive = Kg_fwd * elecMode -> k_drive; // Drive term (k_drive = 2*sqrt(Q_drive*(R/Q))
@@ -168,7 +166,7 @@ double complex ElecMode_Step(ElecMode *elecMode,
   v_out = Filter_Step(&(elecMode->fil), v_in, &(elecMode_state->fil_state))*cexp(I*d_phase_now);
 
   // Calculate outputs based on v_vout
-  elecMode_state->v_2 = pow(cabs(v_out), 2);  // Voltage squared
+  elecMode_state->V_2 = pow(cabs(v_out), 2.0);  // Voltage squared
 
   *v_probe = v_out * elecMode -> k_probe; // Probe (k_probe = exp(j*phase_probe)/sqrt(Q_probe*(R/Q)) )
 
@@ -284,7 +282,7 @@ double complex ElecMode_Get(Cavity *cav, int idx, const char *k_type)
   }
   else if(!strcmp(k_type, "k_probe")) return cav->elecMode_net[idx]->k_probe;
   else if(!strcmp(k_type, "k_em")) return cav->elecMode_net[idx]->k_em;
-  else if(!strcmp(k_type, "omega_0_mode")) return cav->elecMode_net[idx]->omega_0_mode;
+  else if(!strcmp(k_type, "LO_w0")) return cav->elecMode_net[idx]->LO_w0;
   else if(!strcmp(k_type, "omega_f")) return cav->elecMode_net[idx]->omega_f;
   else{
     printf("ElecMode_Get: Invalid k_type"); 

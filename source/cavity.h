@@ -9,7 +9,8 @@
 
 
 typedef struct str_elecmode{
-	double omega_0_mode, omega_f;
+  double LO_w0;
+  double omega_f;
 	double complex k_drive, k_beam, k_probe, k_em;
 	double Tstep;
 	Filter fil;
@@ -26,7 +27,7 @@ typedef struct str_elecmode_state{
 	Filter_State fil_state;
 	double delta_omega;
 	double d_phase;
-	double complex v_2;
+	double complex V_2;
 } ElecMode_State;
 
 typedef struct str_cavity{
@@ -66,7 +67,7 @@ void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav);
 void Cavity_State_Deallocate(Cavity_State *cav_state, Cavity *cav);
 
 void ElecMode_Allocate_In(ElecMode *elecMode,
-  double RoverQ, double foffset, double omega_0_mode,
+  double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
   double Tstep,
@@ -74,7 +75,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   );
 
 ElecMode *ElecMode_Allocate_New(
-  double RoverQ, double foffset, double omega_0_mode,
+  double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
   double beam_phase,  double phase_rev, double phase_probe,
   double Tstep,
