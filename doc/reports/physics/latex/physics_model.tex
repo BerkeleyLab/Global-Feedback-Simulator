@@ -59,7 +59,7 @@ Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.18]{../figures/Model_hierarchy.png}
+\includegraphics[scale=0.6]{../figures/Model_hierarchy.png}
 \caption{Model hierarchy.}
 \label{fig:model_hierarchy}
 \end{figure}
@@ -289,7 +289,7 @@ e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.35]{../figures/fpga_unit_test.png}
+\includegraphics[scale=0.25]{../figures/fpga_unit_test.png}
 \caption{FPGA unit test.}
 \label{fig:fpga_unit_test}
 \end{figure}
@@ -344,7 +344,7 @@ The saturated output amplitude from this equation is 1. While some phase shift w
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.315]{../figures/phase_shift_test.png}
+\includegraphics[scale=0.265]{../figures/phase_shift_test.png}
 \caption{Phase shift test.}
 \label{fig:phase_shfiter_test}
 \end{figure}
@@ -455,7 +455,7 @@ which can then be approximated to amplitude and phase errors using Eqs.~\eqref{e
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.08]{../figures/Module_block_diagram.png}
+\includegraphics[scale=0.3]{../figures/Cryomodule_block_diagram.png}
 \caption{Module block diagram.}
 \label{fig:Module_block_diagram}
 \end{figure}
@@ -602,24 +602,49 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 \subsubsection{Software implementation}
 
 We now turn to the matrix Equation ~\ref{eq: state_space}. Two expressions appear:
+\begin{equation}
+  \frac{dx_{\nu}}{dt} = a_{\nu}x_{\nu} - b_{\nu}y_{\nu}
+  \label{eq:dx/dt}
+\end{equation}
+
+\begin{equation}
+  \frac{dy_{\nu}}{dt} = b_{\nu}x_{\nu} + a_{\nu}y_{\nu} + c_{\nu}F_{\nu}
+  \label{eq:dy/dt}
+\end{equation}
+
+where: 
+
 \be
-\frac{dx_{\nu}}{dt} = ax_{\nu} - by_{\nu}
+a_{\nu} =  \frac{-\omega_{\nu}}{2Q_{\nu}} 
 \ee
 \be
-\frac{dy_{\nu}}{dt} = bx_{\nu} + ay_{\nu} + cF_{\nu}
+b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}} 
+\ee
+\be
+c_{\nu} = -\frac{\omega_{\nu}}{k_{\nu}b_{\nu}}
 \ee
 
-Discretizing as before, we find: 
+These displacement influence each mode's instantaneous  eigenmode frequency $\omega_{\mu}$ as following
 \be
-\label{eq_x}
-x^{n+1}_{\nu} = x^{n}_{\nu} + T(ax^{n}_{\nu} - by^{n}_{\nu}) = x^{n}_{\nu}(1 + Ta_{\nu}) - Tb_{\nu}y^{n}_{\nu}
-\ee
-\be
-\label{eq_y}
-y^{n+1}_{\nu} = y^{n}_{\nu} + T(bx^{n}_{\nu} + ay^{n}_{\nu} + cF^{n}_{\nu}) = y^{n}_{\nu}(1+Ta_{\nu}) + T(b_{\nu}x^{n} + cF^{n}_{\nu})
+\label{eq_wmu}
+\omega_\mu = \sum_\nu C_{\mu\nu} x_\nu
 \ee
 
+where $C$ is the coupling matrix from mechano to EM.
 
+As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}, where:
+
+\begin{equation}
+ \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}
+\end{equation}
+
+\noindent and,
+
+\begin{equation}
+ \vec V_{\rm out} = y_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = b_{\nu}x_{\nu} + c_{\nu}F_{\nu}
+\end{equation}
+
+\noindent respectively.
 % 
 % 
 % These electromagnetic fields interact mechanically.
@@ -686,12 +711,13 @@ y^{n+1}_{\nu} = y^{n}_{\nu} + T(bx^{n}_{\nu} + ay^{n}_{\nu} + cF^{n}_{\nu}) = y^
 % 
 % where $C$ is the coupling matrix from mechano to EM.
 
+\newpage
 
 \section{Linac section}
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.11]{../figures/Linac_block_diagram.png}
+\includegraphics[scale=0.45]{../figures/Linac_block_diagram.png}
 \caption{Linac block diagram.}
 \label{fig:Linac_block_diagram}
 \end{figure}
