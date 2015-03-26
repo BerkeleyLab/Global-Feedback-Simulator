@@ -84,13 +84,13 @@
             "description": "Near-IQ denominator (IF carrier/ADC clock)"
         },
 
-        "module_connect" : ["Module0"],
+        "cryomodule_connect" : ["Cryomodule0"],
         "Chicane": "Chicane0"
     },
 
-    "Module0": {
-        "type": "module",
-        "name": "module0",
+    "Cryomodule0": {
+        "type": "Cryomodule",
+        "name": "cryomodule0",
         "station_connect": ["Station0"],
         "mechanical_mode_connect": ["MechMode0", "MechMode1", "MechMode2"],
 

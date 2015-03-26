@@ -8,6 +8,7 @@
 # Classes defined:
 #   Simulation
 #   Accelerator
+#   Cryomodule
 #   Cavity
 #   ElecMode
 #   MechMode
@@ -344,10 +345,10 @@ def readMechMode(confDict, mech_mode_entry):
 
     return mech_mode
 
-def readCouplings(confDict, mech_couplings, module_entry):
+def readCouplings(confDict, mech_couplings, cryomodule_entry):
     """ readCouplings: Takes the global configuration dictionary and a dictionary containing non-zero
     values for the mechanical couplings (i.e. coupling between electrical modes or piezos and mechanical modes).
-    The module_entry input is necessary in order to access the proper module's mechanical mode list.
+    The cryomodule_entry input is necessary in order to access the proper cryomodule's mechanical mode list.
     The length of the coupling vector used in the simulation code must be equal to the number of mechanical modes (M).
     The mech_couplings input is supposed to contain non-zero values from the configuration file,
     and readCouplings always returns a dictionary of M elements, where the couplings not specified in
@@ -355,13 +356,13 @@ def readCouplings(confDict, mech_couplings, module_entry):
     Inputs:
         confDict: Global configuration dictionary,
         mech_couplings: dictionary containing couplings defined in the configuration file (0 to M elements).
-        module_entry: Module entry in global dictionary in order to access the proper modules mechanical mode list.
+        cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's mechanical mode list.
     Output:
         mech_couplings_list: ordered list containing mechanical couplings for an electrical mode or piezo (length M).
             Order corresponds to the order of appearance of the mechanical mode in mech_net."""
 
-    # Grab the full list of mechanical modes in the Module
-    mech_net = confDict[module_entry]["mechanical_mode_connect"]
+    # Grab the full list of mechanical modes in the Cryomodule
+    mech_net = confDict[cryomodule_entry]["mechanical_mode_connect"]
 
     # Make an ordered list of size M (where M is the total number of mechanical modes, length of mech_net)
     # Fill with 0s if no coupling is specified in mech_couplings by the user
@@ -369,7 +370,7 @@ def readCouplings(confDict, mech_couplings, module_entry):
 
     return mech_couplings_list
 
-def readCavity(confDict, cav_entry, module_entry):
+def readCavity(confDict, cav_entry, cryomodule_entry):
     """ readCavity: Takes the global configuration dictionary and returns a Cavity object
     with the configuration values filled in. The process includes a recursive read of
     electrical modes in each cavity, where ElecMode objects are created for each electrical mode
@@ -377,7 +378,7 @@ def readCavity(confDict, cav_entry, module_entry):
     Inputs:
         confDict: Global configuration dictionary,
         cav_entry: Name of the cavity to be read (string).
-        module_entry: Module entry in global dictionary in order to access the proper module's
+        cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
             mechanical mode list, wich is used as a consistency check to generate mechanical
             coupling vectors for each electrical mode.
     Output:
@@ -436,7 +437,7 @@ def readCavity(confDict, cav_entry, module_entry):
 
         # Get a coupling list of length M (number of mechanical modes),
         # filled with 0s if no coupling is specified by user
-        mech_couplings_list = readCouplings(confDict, mech_couplings, module_entry)
+        mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
 
         # Instantiate ElecMode object
         elec_mode = ElecMode(elec_mode_name, elec_comp_type, mode_name, elec_param_dic, mech_couplings_list)
@@ -450,14 +451,14 @@ def readCavity(confDict, cav_entry, module_entry):
 
     return cavity
 
-def readPiezo(confDict, piezo_entry, module_entry):
+def readPiezo(confDict, piezo_entry, cryomodule_entry):
     """ readPiezo: Takes the global configuration dictionary and returns a Piezo object
     with the configuration parameters and the couplings with each one of the the mechanical
     modes values filled in.
     Inputs:
         confDict: Global configuration dictionary,
         piezo_entry: Name of the Piezo to be read (string).
-        module_entry: Module entry in global dictionary in order to access the proper module's
+        cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
             mechanical mode list, wich is used as a consistency check to generate mechanical
             coupling vectors for each Piezo.
     Output:
@@ -472,7 +473,7 @@ def readPiezo(confDict, piezo_entry, module_entry):
 
     # Check consistency of coupling entries with the list of mechanical modes,
     # and get a coupling dictionary of length M (number of mechanical modes)
-    mech_couplings_list = readCouplings(confDict, mech_couplings, module_entry)
+    mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
 
     # Read rest of parameters
     VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
@@ -482,7 +483,7 @@ def readPiezo(confDict, piezo_entry, module_entry):
 
     return piezo
 
-def readList(confDict, list_in, readFunction, module_entry=None):
+def readList(confDict, list_in, readFunction, cryomodule_entry=None):
     """ readList: Generic function to read list of componentns.
     Takes the global configuration dictionary, cycles through the list of components
     (list of names, list_in), uses the names to identify the configuration entries in
@@ -492,9 +493,9 @@ def readList(confDict, list_in, readFunction, module_entry=None):
         confDict: Global configuration dictionary,
         list_in: list of components to cycle through (list of strings),
         readFunction: name of the read function for the component,
-        module_entry: necessary in some cases in order to pass along module entry information,
+        cryomodule_entry: necessary in some cases in order to pass along cryomodule entry information,
             needed by readStation and readPiezo in order to find the mechanical modes in
-            their corresponding Module.
+            their corresponding Cryomodule.
     Output:
         list_out: List of component objects"""
 
@@ -504,10 +505,10 @@ def readList(confDict, list_in, readFunction, module_entry=None):
     # Cycle through list of component names
     for k in range(len(list_in)):
         # Read component configuration and create component instance
-        if module_entry == None:
+        if cryomodule_entry == None:
             component = readFunction(confDict, list_in[k])
         else:
-            component = readFunction(confDict, list_in[k], module_entry)
+            component = readFunction(confDict, list_in[k], cryomodule_entry)
         # Append object to the component list
         list_out.append(component)
 
@@ -768,7 +769,7 @@ class Station:
 
         return rf_state
 
-def readStation(confDict, station_entry, module_entry):
+def readStation(confDict, station_entry, cryomodule_entry):
 
     # Read name and component type
     name = confDict[station_entry]['name']
@@ -779,7 +780,7 @@ def readStation(confDict, station_entry, module_entry):
     amplifier = readAmplifier(confDict, amplifier_entry)
 
     cavity_entry = confDict[station_entry]['Cavity']
-    cavity = readCavity(confDict, cavity_entry, module_entry)
+    cavity = readCavity(confDict, cavity_entry, cryomodule_entry)
 
     rx_filter_entry = confDict[station_entry]['Rx_filter']
     rx_filter = readZFilter(confDict, rx_filter_entry)
@@ -805,7 +806,7 @@ def readStation(confDict, station_entry, module_entry):
     fwd_adc = readADC(confDict, fwd_adc_entry)
 
     piezo_connect = confDict[station_entry]['piezo_connect']
-    piezo_list = readList(confDict, piezo_connect, readPiezo, module_entry)
+    piezo_list = readList(confDict, piezo_connect, readPiezo, cryomodule_entry)
 
     # Create a Station instance and return
     station = Station(name, station_comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list)
@@ -825,7 +826,7 @@ class Chicane:
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
-        return ("\n--Module Object--\n"
+        return ("\n--Chicane Object--\n"
         + "name: " + self.name + "\n"
         + "type: " + self.type + "\n"
 
@@ -847,8 +848,8 @@ def readChicane(confDict, chicane_entry):
 
     return chicane
 
-class Module:
-    """ Module class: contains parameters specific to a Module configuration"""
+class Cryomodule:
+    """ Cryomodule class: contains parameters specific to a Cryomodule configuration"""
 
     def __init__(self, name, comp_type, station_list, mechanical_mode_list, lp_shift):
         self.name = name
@@ -861,39 +862,39 @@ class Module:
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
-        return ("\n--Module Object--\n"
+        return ("\n--Cryomodule Object--\n"
         + "name: " + self.name + "\n"
         + "type: " + self.type + "\n"
         + "station_list: " + '\n'.join(str(x) for x in self.station_list)
         + "mechanical_mode_list: " + '\n'.join(str(x) for x in self.mechanical_mode_list)
         + "lp_shift: " + str(self.lp_shift) + "\n")
 
-def readModule(confDict, module_entry):
+def readCryomodule(confDict, cryomodule_entry):
 
     # Read name and component type
-    name = confDict[module_entry]['name']
-    module_comp_type = confDict[module_entry]['type']
+    name = confDict[cryomodule_entry]['name']
+    cryomodule_comp_type = confDict[cryomodule_entry]['type']
 
     # Read the station and mechanical mode connectivity
-    station_connect = confDict[module_entry]['station_connect']
-    mechanical_mode_connect = confDict[module_entry]['mechanical_mode_connect']
+    station_connect = confDict[cryomodule_entry]['station_connect']
+    mechanical_mode_connect = confDict[cryomodule_entry]['mechanical_mode_connect']
 
     # Read list of stations and mechanical modes recursively
-    station_list = readList(confDict, station_connect, readStation, module_entry)
+    station_list = readList(confDict, station_connect, readStation, cryomodule_entry)
     mechanical_mode_list = readList(confDict, mechanical_mode_connect, readMechMode)
 
     # Read lp_shift
-    lp_shift = readentry(confDict,confDict[module_entry]["lp_shift"])
+    lp_shift = readentry(confDict,confDict[cryomodule_entry]["lp_shift"])
 
-    # Create a Module instance and return
-    module = Module(name, module_comp_type, station_list, mechanical_mode_list, lp_shift)
+    # Create a Cryomodule instance and return
+    cryomodule = Cryomodule(name, cryomodule_comp_type, station_list, mechanical_mode_list, lp_shift)
 
-    return module
+    return cryomodule
 
 class Linac:
     """ Linac class: contains parameters specific to a Linac configuration"""
 
-    def __init__(self, name, comp_type, param_dic, module_list, chicane):
+    def __init__(self, name, comp_type, param_dic, cryomodule_list, chicane):
         self.name = name
         self.type = comp_type
 
@@ -903,12 +904,12 @@ class Linac:
         self.dds_numerator = param_dic["dds_numerator"]
         self.dds_denominator = param_dic["dds_denominator"]
 
-        self.module_list = module_list
+        self.cryomodule_list = cryomodule_list
         self.chicane = chicane
 
         # Need to manually propagate the value of f0 down to the Electrical Mode level
-        for module in module_list:
-            for station in module.station_list:
+        for cryomodule in cryomodule_list:
+            for station in cryomodule.station_list:
                 for mode in station.cavity.elec_modes:
                     mode.LO_w0["value"] = 2*pi*self.f0["value"]
 
@@ -926,7 +927,7 @@ class Linac:
         + "dds_denominator: " + str(self.dds_denominator) + "\n"
         + "chicane: " + str(self.chicane) + "\n"
 
-        + "module_list: " + '\n'.join(str(x) for x in self.module_list))
+        + "cryomodule_list: " + '\n'.join(str(x) for x in self.cryomodule_list))
 
 def readLinac(confDict, linac_entry):
 
@@ -945,18 +946,18 @@ def readLinac(confDict, linac_entry):
     linac_param_dic["dds_numerator"] = readentry(confDict,confDict[linac_entry]["dds_numerator"])
     linac_param_dic["dds_denominator"] = readentry(confDict,confDict[linac_entry]["dds_denominator"])
 
-    # Read the module connectivity
-    module_connect = confDict[linac_entry]['module_connect']
+    # Read the cryomodule connectivity
+    cryomodule_connect = confDict[linac_entry]['cryomodule_connect']
 
     # Read list of modules recursively
-    module_list = readList(confDict, module_connect, readModule)
+    cryomodule_list = readList(confDict, cryomodule_connect, readCryomodule)
 
     # Read the chicane
     chicane_name = confDict[linac_entry]["Chicane"]
     chicane = readChicane(confDict, chicane_name)
 
     # Instantiate Linac object and return
-    linac = Linac(name, linac_comp_type, linac_param_dic, module_list, chicane)
+    linac = Linac(name, linac_comp_type, linac_param_dic, cryomodule_list, chicane)
 
     return linac
 
