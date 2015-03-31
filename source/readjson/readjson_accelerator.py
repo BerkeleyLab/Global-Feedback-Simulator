@@ -300,6 +300,20 @@ class MechMode:
         + "Q: " + str(self.Q) + "\n"
         + "full_scale: " + str(self.full_scale) + "\n")
 
+    def Get_C_Pointer(self):
+        import accelerator as acc
+
+        # Grab attributes from object
+        f0 = self.f0['value']
+        Q = self.Q['value']
+        k = 1.0
+
+        # Allocate Memory for C struct
+        mechMode = acc.MechMode_Allocate_New(f0, Q, k, Tstep_global);
+
+        # Return C Pointer
+        return mechMode
+
 class Piezo:
     """ Piezo class: contains couplings between the Piezo and each
     one of the mechanical modes (MechMode instances)."""
@@ -756,7 +770,8 @@ class Station:
 
         cavity_pointer = self.cavity.Get_C_Pointer()
 
-        rf_station = acc.RF_Station_Allocate_New(Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size)
+        rf_station = acc.RF_Station()
+        acc.RF_Station_Allocate_In(rf_station, Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size)
 
         return rf_station
 
@@ -868,6 +883,55 @@ class Cryomodule:
         + "station_list: " + '\n'.join(str(x) for x in self.station_list)
         + "mechanical_mode_list: " + '\n'.join(str(x) for x in self.mechanical_mode_list)
         + "lp_shift: " + str(self.lp_shift) + "\n")
+
+    def Get_C_Pointer(self):
+
+        import accelerator as acc
+
+        # First count number of Stations and Mechanical Modes and Allocate Arrays
+        n_Stations = len(self.station_list)
+        n_MechModes = len(self.mechanical_mode_list)
+
+        # Empty lists to store pointers
+        rf_station_pointers = []
+        mechMode_pointers = []
+
+        # Allocate memory for RF Station and Mechanical mode Arrays
+        rf_station_net = acc.RF_Station_Allocate_Array(n_Stations)
+        mechMode_net = acc.MechMode_Allocate_Array(n_MechModes)
+
+        # Allocate each RF Station and append it to the rf_station_net
+        for idx, rf_station in enumerate(self.station_list):
+            RF_Station_C_Pointer = rf_station.Get_C_Pointer()
+            acc.RF_Station_Append(rf_station_net, RF_Station_C_Pointer, idx)
+            rf_station_pointers.append(RF_Station_C_Pointer)
+
+        # Allocate each MechMode and append it to the mechMode_net
+        for idx, mechMode in enumerate(self.mechanical_mode_list):
+            mechMode_C_Pointer = mechMode.Get_C_Pointer()
+            acc.MechMode_Append(mechMode_net, mechMode_C_Pointer, idx)
+            mechMode_pointers.append(mechMode_C_Pointer)
+
+        # Instantiate Cryomodule C structure
+        cryomodule = acc.Cryomodule()
+        # Fill in Cryomodule C data structure
+        acc.Cryomodule_Allocate_In(cryomodule, rf_station_net, n_Stations, mechMode_net, n_MechModes)
+
+        # Return C Pointer for Cryomodule and lists of pointers
+        return cryomodule, rf_station_pointers, mechMode_pointers
+
+    @staticmethod
+    def Get_State_Pointer(cryomodule_C_Pointer):
+        import accelerator as acc
+
+        # Get C pointer to Cryomodule_State C struct
+        cryo_state = acc.Cryomodule_State()
+
+        # Allocate Memory for cryo_state
+        acc.Cryomodule_State_Allocate(cryo_state, cryomodule_C_Pointer)
+
+        # Return State C pointer
+        return cryo_state
 
 def readCryomodule(confDict, cryomodule_entry):
 

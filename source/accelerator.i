@@ -1,9 +1,11 @@
 %module accelerator
 
 %{
+#define SWIG_FILE_WITH_INIT
 #include "filter.h"
 #include "cavity.h"
 #include "rf_station.h"
+#include "cryomodule.h"
 %}
 
 %include "complex.i"
@@ -19,3 +21,4 @@
 %include "filter.h"
 %include "cavity.h"
 %include "rf_station.h"
+%include "cryomodule.h"

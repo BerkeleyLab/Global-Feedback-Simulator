@@ -12,8 +12,13 @@ RF_State_dp RF_State_Allocate_Array(int n)
 RF_Station_dp RF_Station_Allocate_Array(int n)
 {
   RF_Station_dp RF_Station_net = calloc(n, sizeof(RF_Station *));
-  
   return RF_Station_net;
+}
+
+void RF_Station_Append(RF_Station** rf_station_arr, RF_Station* rf_station, int index)
+{
+  // XXX Add some check!!
+  rf_station_arr[index] = rf_station;
 }
 
 /*
