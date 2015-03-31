@@ -43,7 +43,7 @@ typedef struct str_cavity{
 } Cavity;
 
 typedef struct str_cavity_state{
-	double complex E_probe, E_reverse;
+	double complex E_probe, E_reverse, V;
   double complex Kg;
 	ElecMode_State **elecMode_state_net;
 } Cavity_State;

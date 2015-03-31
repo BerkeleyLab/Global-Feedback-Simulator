@@ -10,10 +10,10 @@ ElecMode_dp ElecMode_Allocate_Array(int n)
   return elecMode_net;
 }
 
-void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int index)
+void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int idx)
 {
   // XXX Add some check!!
-  elecMode_arr[index] = elecMode;
+  elecMode_arr[idx] = elecMode;
 }
 
 
@@ -259,6 +259,7 @@ double complex Cavity_Step(Cavity *cav, double delta_tz,
   // Propagate new values into Cavity state
   cav_state -> E_probe = v_probe_sum;
   cav_state -> E_reverse = v_em_sum-Kg_rfl;
+  cav_state -> V = v_out;
 
   // Return overall accelerating voltage (as seen by the beam)
   return v_out;
@@ -312,6 +313,7 @@ void Cavity_Clear(Cavity *cav, Cavity_State *cav_state)
   // Zero out signals
   cav_state -> E_probe = 0.0;
   cav_state -> E_reverse = 0.0;
+  cav_state -> V = 0.0;
 
   // Clear filter states for each electrical mode
   for(int i=0;i<cav->n_modes;i++){
