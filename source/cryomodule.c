@@ -111,12 +111,6 @@ Cryomodule * Cryomodule_Allocate_New(RF_Station **rf_station_net, int n_rf_stati
 	return cryo;
 }
 
-void Cryo_RF_Station_Append(Cryomodule *cryo, RF_Station* rf_station, int index)
-{
-  // XXX Add some check!!
-  cryo->rf_station_net[index] = rf_station;
-}
-
 RF_Station *Get_RF_Station(Cryomodule *cryo, int index)
 {
 	if(cryo->rf_station_net[index]) return cryo->rf_station_net[index];
@@ -172,7 +166,7 @@ void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
 	int nu, mu;
 	int n_Emodes;
 	// Temporary variables for summation components
-	double V_2_mu, A_nu_mu, x_nu, C_mu_nu;
+	double V_2_mu=0.0, A_nu_mu=0.0, x_nu=0.0, C_mu_nu=0.0;
 
 	// Calculate Electrical to Mecahnical couplings
 	// and calculate displacements for each Mechanical Eigenmode

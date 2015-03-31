@@ -104,7 +104,7 @@ void ElecMode_State_Allocate(ElecMode_State *elecMode_state, ElecMode *elecMode)
   Filter_State_Allocate(&elecMode_state->fil_state, &elecMode->fil);
 }
 
-void ElecMode_State_Deallocate(ElecMode_State *elecMode_state, ElecMode * elecMode)
+void ElecMode_State_Deallocate(ElecMode_State *elecMode_state)
 {
   Filter_State_Deallocate(&elecMode_state->fil_state);
   free(elecMode_state);
@@ -128,7 +128,7 @@ void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav)
 void Cavity_State_Deallocate(Cavity_State *cav_state, Cavity *cav)
 {
   for(int i=0;i<cav->n_modes;i++) {
-      ElecMode_State_Deallocate(cav_state -> elecMode_state_net[i], cav->elecMode_net[i]);
+      ElecMode_State_Deallocate(cav_state -> elecMode_state_net[i]);
   }
   free(cav_state -> elecMode_state_net);
   free(cav_state);

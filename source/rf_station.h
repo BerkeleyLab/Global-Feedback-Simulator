@@ -48,7 +48,7 @@ typedef struct str_Delay_State {
 } Delay_State;
 
 void Delay_State_Allocate(Delay *delay, Delay_State *delay_state);
-void Delay_State_Deallocate(Delay *delay, Delay_State *delay_state);
+void Delay_State_Deallocate(Delay_State *delay_state);
 double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_state);
 void Delay_Clear(Delay *delay, Delay_State *delay_state);
 
@@ -61,6 +61,7 @@ typedef struct str_RF_Station {
   double nom_grad;	// Nominal Cavity gradient
   double Clip;  // Saturation parameter
   double PAscale;	// Amplifier scaling (from unitless to sqrt(W))
+  double PAmax;
 
   Filter RXF;	// Anti-alias filter
   Filter TRF1, TRF2;	// SSA Filters

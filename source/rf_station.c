@@ -36,7 +36,7 @@ void Delay_State_Allocate(Delay *delay, Delay_State *delay_state)
   delay_state -> index = 0;
 }
 
-void Delay_State_Deallocate(Delay *delay, Delay_State *delay_state)
+void Delay_State_Deallocate(Delay_State *delay_state)
 {
   free(delay_state->buffer);
 }
@@ -90,6 +90,7 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
 {
   rf_station->Clip = Clip;
   rf_station->PAscale = PAscale;
+  rf_station->PAmax = PAmax;
   
   /*
   * Configure the Filters using their poles

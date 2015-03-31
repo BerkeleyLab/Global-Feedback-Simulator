@@ -87,7 +87,7 @@ ElecMode_dp ElecMode_Allocate_Array(int n);
 void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int index);
 
 void ElecMode_State_Allocate(ElecMode_State *elecMode_state, ElecMode *elecMode);
-void ElecMode_State_Deallocate(ElecMode_State *elecMode_state, ElecMode * elecMode);
+void ElecMode_State_Deallocate(ElecMode_State *elecMode_state);
 
 double complex ElecMode_Step(ElecMode *elecMode, double complex Kg_fwd, 
 	double beam_charge, double delta_tz,
