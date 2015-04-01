@@ -110,6 +110,12 @@ void ElecMode_State_Deallocate(ElecMode_State *elecMode_state)
   free(elecMode_state);
 }
 
+ElecMode_State *ElecMode_State_Get(Cavity_State *cav_state, int idx)
+{
+  return cav_state->elecMode_state_net[idx];
+}
+
+
 void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav)
 {
 
@@ -162,6 +168,7 @@ double complex ElecMode_Step(ElecMode *elecMode,
   // That term implies the unity gain at DC: normalization takes place in Filter_Step.
   v_in = (v_drive + v_beam)*cexp(-I*d_phase_now);
 
+  // double scale = (elecMode_state->delta_omega == 0.0) ? 1.0 : abs(elecMode_state->delta_omega);
   // Apply first-order low-pass filter
   v_out = Filter_Step(&(elecMode->fil), v_in, &(elecMode_state->fil_state))*cexp(I*d_phase_now);
 
@@ -307,6 +314,15 @@ void ElecMode_Set(Cavity *cav, int idx, const char *k_type, double complex new_v
   }
 
 }
+
+// double complex ElecMode_State_Get(Cavity_State *cav_state, int idx, const char *k_type)
+// {
+//   if (!strcmp(k_type, "k_drive")){ 
+//     printf("ElecMode_Get: k_drive = %f\n", cabs(cav->elecMode_net[idx]->k_drive));
+//     return cav->elecMode_net[idx]->k_drive;
+//   }
+// }
+
 
 void Cavity_Clear(Cavity *cav, Cavity_State *cav_state)
 {

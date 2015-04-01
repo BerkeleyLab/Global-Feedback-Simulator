@@ -65,6 +65,7 @@ void Cavity_Clear(Cavity *cav, Cavity_State *cav_state);
 
 void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav);
 void Cavity_State_Deallocate(Cavity_State *cav_state, Cavity *cav);
+ElecMode_State *ElecMode_State_Get(Cavity_State *cav_state, int idx);
 
 void ElecMode_Allocate_In(ElecMode *elecMode,
   double RoverQ, double foffset, double LO_w0,
