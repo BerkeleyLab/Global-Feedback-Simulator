@@ -82,5 +82,5 @@ clean:
 
 .SECONDARY: $(CLEAN)
 
-unit_tests.log: $(SOURCE_DIR)/_accelerator.so  $(SOURCE_DIR)/rf_station_test.py $(UNIT_TEST_FILES)
+unit_tests.log: $(SOURCE_DIR)/_accelerator.so $(UNIT_TEST_FILES)
 	python $(SOURCE_DIR)/unit_tests_all.py > $@
