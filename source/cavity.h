@@ -32,7 +32,7 @@ typedef struct str_elecmode_state{
 
 typedef struct str_cavity{
 	// XXX Check if used in the future: Inherited properties
-	double nom_beam_phase, rf_phase, design_voltage, unity_voltage;
+	double rf_phase, design_voltage;
 	int fund_index;
 	// XXX
 
@@ -51,13 +51,14 @@ typedef struct str_cavity_state{
 void Cavity_Allocate_In(Cavity *cav, 
   ElecMode_dp elec_mode_net, int n_modes,
   double L, double nom_grad, 
-  double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
+  double rf_phase, double design_voltage,
   int fund_index);
 
 Cavity * Cavity_Allocate_New(ElecMode_dp elec_mode_net, int n_modes, 
   double L, double nom_grad,
-  double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
+  double rf_phase, double design_voltage,
   int fund_index);
+
 void Cavity_Deallocate(Cavity *cav);
 
 double complex Cavity_Step(Cavity *cav, double delta_tz, double complex drive_in, double complex beam_charge, Cavity_State *cav_state);
@@ -70,7 +71,7 @@ ElecMode_State *ElecMode_State_Get(Cavity_State *cav_state, int idx);
 void ElecMode_Allocate_In(ElecMode *elecMode,
   double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
-  double beam_phase,  double phase_rev, double phase_probe,
+  double rf_phase,  double phase_rev, double phase_probe,
   double Tstep,
   double *mech_couplings, int n_mech
   );
@@ -78,7 +79,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
 ElecMode *ElecMode_Allocate_New(
   double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
-  double beam_phase,  double phase_rev, double phase_probe,
+  double rf_phase,  double phase_rev, double phase_probe,
   double Tstep,
   double *mech_couplings, int n_mech
   );

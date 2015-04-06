@@ -30,7 +30,7 @@ typedef struct str_fpga_state {
 } FPGA_State;
 
 void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double out_sat, double Tstep);
-// double complex FPGA_Step(FPGA * fpga, double complex cavity_vol, FPGA_State * stnow, int openloop);
+void FPGA_Deallocate(FPGA *fpga);
 void FPGA_Clear(FPGA_State * stnow);
 double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow, int openloop);
 
@@ -47,10 +47,12 @@ typedef struct str_Delay_State {
 	int index;
 } Delay_State;
 
+void Delay_State_Deallocate(Delay_State *delay_state);
 void Delay_State_Allocate(Delay *delay, Delay_State *delay_state);
 void Delay_State_Deallocate(Delay_State *delay_state);
 double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_state);
 void Delay_Clear(Delay *delay, Delay_State *delay_state);
+void Delay_Deallocate(Delay *delay);
 
 /*
  * RF Station
@@ -115,6 +117,8 @@ RF_Station * RF_Station_Allocate_New(
   double stable_gbw,
   double FPGA_out_sat,
   int loop_delay_size);
+
+void RF_Station_Deallocate(RF_Station *rf_station);
 
 void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station);
 void RF_State_Deallocate(RF_State *rf_state, RF_Station *rf_station);

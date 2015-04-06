@@ -44,9 +44,9 @@
             "description": "Bunch repetition rate"
         },
 
-		"gun": "d_Gun",
-		"linac_connect": ["Linac0"]
-	},
+        "gun": "d_Gun",
+        "linac_connect": ["Linac0"]
+    },
 
     "Linac0": {
         "type": "linac",
@@ -55,7 +55,17 @@
         "f0": {
             "value": 1300e6,
             "units": "Hz",
-            "description": "Operating frequency"
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 0.0,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
         },
         "lam": {
             "value": 0.0,
@@ -110,16 +120,6 @@
         "Tx_filter1":"d_TRF1",
         "Tx_filter2":"d_TRF2",
         "Controller": "d_Controller",
-        "E": {
-            "value": 0.0,
-            "units": "eV",
-            "description": "Energy set-point"
-        },
-        "phi": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
-        },
         "loop_delay_size": {
             "value": 3,
             "units": "Time steps",
@@ -127,6 +127,12 @@
         },
 
         "piezo_connect": ["Piezo0", "Piezo1"],
+        
+        "N_Stations": {
+            "value": 1,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
 
         "cav_adc" : "cav_adc0",
         "rfl_adc" : "rfl_adc0",
@@ -138,7 +144,7 @@
         "name": "cavity0",
 
         "L": {
-            "value": 0.0,
+            "value": 1.0,
             "units": "m",
             "description": "Length"
         },
@@ -147,26 +153,7 @@
             "units": "V/m",
             "description": "Nominal gradient"
         },
-        "nom_beam_phase": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal beam phase (<0 accelerates and puts head energy lower than tail)"
-        },
-        "rf_phase": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal RF phase"
-        },
-        "design_voltage": {
-            "value": 16e6,
-            "units": "V",
-            "description": "Design Voltage"
-        },
-        "unity_voltage": {
-            "value": 16e6,
-            "units": "V",
-            "description": "Unity Voltage"
-        },
+
         "elec_mode_connect" : ["ElecMode0", "ElecMode1", "ElecMode2"]
     },
 

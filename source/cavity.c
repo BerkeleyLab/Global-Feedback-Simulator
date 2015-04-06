@@ -20,7 +20,7 @@ void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int idx)
 void ElecMode_Allocate_In(ElecMode *elecMode,
   double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
-  double beam_phase,  double phase_rev, double phase_probe,
+  double rf_phase,  double phase_rev, double phase_probe,
   double Tstep,
   double *mech_couplings, int n_mech
   )
@@ -34,7 +34,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
 
   // Beam impedance/derivator (conversion factor between charge and beam induced voltage)
   // Includes shift to take beam phase relative to the RF into account
-  elecMode -> k_beam = RoverQ*Q_L*cexp(-I*beam_phase)/Tstep*1e-12;
+  elecMode -> k_beam = RoverQ*Q_L*cexp(-I*rf_phase)/Tstep*1e-12;
   
   // Drive port imperdance
   elecMode -> k_drive = 2*sqrt(Q_drive*RoverQ);
@@ -75,7 +75,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
 ElecMode * ElecMode_Allocate_New(
   double RoverQ, double foffset, double LO_w0,
   double Q_0, double Q_drive, double Q_probe,
-  double beam_phase,  double phase_rev, double phase_probe,
+  double rf_phase,  double phase_rev, double phase_probe,
   double Tstep,
   double *mech_couplings, int n_mech
   )
@@ -84,7 +84,7 @@ ElecMode * ElecMode_Allocate_New(
 
   // Allocate single-pole, n_mode Filter
   Filter_Allocate_In(&elecMode->fil,1,1);
-  ElecMode_Allocate_In(elecMode, RoverQ, foffset, LO_w0, Q_0, Q_drive, Q_probe, beam_phase,  phase_rev, phase_probe, Tstep ,mech_couplings, n_mech);
+  ElecMode_Allocate_In(elecMode, RoverQ, foffset, LO_w0, Q_0, Q_drive, Q_probe, rf_phase,  phase_rev, phase_probe, Tstep ,mech_couplings, n_mech);
 
   return elecMode;
 }
@@ -187,15 +187,13 @@ void Cavity_Allocate_In(Cavity *cav,
   ElecMode_dp elecMode_net, int n_modes,
   double L, double nom_grad,
   // XXX
-  double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
+  double rf_phase, double design_voltage,
   int fund_index)
   // XXX
 {
   // XXX Check if used in the future: Inherited properties
-  cav -> nom_beam_phase = nom_beam_phase;
   cav -> rf_phase = rf_phase;
   cav -> design_voltage = design_voltage;
-  cav -> unity_voltage = unity_voltage;
   cav -> fund_index = fund_index;
   /// XXX
 
@@ -208,15 +206,15 @@ void Cavity_Allocate_In(Cavity *cav,
 Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes, 
   double L, double nom_grad,
    // XXX
-  double nom_beam_phase, double rf_phase, double design_voltage, double unity_voltage,
+  double rf_phase, double design_voltage,
   int fund_index)
   // XXX
 {
   Cavity *cav;
   cav = calloc(1,sizeof(Cavity));
 
-  Cavity_Allocate_In(cav, elecMode_net, n_modes, L, nom_grad, 
-    nom_beam_phase, rf_phase, design_voltage, unity_voltage, 
+  Cavity_Allocate_In(cav, elecMode_net, n_modes, L,
+    nom_grad, rf_phase, design_voltage, 
     fund_index);
 
   return cav;

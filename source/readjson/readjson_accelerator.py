@@ -133,10 +133,6 @@ class Cavity:
         # Rest of configuration parameters
         self.L = param_dic["L"]
         self.nom_grad = param_dic["nom_grad"]
-        self.nom_beam_phase = param_dic["nom_beam_phase"]
-        self.rf_phase = param_dic["rf_phase"]
-        self.design_voltage = param_dic["design_voltage"]
-        self.unity_voltage = param_dic["unity_voltage"]
 
         # List of electrical mode (ElecMode) instances (objects)
         self.elec_modes = elec_modes
@@ -150,6 +146,13 @@ class Cavity:
         # Store the index of the fundamental mode
         self.fund_index = {"value" : fund_index, "units" : "N/A", "description" : "Index of the fundamental mode in array"}
 
+        ## Add (replicate) parameters that will be filled after object instance
+        # rf_phase corresponds to Linac's phi parameter
+        self.rf_phase = {"value" : 0.0, "units" : "deg", "description" : "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"}
+        # design_voltage is related to the Cavity set-point (Default at max)
+        
+        self.design_voltage = {"value" : self.nom_grad["value"]*self.L["value"], "units" : "V", "description" : "Design operating Cavity voltage"}
+
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
@@ -158,10 +161,8 @@ class Cavity:
         + "type: " + self.type + "\n"
         + "L: " + str(self.L) + "\n"
         + "nom_grad: " + str(self.nom_grad) + "\n"
-        + "nom_beam_phase: " + str(self.nom_beam_phase) + "\n"
         + "rf_phase: " + str(self.rf_phase) + "\n"
         + "design_voltage: " + str(self.design_voltage) + "\n"
-        + "unity_voltage: " + str(self.unity_voltage) + "\n"
         + "electrical modes: " + '\n'.join(str(x) for x in self.elec_modes))
 
     def Get_C_Pointer(self):
@@ -180,22 +181,20 @@ class Cavity:
             elecMode = acc.ElecMode_Allocate_New(mode.RoverQ['value'], \
                 mode.foffset['value'], mode.LO_w0['value'], \
                 mode.Q_0['value'], mode.Q_drive['value'], mode.Q_probe['value'], \
-                self.nom_beam_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], \
+                self.rf_phase['value'],  mode.phase_rev['value'], mode.phase_probe['value'], \
                 Tstep_global, mech_couplings, n_mech)
 
             acc.ElecMode_Append(elecMode_net, elecMode, idx)
 
         L = self.L['value']
         nom_grad = self.nom_grad['value']
-        nom_beam_phase = self.nom_beam_phase['value']
         rf_phase = self.rf_phase['value']
         design_voltage = self.design_voltage['value']
-        unity_voltage = self.unity_voltage['value']
         fund_index = self.fund_index['value']
 
         # Get a C-pointer to a Cavity structure
         cavity = acc.Cavity_Allocate_New(elecMode_net, n_modes, L, nom_grad, \
-            nom_beam_phase, rf_phase, design_voltage, unity_voltage, \
+            rf_phase, design_voltage, \
             fund_index)
 
         return cavity
@@ -252,13 +251,13 @@ class ElecMode:
         + "phase_probe: " + str(self.phase_probe) + "\n"
         + "mech_couplings_list: " + str(self.mech_couplings_list))
 
-    def Compute_ElecMode(self, Tstep, nom_beam_phase):
+    def Compute_ElecMode(self, Tstep, rf_phase):
         import numpy as np
 
         # Initialize an empty list to return
         modes_out = []
 
-        beam_phase = nom_beam_phase
+        beam_phase = rf_phase
 
         mode_name = self.mode_name
         LO_w0 = self.LO_w0['value']
@@ -407,12 +406,6 @@ def readCavity(confDict, cav_entry, cryomodule_entry):
 
     cav_param_dic["L"] = readentry(confDict,confDict[cav_entry]["L"])
     cav_param_dic["nom_grad"] = readentry(confDict,confDict[cav_entry]["nom_grad"])
-
-    cav_param_dic["nom_beam_phase"] = readentry(confDict,confDict[cav_entry]["nom_beam_phase"])
-    cav_param_dic["rf_phase"] = readentry(confDict,confDict[cav_entry]["rf_phase"])
-    cav_param_dic["design_voltage"] = readentry(confDict,confDict[cav_entry]["design_voltage"])
-    cav_param_dic["unity_voltage"] = readentry(confDict,confDict[cav_entry]["unity_voltage"])
-
 
     # Grab the list of electrical modes
     elec_mode_connect = confDict[cav_entry]["elec_mode_connect"]
@@ -707,7 +700,7 @@ def readAmplifier(confDict, amplifier_entry):
 class Station:
     """ Station class: contains parameters specific to a Station configuration"""
 
-    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list):
+    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list, N_Stations):
         self.name = name
         self.type = comp_type
 
@@ -722,6 +715,11 @@ class Station:
         self.fwd_adc = fwd_adc
         self.rfl_adc = rfl_adc
         self.piezo_list = piezo_list
+        self.N_Stations = N_Stations
+
+        ## Add (replicate) parameters that will be filled after object instance
+        self.max_voltage = {"value" : 0.0, "units" : "V", "description" : "Maximum accelerating voltage"}
+
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -740,6 +738,7 @@ class Station:
         + "cav_adc: " + str(self.cav_adc) + "\n"
         + "fwd_adc: " + str(self.fwd_adc) + "\n"
         + "rfl_adc: " + str(self.rfl_adc) + "\n"
+        + "N_Stations: " + str(self.N_Stations) + "\n"
         + "piezo_list: " + '\n'.join(str(x) for x in self.piezo_list))
 
     def Get_C_Pointer(self):
@@ -823,8 +822,10 @@ def readStation(confDict, station_entry, cryomodule_entry):
     piezo_connect = confDict[station_entry]['piezo_connect']
     piezo_list = readList(confDict, piezo_connect, readPiezo, cryomodule_entry)
 
+    N_Stations = confDict[station_entry]['N_Stations']
+
     # Create a Station instance and return
-    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list)
+    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list, N_Stations)
 
     return station
 
@@ -963,6 +964,8 @@ class Linac:
         self.type = comp_type
 
         self.f0 = param_dic["f0"]
+        self.E = param_dic["E"]
+        self.phi = param_dic["phi"]
         self.lam = param_dic["lam"]
         self.s0 = param_dic["s0"]
         self.dds_numerator = param_dic["dds_numerator"]
@@ -971,9 +974,31 @@ class Linac:
         self.cryomodule_list = cryomodule_list
         self.chicane = chicane
 
-        # Need to manually propagate the value of f0 down to the Electrical Mode level
+        # Add parameters that will be filled after object instance
+        self.dE = {"value" : 0.0, "units" : "eV", "description" : "Energy increase in Linac (final minus initial Energy)"}
+        self.max_voltage = {"value" : 0.0, "units" : "V", "description" : "Maximum Accelerating Voltage"}
+        self.N_Stations = {"value" : 0.0, "units" : "N/A", "description" : "Total number of RF Stations in Linac"}
+        self.L = {"value" : 0.0, "units" : "m", "description" : "Total Linac Length"}
+
+        # Need to manually propagate values down to the Cavity and Electrical Mode level
         for cryomodule in cryomodule_list:
             for station in cryomodule.station_list:
+                # Indicate each cavity the nominal beam phase for the Linac
+                station.cavity.rf_phase["value"] = self.phi["value"]
+
+                # Calculate each RF Station's maximum accelerating voltage
+                # (also taking into account the projection of the RF field on the beam)
+                N_Stations = station.N_Stations["value"]
+                nom_grad = station.cavity.nom_grad["value"]
+                L = station.cavity.L["value"]
+                station.max_voltage["value"] = N_Stations*nom_grad*L
+
+                # Add to the Linac's total accelerating voltage, number of RF Stations and Length
+                self.max_voltage["value"] += station.max_voltage["value"]
+                self.N_Stations["value"] += N_Stations
+                self.L["value"] += L*N_Stations
+
+                # Indicate each Electrical Eigenmode the nominal LO frequency for the Linac 
                 for mode in station.cavity.elec_modes:
                     mode.LO_w0["value"] = 2*pi*self.f0["value"]
 
@@ -985,13 +1010,61 @@ class Linac:
         + "type: " + self.type + "\n"
 
         + "f0: " + str(self.f0) + "\n"
+        + "E: " + str(self.E) + "\n"
+        + "phi: " + str(self.phi) + "\n"
         + "lam: " + str(self.lam) + "\n"
         + "s0: " + str(self.s0) + "\n"
+        + "dE: " + str(self.dE) + "\n"
+        + "max_voltage: " + str(self.max_voltage) + "\n"
+        + "L: " + str(self.L) + "\n"
         + "dds_numerator: " + str(self.dds_numerator) + "\n"
         + "dds_denominator: " + str(self.dds_denominator) + "\n"
         + "chicane: " + str(self.chicane) + "\n"
 
         + "cryomodule_list: " + '\n'.join(str(x) for x in self.cryomodule_list))
+
+    def Get_C_Pointer(self):
+
+        import accelerator as acc
+
+        # First count number of Stations and Mechanical Modes and Allocate Arrays
+        n_Cryos = len(self.cryomodule_list)
+
+        # Empty list to store pointers
+        cryo_pointers = []
+
+        # Allocate memory for array of Cryomodules
+        cryo_net = acc.Cryomodule_Allocate_Array(n_Stations)
+
+        # Allocate each Cryomodule and append it to the cryo_net
+        for idx, cryo in enumerate(self.cryomodule_list):
+            Cryo_C_Pointer = cryo.Get_C_Pointer()
+            acc.RF_Station_Append(cryo_net, Cryo_C_Pointer, idx)
+            cryo_pointers.append(Cryo_C_Pointer)
+
+        # Instantiate Linac C structure
+        linac = acc.Linac()
+        # Fill in Linac C data structure
+        acc.Linac_Allocate_In(linac, cryo_net, n_Cryos,
+            self.dE["value"], self.R56["value"], self.T566["value"], \
+            self.phi["value"], self.lam["value"], self.s0["value"], \
+            self.iris_rad["value"], self.L["value"])
+
+        # Return C Pointer for Cryomodule and lists of pointers
+        return linac, cryo_pointers
+
+    @staticmethod
+    def Get_State_Pointer(cryomodule_C_Pointer):
+        import accelerator as acc
+
+        # Get C pointer to Cryomodule_State C struct
+        cryo_state = acc.Cryomodule_State()
+
+        # Allocate Memory for cryo_state
+        acc.Cryomodule_State_Allocate(cryo_state, cryomodule_C_Pointer)
+
+        # Return State C pointer
+        return cryo_state
 
 def readLinac(confDict, linac_entry):
 
@@ -1003,7 +1076,8 @@ def readLinac(confDict, linac_entry):
     linac_param_dic = {}
 
     linac_param_dic["f0"] = readentry(confDict,confDict[linac_entry]["f0"]) # Resonance frequency [Hz]
-    linac_param_dic["lam"] = readentry(confDict,confDict[linac_entry]["lam"])
+    linac_param_dic["E"] = readentry(confDict,confDict[linac_entry]["E"])
+    linac_param_dic["phi"] = readentry(confDict,confDict[linac_entry]["phi"])
     linac_param_dic["lam"] = readentry(confDict,confDict[linac_entry]["lam"])
     linac_param_dic["s0"] = readentry(confDict,confDict[linac_entry]["s0"])
     linac_param_dic["iris_rad"] = readentry(confDict,confDict[linac_entry]["iris_rad"])
@@ -1028,10 +1102,11 @@ def readLinac(confDict, linac_entry):
 class Accelerator:
     """ Accelerator class: contains parameters specific to an accelerator configuration"""
 
-    def __init__(self, name, comp_type, bunch_rate, gun, linac_list):
+    def __init__(self, name, comp_type, bunch_rate, E, gun, linac_list):
         self.name = name
         self.type = comp_type
         self.bunch_rate = bunch_rate
+        self.E = E
         self.gun = gun
         self.linac_list = linac_list
 
@@ -1042,6 +1117,7 @@ class Accelerator:
         + "name: " + self.name + "\n"
         + "type: " + self.type + "\n"
         + "bunch_rate: " + str(self.bunch_rate) + "\n"
+        + "E: " + str(self.E) + "\n"
         + "gun: " + str(self.gun) + "\n"
         + "linac_list: " + '\n'.join(str(x) for x in self.linac_list))
 
@@ -1081,16 +1157,21 @@ def readGun(confDict):
     sd0 = readentry(confDict,confDict[gun_entry]["sd0"])
     E = readentry(confDict,confDict[gun_entry]["E"])
 
-    # Instantiate Linac object and return
+    # Instantiate Gun object
     gun = Gun(name, gun_comp_type, Q, sz0, sd0, E)
 
-    return gun
+    # Return Gun object along with its energy
+    Egun = E["value"]
+
+    return gun, Egun
 
 
 def readAccelerator(confDict):
     """ readAccelerator : Takes the global configuration dictionary and
     returns an Accelerator object with the configuration values filled in"""
 
+    import numpy as np
+    
     # Read name and component type
     name = confDict["Accelerator"]["name"]
     comp_type = confDict["Accelerator"]["type"]
@@ -1100,15 +1181,44 @@ def readAccelerator(confDict):
 
     # Read Accelerator components (Gun + series of linacs)
     # # Read gun
-    gun = readGun(confDict)
+    gun, Egun = readGun(confDict)
 
     # # Read connectivity of linacs
     linac_connect = confDict["Accelerator"]["linac_connect"]
     # # Read linacs recursively
     linac_list = readList(confDict, linac_connect, readLinac)
 
+    # Now that the Array of Linacs has been instantiated and their final Energies are known,
+    # fill in the Energy increase parameter for each Linac.
+    ## Start with the Energy out of the Gun
+    Elast = Egun
+    # Iterate over Linacs
+    for linac in linac_list:
+        # Energy increase is the difference between Linac's final and initial Energy
+        linac.dE["value"] = linac.E["value"] - Elast
+        Elast = linac.E["value"]
+
+        # Check if Energy increase is compatible with Linac configuration
+        sp_ratio = linac.dE["value"]/np.cos(linac.phi["value"])/linac.max_voltage["value"]
+        if np.abs(sp_ratio) > 1.0:
+            error_1 = "Linac "+ linac.name + ": Energy increase higher than tolerated:\n"
+            error_2 = "\tEnergy increase requested = %.2f eV"%linac.dE["value"]
+            error_3 = "\tAt Beam phase = %.2f deg"%linac.phi["value"]
+            error_4 = "\tand Maximum Accelerating Voltage = %.2f V"%linac.max_voltage["value"]
+            error_text = error_1 + error_2 + error_3 + error_4
+            raise Exception(error_text)
+        else:
+            # Once Energy increase is known, calculate set-point for each RF Station
+            for cryo in linac.cryomodule_list:
+                for station in cryo.station_list:
+                    station_max_voltage = station.max_voltage['value']
+                    station.cavity.design_voltage['value'] = station_max_voltage*sp_ratio
+
+    # Add a parameter which was not parsed from configuration but deduced
+    E = {"value" : Elast, "units" : "eV", "description" : "Final Accelerator Energy"}
+
     # Get Accelerator instance and return
-    accelerator = Accelerator(name, comp_type, bunch_rate, gun, linac_list)
+    accelerator = Accelerator(name, comp_type, bunch_rate, E, gun, linac_list)
 
     return accelerator
 

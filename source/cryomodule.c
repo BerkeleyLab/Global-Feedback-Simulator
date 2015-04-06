@@ -67,6 +67,17 @@ MechMode *MechMode_Allocate_New(double f_nu, double Q_nu, double k_nu, double Ts
 	return mechMode;
 }
 
+void MechMode_Deallocate(MechMode *mechMode)
+{
+	Filter_Deallocate(&mechMode->fil_x);
+	Filter_Deallocate(&mechMode->fil_y);
+	mechMode->f0 = 0.0;
+	mechMode->Q = 0.0;
+	mechMode->a_nu = 0.0;
+	mechMode->b_nu = 0.0;
+	mechMode->c_nu = 0.0;
+}
+
 void MechMode_State_Allocate(MechMode_State *mechMode_State, MechMode *mechMode)
 {
 	// Initialize attributes
@@ -79,6 +90,14 @@ void MechMode_State_Allocate(MechMode_State *mechMode_State, MechMode *mechMode)
 	// Allocate Filter State for y_nu
 	Filter_State_Allocate(&mechMode_State->fil_state_y, &mechMode->fil_y);
 
+}
+
+void MechMode_State_Deallocate(MechMode_State *mechMode_State)
+{
+	Filter_State_Deallocate(&mechMode_State->fil_state_x);
+	Filter_State_Deallocate(&mechMode_State->fil_state_y);
+	mechMode_State->x_nu = 0.0;
+	mechMode_State->y_nu = 0.0;
 }
 
 void MechMode_Step(MechMode *mechMode, MechMode_State *mechMode_State, double complex F_nu)
@@ -95,13 +114,24 @@ void MechMode_Step(MechMode *mechMode, MechMode_State *mechMode_State, double co
 
 }
 
+Cryomodule_dp Cryomodule_Allocate_Array(int n)
+{
+  Cryomodule_dp cryomodule_net = calloc(n, sizeof(Cryomodule *));
+  return cryomodule_net;
+}
+
+void Cryomodule_Append(Cryomodule** cryo_arr, Cryomodule* cryo, int index)
+{
+  // XXX Add some check!!
+  cryo_arr[index] = cryo;
+}
+
 void Cryomodule_Allocate_In(Cryomodule *cryo, RF_Station_dp rf_station_net, int n_rf_stations, MechMode_dp mechMode_net, int n_mechModes)
 {
 	cryo -> rf_station_net = rf_station_net;
 	cryo -> mechMode_net = mechMode_net;
 	cryo -> n_rf_stations = n_rf_stations;
 	cryo -> n_mechModes = n_mechModes;
-
 }
 
 Cryomodule * Cryomodule_Allocate_New(RF_Station **rf_station_net, int n_rf_stations, MechMode **mechMode_net, int n_mechModes)
@@ -109,6 +139,21 @@ Cryomodule * Cryomodule_Allocate_New(RF_Station **rf_station_net, int n_rf_stati
 	Cryomodule * cryo = calloc(1,sizeof(Cryomodule));
 	Cryomodule_Allocate_In(cryo, rf_station_net, n_rf_stations, mechMode_net, n_mechModes);
 	return cryo;
+}
+void Cryomodule_Deallocate(Cryomodule* cryo)
+{
+	for(int i=0;i<cryo->n_rf_stations;i++){
+		RF_Station_Deallocate(cryo->rf_station_net[i]);
+	}
+	for (int i=0;i<cryo->n_mechModes;i++){
+		MechMode_Deallocate(cryo->mechMode_net[i]);
+	}
+
+	free(cryo->rf_station_net);
+	free(cryo->mechMode_net);
+
+	cryo->n_rf_stations = 0.0;
+	cryo->n_mechModes = 0.0;
 }
 
 RF_Station *Get_RF_Station(Cryomodule *cryo, int index)
@@ -141,6 +186,20 @@ void Cryomodule_State_Allocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
  	// Allocate vectors to store Lorentz forces
  	cryo_state->F_nu = calloc(cryo->n_mechModes,sizeof(double));
 
+}
+
+void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
+{
+	for(int i=0;i<cryo->n_rf_stations;i++){
+		RF_State_Deallocate(cryo_state->rf_state_net[i], cryo->rf_station_net[i]);
+	}
+	for (int i=0;i<cryo->n_mechModes;i++){
+		MechMode_State_Deallocate(cryo_state->mechMode_state_net[i]);
+	}
+
+	free(cryo_state->rf_state_net);
+	free(cryo_state->mechMode_state_net);
+	free(cryo_state->F_nu);
 }
 
 void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,

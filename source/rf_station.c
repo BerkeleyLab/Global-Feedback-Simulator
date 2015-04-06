@@ -41,6 +41,12 @@ void Delay_State_Deallocate(Delay_State *delay_state)
   free(delay_state->buffer);
 }
 
+void Delay_Deallocate(Delay *delay)
+{
+  delay->size = 0;
+}
+
+
 double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_state)
 {
   double complex out;
@@ -166,7 +172,25 @@ RF_Station * RF_Station_Allocate_New(
     p_RXF, cav, stable_gbw, FPGA_out_sat, loop_delay_size);
 
   return rf_station;
- }
+}
+
+void RF_Station_Deallocate(RF_Station *rf_station)
+{
+
+  Filter_Deallocate(&rf_station->RXF);
+  Filter_Deallocate(&rf_station->TRF1);
+  Filter_Deallocate(&rf_station->TRF2);
+
+  FPGA_Deallocate(&rf_station->fpga);
+  Cavity_Deallocate(rf_station->cav);
+  Delay_Deallocate(&rf_station->loop_delay);
+
+  rf_station->nom_grad = 0.0;
+  rf_station->Clip = 0.0;
+  rf_station->PAscale = 0.0;
+  rf_station->PAmax = 0.0;
+
+}
 
 void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
 
@@ -209,6 +233,16 @@ void FPGA_Allocate_In(FPGA * fpga,
   fpga->state_sat = out_sat;
 
   fpga->Tstep = Tstep;
+}
+
+void FPGA_Deallocate(FPGA *fpga)
+{
+  fpga->kp = 0.0;
+  fpga->ki = 0.0;
+  fpga->set_point = 0.0;
+  fpga->out_sat = 0.0;
+  fpga->state_sat = 0.0;
+  fpga->Tstep = 0.0;
 }
 
 void FPGA_Clear(FPGA_State * stnow)

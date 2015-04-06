@@ -157,7 +157,7 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
     # drive_step and beam_step contain: [a, b, c, cav_v_meas, bw_meas, cav_v]
     return trang, drive_step, beam_step, mode_dict, E_probe, E_reverse
 
-def run_cavity_freq_test(Tmax, test_file):
+def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
 
     # Import JSON parser module
     from get_configuration import Get_SWIG_Cavity
@@ -183,6 +183,8 @@ def run_cavity_freq_test(Tmax, test_file):
 
     delta_tz = 0.0  # Timing noise
 
+    elecMode_state = acc.ElecMode_State_Get(cav_state,0);
+    elecMode_state.delta_omega = delta_omega
     # Run Numerical Simulation
     for i in xrange(1,nt):
         cav_v[i] = acc.Cavity_Step(cav, delta_tz, drive_in[i], beam_charge[i], cav_state)
@@ -366,6 +368,7 @@ def cavity_test_freqs():
     plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
     plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
     plt.ylim([-1e5,9e5])
+    plt.axis('equal')
     plt.xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
     plt.ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
     plt.rc('font',**{'size':20})
@@ -384,12 +387,96 @@ def cavity_test_freqs():
     # Return PASS/FAIL boolean
     return fit_pass
 
+def cavity_test_noise():
+
+    # Configuration file for specific test configuration
+    # (to be appended to standard test cavity configuration)
+    test_file = "source/configfiles/unit_tests/cavity_test_freqs1.json"
+
+    # Total simulation time 
+    Tmax = 1
+
+    # Empty lists to append simulation results to
+    drive_in_list = []
+    cav_v_list = []
+    mode_dicts = []
+
+    # Pass/FAIL boolean for curve fits
+    # True = curve fit RMS error are under threshold
+    fit_pass = True
+    fit_threshold = 1e-3
+
+    print "\n**** Test Noise...\n"
+    
+    # Try different detuning frequencies
+    # delta_fs = [0, 10, 20]
+    delta_fs = np.arange(0,6,2)
+
+    
+    # Iterate over simulation tests
+    for idx, delta_f in enumerate(delta_fs):
+        # Run numerical simulation
+        trang, cav_v, drive_in, beam_charge, mode_dict, curve_fit, foffset_meas = run_cavity_freq_test(Tmax, test_file, 2.0*np.pi*delta_f)
+    
+        # Store signals
+        drive_in_list.append(drive_in)
+        cav_v_list.append(cav_v)
+        mode_dicts.append(mode_dict)
+    
+        # Calculate error RMS on curve fit
+        fit_error = linalg.norm(np.abs(curve_fit[5])-np.abs(curve_fit[3]))/linalg.norm(np.abs(curve_fit[5]))
+        print "Test "+str(idx+1)+":"
+        print '  Fit RMS error is {:.2e}'.format(fit_error)
+        print '  Offset: Measured = %.2f Hz, Set to = %.2f Hz' %(foffset_meas, mode_dict['foffset'])
+    
+        # Compare error to threshold and establish PASS/FAIL
+        if fit_error < fit_threshold: this_fit_pass = True
+        else: this_fit_pass = False
+        fit_pass = fit_pass & this_fit_pass
+    
+
+    # Plot title
+    plt.title("Cavity Step Response: Drive @ "+r'$\omega_0$', fontsize=40, y=1.05)
+
+    # Iterate over modes and plot amplitude
+    for idx, delta_f in enumerate(delta_fs):
+        plt.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'offset = ' + str(delta_f) + ' Hz', linewidth=2)
+    
+    f_circle = np.arange(0,-100,-1)
+    # v_circle =  np.abs(mode_dicts[0]['k_drive'])*1/(1+1j*f_circle)
+    # v_circle =  np.sqrt(np.square(np.abs(mode_dicts[0]['k_drive']))-*np.exp(-1j*f_circle))
+    # plt.plot(np.real(v_circle),np.imag(v_circle), '--')
+
+    # Format plot
+    plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
+    plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
+    plt.ylim([-1e5,9e5])
+    plt.axis('equal')
+    plt.xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
+    plt.ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
+    plt.rc('font',**{'size':20})
+    plt.legend(loc='upper right')
+
+    # Show figure
+    plt.show()
+
+    # print PASS/FAIL
+    if (fit_pass):
+        result = 'PASS' 
+    else:
+        result = 'FAIL'
+    print "\n*** Noise test >>> " + result 
+
+    # Return PASS/FAIL boolean
+    return fit_pass
+
 def unit_cavity():
     print "\n**** Test Cavity step response..."
     test_step_pass = cavity_test_step()
     test_freqs_pass = cavity_test_freqs()
+    test_noise_pass = cavity_test_noise()
 
-    return test_step_pass & test_freqs_pass
+    return test_step_pass & test_freqs_pass & test_noise_pass
 
 def perform_tests():
     print "\n****\nTesting Filter..."

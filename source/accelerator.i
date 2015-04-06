@@ -6,6 +6,7 @@
 #include "cavity.h"
 #include "rf_station.h"
 #include "cryomodule.h"
+#include "linac.h"
 %}
 
 %include "complex.i"
@@ -22,3 +23,4 @@
 %include "cavity.h"
 %include "rf_station.h"
 %include "cryomodule.h"
+%include "linac.h"
