@@ -44,9 +44,9 @@
             "description": "Bunch repetition rate"
         },
 
-		"gun": "d_Gun",
-		"linac_connect": ["Linac0"]
-	},
+        "gun": "d_Gun",
+        "linac_connect": ["Linac0"]
+    },
 
     "Linac0": {
         "type": "linac",
@@ -55,12 +55,17 @@
         "f0": {
             "value": 1300e6,
             "units": "Hz",
-            "description": "Operating frequency"
+            "description": "Nominal LO frequency"
         },
-        "lam": {
+        "E": {
             "value": 0.0,
-            "units": "m",
-            "description": "RF wavelength for each linac (Sband=0.105m, Xband=0.02625m)"
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
         },
         "s0": {
             "value": 0.0,
@@ -71,6 +76,12 @@
             "value": 0.0,
             "units": "m",
             "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
         },
 
         "dds_numerator": {
@@ -84,13 +95,13 @@
             "description": "Near-IQ denominator (IF carrier/ADC clock)"
         },
 
-        "module_connect" : ["Module0"],
+        "cryomodule_connect" : ["Cryomodule0"],
         "Chicane": "Chicane0"
     },
 
-    "Module0": {
-        "type": "module",
-        "name": "module0",
+    "Cryomodule0": {
+        "type": "Cryomodule",
+        "name": "cryomodule0",
         "station_connect": ["Station0"],
         "mechanical_mode_connect": ["MechMode0", "MechMode1", "MechMode2"],
 
@@ -110,16 +121,6 @@
         "Tx_filter1":"d_TRF1",
         "Tx_filter2":"d_TRF2",
         "Controller": "d_Controller",
-        "E": {
-            "value": 0.0,
-            "units": "eV",
-            "description": "Energy set-point"
-        },
-        "phi": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
-        },
         "loop_delay_size": {
             "value": 3,
             "units": "Time steps",
@@ -127,6 +128,12 @@
         },
 
         "piezo_connect": ["Piezo0", "Piezo1"],
+        
+        "N_Stations": {
+            "value": 1,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
 
         "cav_adc" : "cav_adc0",
         "rfl_adc" : "rfl_adc0",
@@ -138,7 +145,7 @@
         "name": "cavity0",
 
         "L": {
-            "value": 0.0,
+            "value": 1.0,
             "units": "m",
             "description": "Length"
         },
@@ -147,26 +154,7 @@
             "units": "V/m",
             "description": "Nominal gradient"
         },
-        "nom_beam_phase": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal beam phase (<0 accelerates and puts head energy lower than tail)"
-        },
-        "rf_phase": {
-            "value": 0.0,
-            "units": "deg",
-            "description": "Nominal RF phase"
-        },
-        "design_voltage": {
-            "value": 16e6,
-            "units": "V",
-            "description": "Design Voltage"
-        },
-        "unity_voltage": {
-            "value": 16e6,
-            "units": "V",
-            "description": "Unity Voltage"
-        },
+
         "elec_mode_connect" : ["ElecMode0", "ElecMode1", "ElecMode2"]
     },
 
@@ -455,10 +443,10 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     },
 
@@ -482,10 +470,10 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     },
 
@@ -509,25 +497,11 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
-        }
-    },
-
-    "Chicane0": {
-        "type": "chicane",
-        "name": "chicane1",
-        "R56": {
-            "value": -0.005,
-            "units": "m",
-            "description": "Nominal R56 (chicane R56 < 0)"
-        },
-        "T566": {
-            "value": "-1.5*R56",
-            "units": "m",
-            "description": "Nominal T566 (always > 0)"
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     }
+
  }

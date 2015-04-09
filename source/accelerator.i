@@ -7,6 +7,7 @@
 #include "rf_station.h"
 #include "cryomodule.h"
 #include "linac.h"
+#include "doublecompress.h"
 %}
 
 %include "complex.i"
@@ -24,3 +25,4 @@
 %include "rf_station.h"
 %include "cryomodule.h"
 %include "linac.h"
+%include "doublecompress.h"

@@ -64,8 +64,8 @@ function [Ipk,sz,dE_E,sd,dt,sdsgn,k,Eloss,dE_Ei,dE_Ei2,cor1] = double_compressxv
 if (length(dphiv) ~= length(params.phiv))
   error('wrong size to dphiv input');
 end
-
-N      = abs(Q)*6.241E18                              % bunch population [particles/bunch]
+format long
+%N      = abs(Q)*6.241E18                              % bunch population [particles/bunch]
 
 %lam	=params.lam;
 sz0	=params.sz0;
@@ -93,7 +93,7 @@ if(temp==1)
 end
 
 Nv        = length(Ev);
-e         = 1.602177E-19;                         % constants and conversions...
+%e         =1.60217656535E-19;                         % constants and conversions...
 c         = 2.99792458E8;
 Z0        = 120*pi;
 dN_Nf     = dN_N*1e-2;		                  % percent -> unitless
@@ -104,9 +104,9 @@ lambar    = lamv/2/pi;
 sz0m      = (sz0+dsig_z)*1E-3;
 sd0f      = (sd0+dsig_E)*1E-2;
 sqrt12    = sqrt(12);
-Nec       = 2*N*e*s0m*Z0*c/pi./am.^2/1E9;         %equation in doc looks like e^2, missing e is in the conversion from ev->joules
+%Nec       = 2*Q*s0m*Z0*c/pi./am.^2/1E9         %equation in doc looks like e^2, missing e is in the conversion from ev->joules
 
-%Nec       = 2*abs(Q)*s0m*Z0*c/pi./am.^2/1E9;         %equation in doc looks like e^2, missing e is in the conversion from ev->joules
+Nec       = 2*abs(Q)*s0m*Z0*c/pi./am.^2/1E9;         %equation in doc looks like e^2, missing e is in the conversion from ev->joules
 phivr     = phiv*deg_2_rad;
 dphivr    = dphiv*deg_2_rad;
 dV_Vvr    = dV_Vv/100;                            % voltage errors in % converted to dimensionless
@@ -135,10 +135,10 @@ for j = 1:Nv                                      % loop over all linac-compress
   ds          = sz1(j)*sqrt12;                    % FW bunch length for uniform dist. [m]
   dphi        = dt1(j)*c/lambar(j) + dphivr(j);   % total local phase error (gun, prev-R56 + local-rf) [rad]
   % wake's effect on linear correlation factor (<0) [1/m]
-  kw          = -(1+dN_Nf)*(Nec(j)*Lv(j)/(ds^2*Ev(j)))*(1-(1+sqrt(ds/s0m(j)))*exp(-sqrt(ds/s0m(j))));
+  kw          = -(1+dN_Nf)*(Nec(j)*Lv(j)/(ds^2*Ev(j)))*(1-(1+sqrt(ds/s0m(j)))*exp(-sqrt(ds/s0m(j))))
   % rf phase induced linear correlation factor [1/m]
-  kn          = (Er(j)-1)*sin(phivr(j) + dphi)/(lambar(j)*C(j));
-  k(j)        = kw + kn;                          % total linear correlation factor [1/m]
+  kn          = (Er(j)-1)*sin(phivr(j) + dphi)/(lambar(j)*C(j))
+  k(j)        = kw + kn                          % total linear correlation factor [1/m]
   % relative energy error due to dphase and dN error [ ]
   % changed by author (introduced dV_Vvr)
   dE_E(j)     = dE_E1(j)*Er(j) + (1-Er(j))*((1+dV_Vvr(j))*cos(phivr(j) + dphi)/C(j) - 1) +...
@@ -169,8 +169,8 @@ for j = 1:Nv                                      % loop over all linac-compress
   dt(j)       = 1E12*dt1(j+1);                    % save timing error to this point [psec]
 end
 
-Ipk   = (1+dN_Nf)*N*e*c/sqrt12./sz;               % calculate peak current over uniform bunch dist. [A]
-%Ipk   = (1+dN_Nf)*abs(Q)*c/sqrt12./sz;               % calculate peak current over uniform bunch dist. [A]
+%Ipk   = (1+dN_Nf)*Q*c/sqrt12./sz;               % calculate peak current over uniform bunch dist. [A]
+Ipk   = (1+dN_Nf)*abs(Q)*c/sqrt12./sz;               % calculate peak current over uniform bunch dist. [A]
 sz    = sz*1E3;                                   % m -> mm
 sd    = sd*1E2;                                   % [ ] -> %
 sdsgn = sdsgn*1E2;                                % [ ] -> % (dE/E-z slope times sigz)

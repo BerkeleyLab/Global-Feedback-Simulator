@@ -32,7 +32,7 @@
         "top_drive" : {
             "value": 95,
             "units": "%",
-            "description": "Maximum amplifier output drive setting"
+            "description": "Maximum amplifier output drive setting (relative to PAmax)"
         }
     },
 
@@ -96,10 +96,10 @@
 			"units": "",
 			"description" : ""
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
 
     },
@@ -134,6 +134,118 @@
 		}
 	},
 
+
+    "d_Gun": {
+        "type": "gun",
+        "name":"d_Gun",
+        "Q": {
+            "value": -300e-12,
+            "units": "C",
+            "description": "Bunch nominal charge (<0 for electrons)"
+        },
+        "sz0": {
+            "value": 0.548e-3,
+            "units": "m",
+            "description": "Nominal initial rms bunch length"
+        },
+        "sd0": {
+            "value": 0.0,
+            "units": "fraction",
+            "description": "Nominal initial incoherent Energy spread at Eg (gun exit Energy)"
+        },
+        "E": {
+            "value": 750e3,
+            "units": "eV",
+            "description": "Nominal gun exit energy"
+        }
+    },
+
+     "d_Linac": {
+        "type": "linac",
+        "name": "d_linac",
+
+        "f0": {
+            "value": 1300e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 0.0,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["d_Cryomodule"],
+        "Chicane": "d_Chicane"
+    },
+
+    "d_Cryomodule": {
+        "type": "Cryomodule",
+        "name": "d_cryomodule",
+        "station_connect": ["d_Station"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "d_Station": {
+        "type": "station",
+        "name": "d_station",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "d_Cavity",
+        "Rx_filter":"d_RXF",
+        "Tx_filter1":"d_TRF1",
+        "Tx_filter2":"d_TRF2",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+
+        "piezo_connect": [],
+        
+        "N_Stations": {
+            "value": 1,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rfl_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    },
+
 	"d_Cavity": {
         "type": "Cavity",
         "name": "Cavity",
@@ -151,44 +263,58 @@
 
         "elec_modes" : ["d_ElecMode"]
     },
+    
+    "d_ElecMode":{
+        "type": "elec_mode",
+        "name": "d_elecMode",
+        "mode_name": "default",
 
-    "d_Chicane": {
-        "type": "chicane",
-        "name": "chicane1",
-        "R56": {
-            "value": 0.0,
+        "RoverQ": {
+            "value": 1036.0,
+            "units": "Ohms",
+            "description": "Shunt impedance (R/Q)"
+        },
+        "foffset": {
+            "value": 1.0,
+            "units": "Hz",
+            "description": "Nominal frequency offset"
+        },
+        "peakV": {
+            "value": 1.5e6,
             "units": "",
             "description": ""
-	    },
-	    "T566": {
-            "value": 0.0,
+        },
+        "Q_0": {
+            "value": 1e10,
+            "units": "Unitless",
+            "description": "Internal loss Q"
+        },
+        "Q_drive": {
+            "value": 8.1e7,
+            "units": "Unitless",
+            "description": "Drive coupler Q"
+        },
+        "Q_probe": {
+            "value": 2e9,
+            "units": "Unitless",
+            "description": "Field probe Q"
+        },
+        "phase_rev": {
+            "value": 0,
             "units": "",
-            "description": ""
-	    }
-	},
+            "description": "Phase shift between Cavity cells and reverse ADC"
+        },
+        "phase_probe": {
+            "value": 0,
+            "units": "",
+            "description": "Phase shift between Cavity cells and probe ADC"
+        },
 
-    "d_Gun": {
-        "type": "gun",
-        "name":"d_Gun",
-        "Q": {
-            "value": -3.0E-10,
-            "units": "",
-            "description": ""
-        },
-        "sz0": {
-            "value": 0.548,
-            "units": "",
-            "description": ""
-        },
-        "sd0": {
-            "value": 0.0,
-            "units": "",
-            "description": ""
-        },
-        "E": {
-            "value": 0.00075,
-            "units": "",
+        "mech_couplings" : {
+            "value": {},
+            "units": "Hz/(MV/m)^2",
             "description": ""
         }
     }
+
 }

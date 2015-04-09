@@ -3,19 +3,18 @@
 import readjson.parse_accelerator as parseAcc
 
 
-
 def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 
     if Verbose: print "\nLoading JSON configuration files ..."
-    #Get the simulation and accelerator objects from the JSON parser
+    # Get the accelerator objects from the JSON parser
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json",
         cavity_test_file]
 
-    simulation, accelerator = parseAcc.ParseAccelerator(file_list, Verbose)
+    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
 
-    Tstep = simulation.Tstep['value']
+    Tstep = accelerator.Tstep['value']
     cavity_object = accelerator.linac_list[0].cryomodule_list[0].station_list[0].cavity
     cavity = cavity_object.Get_C_Pointer()
     cavity_state = cavity_object.Get_State_Pointer(cavity) 
@@ -30,7 +29,7 @@ def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
 
     if Verbose: print "\nLoading JSON configuration files ..."
-    #Get the simulation and accelerator objects from the JSON parser
+    # Get the accelerator objects from the JSON parser
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
@@ -38,9 +37,9 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
     if rf_station_test_file:
         file_list.append(rf_station_test_file)
 
-    simulation, accelerator = parseAcc.ParseAccelerator(file_list, Verbose)
+    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
 
-    Tstep = simulation.Tstep['value']
+    Tstep = accelerator.Tstep['value']
     rf_station_object = accelerator.linac_list[0].cryomodule_list[0].station_list[0]
 
     fund_index = rf_station_object.cavity.fund_index['value']
@@ -61,7 +60,7 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
 def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
 
     if Verbose: print "\nLoading JSON configuration files ..."
-    #Get the simulation and accelerator objects from the JSON parser
+    # Get the accelerator objects from the JSON parser
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
@@ -69,9 +68,9 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
     if cryo_test_file:
         file_list.append(cryo_test_file)
 
-    simulation, accelerator = parseAcc.ParseAccelerator(file_list, Verbose)
+    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
 
-    Tstep = simulation.Tstep['value']
+    Tstep = accelerator.Tstep['value']
     cryo_object = accelerator.linac_list[0].cryomodule_list[0]
 
     cryo, rf_station_pointers, mechMode_pointers = cryo_object.Get_C_Pointer()

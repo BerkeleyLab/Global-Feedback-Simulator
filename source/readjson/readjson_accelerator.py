@@ -25,55 +25,6 @@ from math import pi
 # Define Simulation time step as global
 Tstep_global = 0.0
 
-class Simulation:
-    """ Simulation class: contains parameters specific to a simulation run"""
-
-    def __init__(self, name, comp_type, Tstep, time_steps, nyquist_sign, synthesis):
-        self.name = name
-        self.type = comp_type
-        self.Tstep = Tstep
-        self.time_steps = time_steps
-        self.nyquist_sign = nyquist_sign
-        self.synthesis = synthesis
-
-        # Assign Tstep to the global variable
-        global Tstep_global
-        Tstep_global = Tstep['value']
-
-    def __str__ (self):
-        """str: Convinient concatenated string output for printout"""
-
-        return ("\n--Simulation Object--\n"
-         + "name: " + self.name  + "\n"
-         + "type: " + self.type  + "\n"
-         + "Tstep: " + str(self.Tstep) + "\n"
-         + "time_steps: " + str(self.time_steps) + "\n"
-         + "nyquist_sign: " + str(self.nyquist_sign) + "\n"
-         + "synthesis: " + str(self.synthesis) + "\n")
-
-def readSimulation(confDict):
-    """ readSimulation: Takes the global configuration dictionary and
-    returns a Simulation object with the configuration values filled in"""
-
-    # Read name and component type (strings, no need to go through readentry)
-    name = confDict["Simulation"]["name"]
-    comp_type = confDict["Simulation"]["type"]
-
-    # Read rest of configuration parameters
-    Tstep = readentry(confDict, confDict["Simulation"]["Tstep"])
-    time_steps = readentry(confDict, confDict["Simulation"]["time_steps"])
-    nyquist_sign = readentry(confDict,confDict["Simulation"]["nyquist_sign"])
-
-    # Check if simulation dictionary has a Synthesis entry, and if so parse it
-    if confDict["Simulation"].has_key("Synthesis"):
-        synthesis = readSynthesis(confDict["Simulation"])
-    else:
-        synthesis = None
-
-    # Instantiate Simulation object and return
-    simulation = Simulation(name, comp_type, Tstep, time_steps, nyquist_sign, synthesis)
-
-    return simulation
 
 class Synthesis:
     """ Synthesis class: contains parameters specific to a Synthesis run.
@@ -207,7 +158,6 @@ class Cavity:
         acc.Cavity_State_Allocate(cavity_state, cavity_C_pointer)
 
         return cavity_state
-
 
 class ElecMode:
     def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_list):
@@ -593,13 +543,13 @@ def readZFilter(confDict, zfilter_entry):
 class ADC:
     """ ADC class: contains parameters specific to a ADC configuration"""
 
-    def __init__(self, name, comp_type, adc_max, adc_off, psd_llrf):
+    def __init__(self, name, comp_type, adc_max, adc_off, noise_psd):
         self.name = name
         self.type = comp_type
 
         self.adc_max = adc_max
         self.adc_off = adc_off
-        self.psd_llrf = psd_llrf
+        self.noise_psd = noise_psd
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -609,7 +559,7 @@ class ADC:
         + "type: " + self.type + "\n"
         + "adc_max: " + str(self.adc_max) + "\n"
         + "adc_off: " + str(self.adc_off) + "\n"
-        + "psd_llrf: " + str(self.psd_llrf) + "\n")
+        + "noise_psd: " + str(self.noise_psd) + "\n")
 
 def readADC(confDict, adc_entry):
 
@@ -620,10 +570,10 @@ def readADC(confDict, adc_entry):
     # Read the rest of parameters
     adc_max = readentry(confDict,confDict[adc_entry]["adc_max"])
     adc_off = readentry(confDict,confDict[adc_entry]["adc_off"])
-    psd_llrf = readentry(confDict,confDict[adc_entry]["psd_llrf"])
+    noise_psd = readentry(confDict,confDict[adc_entry]["noise_psd"])
 
     # Create an ADC instance and return
-    adc = ADC(name, adc_comp_type, adc_max, adc_off, psd_llrf)
+    adc = ADC(name, adc_comp_type, adc_max, adc_off, noise_psd)
 
     return adc
 
@@ -829,41 +779,6 @@ def readStation(confDict, station_entry, cryomodule_entry):
 
     return station
 
-class Chicane:
-    """ Chicane class: contains parameters specific to a Chicane configuration"""
-
-    def __init__(self, comp_type, name, R56, T566):
-        self.name = name
-        self.type = comp_type
-
-        self.R56 = R56
-        self.T566 = T566
-
-    def __str__(self):
-        """str: Convinient concatenated string output for printout"""
-
-        return ("\n--Chicane Object--\n"
-        + "name: " + self.name + "\n"
-        + "type: " + self.type + "\n"
-
-        + "R56: " + str(self.R56) + "\n"
-        + "T566: " + str(self.T566) + "\n")
-
-def readChicane(confDict, chicane_entry):
-
-    # Read name and component type
-    name = confDict[chicane_entry]['name']
-    chicane_comp_type = confDict[chicane_entry]['type']
-
-    # Read parameters
-    R56 = readentry(confDict,confDict[chicane_entry]["R56"])
-    T566 = readentry(confDict,confDict[chicane_entry]["T566"])
-
-    # Create a Chicane instance and return
-    chicane = Chicane(name, chicane_comp_type, R56, T566)
-
-    return chicane
-
 class Cryomodule:
     """ Cryomodule class: contains parameters specific to a Cryomodule configuration"""
 
@@ -959,26 +874,38 @@ def readCryomodule(confDict, cryomodule_entry):
 class Linac:
     """ Linac class: contains parameters specific to a Linac configuration"""
 
-    def __init__(self, name, comp_type, param_dic, cryomodule_list, chicane):
+    def __init__(self, name, comp_type, param_dic, cryomodule_list):
+
+        import numpy as np
+
         self.name = name
         self.type = comp_type
 
         self.f0 = param_dic["f0"]
         self.E = param_dic["E"]
         self.phi = param_dic["phi"]
-        self.lam = param_dic["lam"]
+        self.phi['value'] = self.phi['value']*np.pi/180    # Convert degrees to radians
         self.s0 = param_dic["s0"]
+        self.iris_rad = param_dic["iris_rad"]
+        self.R56 = param_dic["R56"]
         self.dds_numerator = param_dic["dds_numerator"]
         self.dds_denominator = param_dic["dds_denominator"]
 
         self.cryomodule_list = cryomodule_list
-        self.chicane = chicane
 
         # Add parameters that will be filled after object instance
         self.dE = {"value" : 0.0, "units" : "eV", "description" : "Energy increase in Linac (final minus initial Energy)"}
         self.max_voltage = {"value" : 0.0, "units" : "V", "description" : "Maximum Accelerating Voltage"}
         self.N_Stations = {"value" : 0.0, "units" : "N/A", "description" : "Total number of RF Stations in Linac"}
         self.L = {"value" : 0.0, "units" : "m", "description" : "Total Linac Length"}
+
+        # Some parameters are deduced from others
+        # RF wavelength deduced from f0
+        c = 2.99792458e8    # Speed of light [m/s]
+        self.lam = {"value" : c/self.f0['value'], "units" : "m", "description" : "RF wavelength for each linac (Sband=0.105m, Xband=0.02625m)"}
+        # T566 deduced from R56 (small angle approximation)
+        self.T566 = {"value" : -1.5*self.R56['value'], "units" : "m", "description" : "Nominal T566 (always >= 0)"}
+
 
         # Need to manually propagate values down to the Cavity and Electrical Mode level
         for cryomodule in cryomodule_list:
@@ -987,7 +914,6 @@ class Linac:
                 station.cavity.rf_phase["value"] = self.phi["value"]
 
                 # Calculate each RF Station's maximum accelerating voltage
-                # (also taking into account the projection of the RF field on the beam)
                 N_Stations = station.N_Stations["value"]
                 nom_grad = station.cavity.nom_grad["value"]
                 L = station.cavity.L["value"]
@@ -1014,12 +940,14 @@ class Linac:
         + "phi: " + str(self.phi) + "\n"
         + "lam: " + str(self.lam) + "\n"
         + "s0: " + str(self.s0) + "\n"
+        + "iris_rad: " + str(self.iris_rad) + "\n"
+        + "R56: " + str(self.R56) + "\n"
+        + "T566: " + str(self.T566) + "\n"
         + "dE: " + str(self.dE) + "\n"
         + "max_voltage: " + str(self.max_voltage) + "\n"
         + "L: " + str(self.L) + "\n"
         + "dds_numerator: " + str(self.dds_numerator) + "\n"
         + "dds_denominator: " + str(self.dds_denominator) + "\n"
-        + "chicane: " + str(self.chicane) + "\n"
 
         + "cryomodule_list: " + '\n'.join(str(x) for x in self.cryomodule_list))
 
@@ -1034,7 +962,7 @@ class Linac:
         cryo_pointers = []
 
         # Allocate memory for array of Cryomodules
-        cryo_net = acc.Cryomodule_Allocate_Array(n_Stations)
+        cryo_net = acc.Cryomodule_Allocate_Array(n_Cryos)
 
         # Allocate each Cryomodule and append it to the cryo_net
         for idx, cryo in enumerate(self.cryomodule_list):
@@ -1078,9 +1006,9 @@ def readLinac(confDict, linac_entry):
     linac_param_dic["f0"] = readentry(confDict,confDict[linac_entry]["f0"]) # Resonance frequency [Hz]
     linac_param_dic["E"] = readentry(confDict,confDict[linac_entry]["E"])
     linac_param_dic["phi"] = readentry(confDict,confDict[linac_entry]["phi"])
-    linac_param_dic["lam"] = readentry(confDict,confDict[linac_entry]["lam"])
     linac_param_dic["s0"] = readentry(confDict,confDict[linac_entry]["s0"])
     linac_param_dic["iris_rad"] = readentry(confDict,confDict[linac_entry]["iris_rad"])
+    linac_param_dic["R56"] = readentry(confDict,confDict[linac_entry]["R56"])
     linac_param_dic["dds_numerator"] = readentry(confDict,confDict[linac_entry]["dds_numerator"])
     linac_param_dic["dds_denominator"] = readentry(confDict,confDict[linac_entry]["dds_denominator"])
 
@@ -1090,36 +1018,80 @@ def readLinac(confDict, linac_entry):
     # Read list of modules recursively
     cryomodule_list = readList(confDict, cryomodule_connect, readCryomodule)
 
-    # Read the chicane
-    chicane_name = confDict[linac_entry]["Chicane"]
-    chicane = readChicane(confDict, chicane_name)
-
     # Instantiate Linac object and return
-    linac = Linac(name, linac_comp_type, linac_param_dic, cryomodule_list, chicane)
+    linac = Linac(name, linac_comp_type, linac_param_dic, cryomodule_list)
 
     return linac
 
-class Accelerator:
-    """ Accelerator class: contains parameters specific to an accelerator configuration"""
+class Simulation:
+    """ Simulation class: contains parameters specific to a Simulation run, 
+    as well as all parameters in the Accelerator configuration"""
 
-    def __init__(self, name, comp_type, bunch_rate, E, gun, linac_list):
+    def __init__(self, name, comp_type, Tstep, time_steps, nyquist_sign, synthesis, bunch_rate, E, gun, linac_list):
         self.name = name
         self.type = comp_type
+
+        # Parameters specific to a Simulation run
+        self.Tstep = Tstep
+        self.time_steps = time_steps
+        self.nyquist_sign = nyquist_sign
+        self.synthesis = synthesis
+
+        # Accelerator parameters
         self.bunch_rate = bunch_rate
         self.E = E
         self.gun = gun
         self.linac_list = linac_list
 
+        # Assign Tstep to the global variable
+        global Tstep_global
+        Tstep_global = Tstep['value']
+
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
-        return ("\n--Accelerator Object--\n"
+        return ("\n--Simulation Object--\n"
         + "name: " + self.name + "\n"
         + "type: " + self.type + "\n"
+        + "Tstep: " + str(self.Tstep) + "\n"
+        + "time_steps: " + str(self.time_steps) + "\n"
+        + "nyquist_sign: " + str(self.nyquist_sign) + "\n"
+        + "synthesis: " + str(self.synthesis) + "\n"
         + "bunch_rate: " + str(self.bunch_rate) + "\n"
         + "E: " + str(self.E) + "\n"
         + "gun: " + str(self.gun) + "\n"
+
         + "linac_list: " + '\n'.join(str(x) for x in self.linac_list))
+
+    def Get_C_Pointer(self):
+
+        import accelerator as acc
+
+        # First count number of Linacs and Allocate Arrays
+        n_Linacs = len(self.linac_list)
+
+        # Empty list to store pointers
+        linac_pointers = []
+
+        # Allocate memory for array of Linacs
+        linac_net = acc.Linac_Allocate_Array(n_Stations)
+
+        # Allocate each Linac and append it to the linac_net
+        for idx, cryo in enumerate(self.linac_list):
+            Linac_C_Pointer = cryo.Get_C_Pointer()
+            acc.Linac_Append(linac_net, Linac_C_Pointer, idx)
+            linac_pointers.append(Linac_C_Pointer)
+
+        # Instantiate Accelerator C structure
+        accelerator = acc.Accelerator()
+        # Fill in Linac C data structure
+        acc.Linac_Allocate_In(linac, cryo_net, n_Cryos,
+            self.dE["value"], self.R56["value"], self.T566["value"], \
+            self.phi["value"], self.lam["value"], self.s0["value"], \
+            self.iris_rad["value"], self.L["value"])
+
+        # Return C Pointer for Cryomodule and lists of pointers
+        return linac, cryo_pointers
 
 class Gun:
     """ Gun class: contains parameters specific to an Gun configuration"""
@@ -1130,7 +1102,7 @@ class Gun:
 
         self.Q = Q
         self.sz0 = sz0
-        self.sd0 = sd0
+        self.sd0 = sd0 
         self.E = E
 
     def __str__(self):
@@ -1143,6 +1115,15 @@ class Gun:
         + "sz0: " + str(self.sz0) + "\n"
         + "sd0: " + str(self.sd0) + "\n"
         + "E: " + str(self.E) + "\n")
+
+    def Get_C_Pointer(self):
+
+        import accelerator as acc
+
+        gun = acc.Gun()
+        acc.Gun_Allocate_In(gun, self.E['value'], self.sz0['value'], self.sd0['value'], self.Q['value']);
+
+        return gun
 
 def readGun(confDict):
 
@@ -1165,16 +1146,28 @@ def readGun(confDict):
 
     return gun, Egun
 
-
-def readAccelerator(confDict):
-    """ readAccelerator : Takes the global configuration dictionary and
-    returns an Accelerator object with the configuration values filled in"""
+def readSimulation(confDict):
+    """ readSimulation : Takes the global configuration dictionary and
+    return a Simulation object. This routine is to be called
+    from upper level programs in order to obtain the necessary instances
+    to run a full simulation."""
 
     import numpy as np
-    
+
     # Read name and component type
     name = confDict["Accelerator"]["name"]
     comp_type = confDict["Accelerator"]["type"]
+
+    # Read rest of configuration parameters
+    Tstep = readentry(confDict, confDict["Simulation"]["Tstep"])
+    time_steps = readentry(confDict, confDict["Simulation"]["time_steps"])
+    nyquist_sign = readentry(confDict,confDict["Simulation"]["nyquist_sign"])
+
+    # Check if simulation dictionary has a Synthesis entry, and if so parse it
+    if confDict["Simulation"].has_key("Synthesis"):
+        synthesis = readSynthesis(confDict["Simulation"])
+    else:
+        synthesis = None
 
     # Read other parameters
     bunch_rate = readentry(confDict,confDict["Accelerator"]["bunch_rate"])
@@ -1218,21 +1211,6 @@ def readAccelerator(confDict):
     E = {"value" : Elast, "units" : "eV", "description" : "Final Accelerator Energy"}
 
     # Get Accelerator instance and return
-    accelerator = Accelerator(name, comp_type, bunch_rate, E, gun, linac_list)
+    simulation = Simulation(name, comp_type, Tstep, time_steps, nyquist_sign, synthesis, bunch_rate, E, gun, linac_list)
 
-    return accelerator
-
-def readConfiguration(confDict):
-    """ readConfiguration : Takes the global configuration dictionary and
-    returns Simulation and Accelerator objects. This routine is to be called
-    from upper level programs in order to obtain the necessary instances
-    to run a full simulation """
-
-    # Read Simulation parameters and create an instance
-    simulation = readSimulation(confDict)
-
-    # Read Accelerator parameters (and recursively all of its components) and create an instance
-    accelerator = readAccelerator(confDict)
-
-    # Return Simulation and accelerator instances
-    return simulation, accelerator
+    return simulation

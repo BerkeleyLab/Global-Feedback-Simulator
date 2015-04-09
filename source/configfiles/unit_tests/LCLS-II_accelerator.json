@@ -67,11 +67,6 @@
             "units": "deg",
             "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
         },
-        "lam": {
-            "value": 0.0,
-            "units": "m",
-            "description": "RF wavelength for each linac (Sband=0.105m, Xband=0.02625m)"
-        },
         "s0": {
             "value": 0.0,
             "units": "m",
@@ -81,6 +76,12 @@
             "value": 0.0,
             "units": "m",
             "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
         },
 
         "dds_numerator": {
@@ -442,10 +443,10 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     },
 
@@ -469,10 +470,10 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     },
 
@@ -496,25 +497,11 @@
             "units": "deg",
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
-        "psd_llrf": {
+        "noise_psd": {
             "value": "10**(-13.5)",
-            "units": "",
-            "description": ""
-        }
-    },
-
-    "Chicane0": {
-        "type": "chicane",
-        "name": "chicane1",
-        "R56": {
-            "value": -0.005,
-            "units": "m",
-            "description": "Nominal R56 (chicane R56 < 0)"
-        },
-        "T566": {
-            "value": "-1.5*R56",
-            "units": "m",
-            "description": "Nominal T566 (always > 0)"
+            "units": "dBc/Hz",
+            "description": "Noise Power Spectral Density (PSD)"
         }
     }
+
  }
