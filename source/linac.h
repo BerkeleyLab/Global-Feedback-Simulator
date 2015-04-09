@@ -31,7 +31,6 @@ typedef struct str_Linac_State {
 	Cryomodule_State **cryo_state_net;
 } Linac_State;
 
-
 // Rename pointer for SWIG work around
 typedef Linac* Linac_p;
 typedef Linac ** Linac_dp;
@@ -42,6 +41,8 @@ void Linac_Allocate_In(Linac *linac, Cryomodule_dp cryo_net, int n_cryos,
 Linac * Linac_Allocate_New(Cryomodule_dp cryo_net, int n_cryos,
 	double dE, double R56, double T566, double phi, double lam, double s0, double a, double L);
 void Linac_Deallocate(Linac *linac);
+Linac_dp Linac_Allocate_Array(int n);
+void Linac_Append(Linac** linac_arr, Linac* linac, int index);
 void Linac_State_Allocate(Linac_State *linac_state, Linac *linac);
 // void Linac_Step(Linac *linac, Linac_State * linac_state,
 	// double delta_tz, double complex beam_charge, double complex probe_ns, double complex rev_ns,
@@ -54,7 +55,7 @@ void Linac_State_Deallocate(Linac_State * linac_state, Linac *linac);
  */
 
 typedef struct str_Gun {
- 	// Paramters used by double compress
+ 	// Parameters used by double compress
 	// (and for calculating dE_E)
 	double E, sz0, sd0;
 	double Q;
@@ -62,7 +63,7 @@ typedef struct str_Gun {
 
 void Gun_Allocate_In(Gun *gun, double E, double sz0, double sd0, double Q);
 Gun *Gun_Allocate_New(double E, double sz0, double sd0, double Q);
-void Gun_Deallocate(Gun *gun);
 // Model for Gun is currently Phase-space only and therefore no state support is present
+// Also no Deallocate routine since it does not contain any pointers
 
 #endif

@@ -1,5 +1,17 @@
 #include "linac.h"
 
+Linac_dp Linac_Allocate_Array(int n)
+{
+  Linac_dp linac_net = calloc(n, sizeof(Linac *));
+  return linac_net;
+}
+
+void Linac_Append(Linac** linac_arr, Linac* linac, int index)
+{
+  // XXX Add some check!!
+  linac_arr[index] = linac;
+}
+
 void Linac_Allocate_In(Linac *linac, Cryomodule_dp cryo_net, int n_cryos,
 	double dE, double R56, double T566, double phi, double lam, double s0, double a, double L)
 {
@@ -83,13 +95,4 @@ Gun *Gun_Allocate_New(double E, double sz0, double sd0, double Q)
 	Gun *gun = calloc(1,sizeof(Gun));
 	Gun_Allocate_In(gun, E, sz0, sd0, Q);
 	return gun;
-}
-
-void Gun_Deallocate(Gun *gun)
-{
-	gun->E = 0.0;
-	gun->sz0 = 0.0;
-	gun->sd0 = 0.0;
-	gun->Q = 0.0;
-
 }
