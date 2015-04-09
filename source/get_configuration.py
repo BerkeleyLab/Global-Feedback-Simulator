@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-import readjson.parse_accelerator as parseAcc
+import readjson.parse_simulation as parseSim
 
 
 def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
@@ -12,7 +12,7 @@ def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
         "source/configfiles/unit_tests/LCLS-II_accelerator.json",
         cavity_test_file]
 
-    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
+    accelerator = parseSim.ParseSimulation(file_list, Verbose)
 
     Tstep = accelerator.Tstep['value']
     cavity_object = accelerator.linac_list[0].cryomodule_list[0].station_list[0].cavity
@@ -37,7 +37,7 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
     if rf_station_test_file:
         file_list.append(rf_station_test_file)
 
-    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
+    accelerator = parseSim.ParseSimulation(file_list, Verbose)
 
     Tstep = accelerator.Tstep['value']
     rf_station_object = accelerator.linac_list[0].cryomodule_list[0].station_list[0]
@@ -68,7 +68,7 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
     if cryo_test_file:
         file_list.append(cryo_test_file)
 
-    accelerator = parseAcc.ParseSimulation(file_list, Verbose)
+    accelerator = parseSim.ParseSimulation(file_list, Verbose)
 
     Tstep = accelerator.Tstep['value']
     cryo_object = accelerator.linac_list[0].cryomodule_list[0]

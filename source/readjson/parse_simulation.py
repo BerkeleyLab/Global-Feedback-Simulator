@@ -1,6 +1,6 @@
 #!/usr/bin/python
 
-# Python parser of Accelerator Configuration parameters from JSON file.
+# Python parser of Simulation Configuration parameters from JSON file.
 
  # Get list of JSON files and return dictionary
 def loadConfig(files, Verbose=True):
