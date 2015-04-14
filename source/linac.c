@@ -58,6 +58,13 @@ Cryomodule *Get_Cryomodule(Linac *linac, int index)
 {
 	if(linac->cryo_net[index]) return linac->cryo_net[index];
 	else return NULL;
+
+}
+
+Cryomodule_State *Get_Cryo_State(Linac_State *linac_state, int index)
+{
+	if(linac_state->cryo_state_net[index]) return linac_state->cryo_state_net[index];
+	else return NULL;
 }
 
 void Linac_State_Allocate(Linac_State *linac_state, Linac *linac)

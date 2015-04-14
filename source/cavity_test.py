@@ -108,7 +108,7 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    cav, cav_state, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
+    cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
     
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
@@ -134,19 +134,19 @@ def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v_drive[i] = acc.Cavity_Step(cav, delta_tz, drive_in_d[i], beam_charge_d[i], cav_state);
-        E_probe[i] = cav_state.E_probe
-        E_reverse[i] = cav_state.E_reverse
+        cav_v_drive[i] = acc.Cavity_Step(cav.C_Pointer, delta_tz, drive_in_d[i], beam_charge_d[i], cav.State);
+        E_probe[i] = cav.State.E_probe
+        E_reverse[i] = cav.State.E_reverse
 
     # Fit cavity step response
     drive_step = cavity_curve_fit(Tstep, drive_in_d, cav_v_drive, beam_charge_d)
 
     # # Clear cavity state for a new run
-    acc.Cavity_Clear(cav, cav_state)
+    acc.Cavity_Clear(cav.C_Pointer, cav.State)
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v_beam[i] = acc.Cavity_Step(cav, delta_tz, drive_in_b[i], beam_charge_b[i], cav_state);
+        cav_v_beam[i] = acc.Cavity_Step(cav.C_Pointer, delta_tz, drive_in_b[i], beam_charge_b[i], cav.State);
 
     # # Fit cavity step response
     beam_step = cavity_curve_fit(Tstep, drive_in_b, cav_v_beam, beam_charge_b)
@@ -164,7 +164,7 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    cav, cav_state, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
+    cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
     
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
@@ -183,11 +183,11 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
 
     delta_tz = 0.0  # Timing noise
 
-    elecMode_state = acc.ElecMode_State_Get(cav_state,0);
+    elecMode_state = acc.ElecMode_State_Get(cav.State,0);
     elecMode_state.delta_omega = delta_omega
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v[i] = acc.Cavity_Step(cav, delta_tz, drive_in[i], beam_charge[i], cav_state)
+        cav_v[i] = acc.Cavity_Step(cav.C_Pointer, delta_tz, drive_in[i], beam_charge[i], cav.State)
 
     # Pass along the 1st mode configuration dictionary (useful for single mode tests)
     mode_dict = modes_config[0]

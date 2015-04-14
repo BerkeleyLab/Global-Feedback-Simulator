@@ -8,6 +8,7 @@
 #include "cryomodule.h"
 #include "linac.h"
 #include "doublecompress.h"
+#include "simulation_top.h"
 %}
 
 %include "complex.i"
@@ -26,3 +27,4 @@
 %include "cryomodule.h"
 %include "linac.h"
 %include "doublecompress.h"
+%include "simulation_top.h"

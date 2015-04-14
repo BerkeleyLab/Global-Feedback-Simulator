@@ -136,6 +136,7 @@ class Cavity:
                 Tstep_global, mech_couplings, n_mech)
 
             acc.ElecMode_Append(elecMode_net, elecMode, idx)
+            mode.C_Pointer = elecMode
 
         L = self.L['value']
         nom_grad = self.nom_grad['value']
@@ -148,14 +149,17 @@ class Cavity:
             rf_phase, design_voltage, \
             fund_index)
 
+        self.C_Pointer = cavity
+
         return cavity
 
-    @staticmethod
-    def Get_State_Pointer(cavity_C_pointer):
+    def Get_State_Pointer(self):
         import accelerator as acc
 
         cavity_state = acc.Cavity_State()
-        acc.Cavity_State_Allocate(cavity_state, cavity_C_pointer)
+        acc.Cavity_State_Allocate(cavity_state, self.C_Pointer)
+
+        self.State = cavity_state
 
         return cavity_state
 
@@ -259,6 +263,8 @@ class MechMode:
 
         # Allocate Memory for C struct
         mechMode = acc.MechMode_Allocate_New(f0, Q, k, Tstep_global);
+
+        self.C_Pointer = mechMode
 
         # Return C Pointer
         return mechMode
@@ -722,14 +728,17 @@ class Station:
         rf_station = acc.RF_Station()
         acc.RF_Station_Allocate_In(rf_station, Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size)
 
+        self.C_Pointer = rf_station
+
         return rf_station
 
-    def Get_State_Pointer(self, RF_Station_C_Pointer):
+    def Get_State_Pointer(self):
         import accelerator as acc
 
         rf_state = acc.RF_State()
 
-        acc.RF_State_Allocate(rf_state, RF_Station_C_Pointer)
+        acc.RF_State_Allocate(rf_state, self.C_Pointer)
+        self.State = rf_state
 
         return rf_state
 
@@ -808,10 +817,6 @@ class Cryomodule:
         n_Stations = len(self.station_list)
         n_MechModes = len(self.mechanical_mode_list)
 
-        # Empty lists to store pointers
-        rf_station_pointers = []
-        mechMode_pointers = []
-
         # Allocate memory for RF Station and Mechanical mode Arrays
         rf_station_net = acc.RF_Station_Allocate_Array(n_Stations)
         mechMode_net = acc.MechMode_Allocate_Array(n_MechModes)
@@ -820,31 +825,41 @@ class Cryomodule:
         for idx, rf_station in enumerate(self.station_list):
             RF_Station_C_Pointer = rf_station.Get_C_Pointer()
             acc.RF_Station_Append(rf_station_net, RF_Station_C_Pointer, idx)
-            rf_station_pointers.append(RF_Station_C_Pointer)
 
         # Allocate each MechMode and append it to the mechMode_net
         for idx, mechMode in enumerate(self.mechanical_mode_list):
             mechMode_C_Pointer = mechMode.Get_C_Pointer()
             acc.MechMode_Append(mechMode_net, mechMode_C_Pointer, idx)
-            mechMode_pointers.append(mechMode_C_Pointer)
 
         # Instantiate Cryomodule C structure
         cryomodule = acc.Cryomodule()
         # Fill in Cryomodule C data structure
         acc.Cryomodule_Allocate_In(cryomodule, rf_station_net, n_Stations, mechMode_net, n_MechModes)
 
-        # Return C Pointer for Cryomodule and lists of pointers
-        return cryomodule, rf_station_pointers, mechMode_pointers
+        self.C_Pointer = cryomodule
 
-    @staticmethod
-    def Get_State_Pointer(cryomodule_C_Pointer):
+        # Return C Pointer for Cryomodule and lists of pointers
+        return cryomodule
+
+    def Get_State_Pointer(self, cryo_state=None):
         import accelerator as acc
 
-        # Get C pointer to Cryomodule_State C struct
-        cryo_state = acc.Cryomodule_State()
+        # Get C pointer to Cryomodule_State C struct,
+        # (if it has not been allocated yet)
+        if(cryo_state==None):
+            cryo_state = acc.Cryomodule_State() 
+            # Allocate Memory for cryo_state
+            acc.Cryomodule_State_Allocate(cryo_state, self.C_Pointer)
 
-        # Allocate Memory for cryo_state
-        acc.Cryomodule_State_Allocate(cryo_state, cryomodule_C_Pointer)
+        # Get Pointers to RF States
+        for idx, station in enumerate(self.station_list):
+            station.State = acc.Get_RF_State(cryo_state, idx)
+        
+        # Get Pointers to MechMode States
+        for idx, mechMode in enumerate(self.mechanical_mode_list):
+            mechMode.State = acc.Get_MechMode_State(cryo_state, idx)
+
+        self.State = cryo_state
 
         # Return State C pointer
         return cryo_state
@@ -958,17 +973,13 @@ class Linac:
         # First count number of Stations and Mechanical Modes and Allocate Arrays
         n_Cryos = len(self.cryomodule_list)
 
-        # Empty list to store pointers
-        cryo_pointers = []
-
         # Allocate memory for array of Cryomodules
         cryo_net = acc.Cryomodule_Allocate_Array(n_Cryos)
 
         # Allocate each Cryomodule and append it to the cryo_net
         for idx, cryo in enumerate(self.cryomodule_list):
             Cryo_C_Pointer = cryo.Get_C_Pointer()
-            acc.RF_Station_Append(cryo_net, Cryo_C_Pointer, idx)
-            cryo_pointers.append(Cryo_C_Pointer)
+            acc.Cryomodule_Append(cryo_net, Cryo_C_Pointer, idx)
 
         # Instantiate Linac C structure
         linac = acc.Linac()
@@ -978,21 +989,29 @@ class Linac:
             self.phi["value"], self.lam["value"], self.s0["value"], \
             self.iris_rad["value"], self.L["value"])
 
-        # Return C Pointer for Cryomodule and lists of pointers
-        return linac, cryo_pointers
+        self.C_Pointer = linac
 
-    @staticmethod
-    def Get_State_Pointer(cryomodule_C_Pointer):
+        # Return Linac C Pointer
+        return linac
+
+    def Get_State_Pointer(self, linac_state=None):
         import accelerator as acc
 
-        # Get C pointer to Cryomodule_State C struct
-        cryo_state = acc.Cryomodule_State()
+        # Get C pointer to Linac_state C struct,
+        # (if it has not been allocated yet)
+        if(linac_state==None):
+            # Get C pointer to Linac_State C struct
+            linac_state = acc.Linac_State() 
+            # Allocate Memory for linac_state
+            acc.Linac_State_Allocate(linac_state, self.C_Pointer)
 
-        # Allocate Memory for cryo_state
-        acc.Cryomodule_State_Allocate(cryo_state, cryomodule_C_Pointer)
+        # Get Pointers to Cryomodule States
+        for idx, cryo in enumerate(self.cryomodule_list):
+            cryo_state = acc.Get_Cryo_State(linac_state, idx)
+            cryo.Get_State_Pointer(cryo_state)
 
         # Return State C pointer
-        return cryo_state
+        return linac_state
 
 def readLinac(confDict, linac_entry):
 
@@ -1068,30 +1087,41 @@ class Simulation:
         import accelerator as acc
 
         # First count number of Linacs and Allocate Arrays
-        n_Linacs = len(self.linac_list)
-
-        # Empty list to store pointers
-        linac_pointers = []
+        n_linacs = len(self.linac_list)
 
         # Allocate memory for array of Linacs
-        linac_net = acc.Linac_Allocate_Array(n_Stations)
+        linac_net = acc.Linac_Allocate_Array(n_linacs)
+        
+        # Allocate memory for Gun
+        gun_C_Pointer = self.gun.Get_C_Pointer()
 
         # Allocate each Linac and append it to the linac_net
-        for idx, cryo in enumerate(self.linac_list):
-            Linac_C_Pointer = cryo.Get_C_Pointer()
+        for idx, linac in enumerate(self.linac_list):
+            Linac_C_Pointer = linac.Get_C_Pointer()
             acc.Linac_Append(linac_net, Linac_C_Pointer, idx)
-            linac_pointers.append(Linac_C_Pointer)
 
         # Instantiate Accelerator C structure
-        accelerator = acc.Accelerator()
-        # Fill in Linac C data structure
-        acc.Linac_Allocate_In(linac, cryo_net, n_Cryos,
-            self.dE["value"], self.R56["value"], self.T566["value"], \
-            self.phi["value"], self.lam["value"], self.s0["value"], \
-            self.iris_rad["value"], self.L["value"])
+        sim = acc.Simulation()
 
-        # Return C Pointer for Cryomodule and lists of pointers
-        return linac, cryo_pointers
+        # Fill in Linac C data structure
+        acc.Sim_Allocate_In(sim, \
+            self.Tstep['value'], self.time_steps['value'], \
+            gun_C_Pointer, linac_net, n_linacs)
+
+        self.C_Pointer = sim
+
+        # Return C Pointer for Simulation
+        return sim
+
+    def Get_State_Pointer(self):
+        import accelerator as acc
+
+        sim_state = acc.Simulation_State()
+        acc.Sim_State_Allocate(sim_state, self.C_Pointer)
+
+        self.State = sim_state
+
+        return sim_state
 
 class Gun:
     """ Gun class: contains parameters specific to an Gun configuration"""
@@ -1122,6 +1152,8 @@ class Gun:
 
         gun = acc.Gun()
         acc.Gun_Allocate_In(gun, self.E['value'], self.sz0['value'], self.sd0['value'], self.Q['value']);
+
+        self.C_Pointer = gun
 
         return gun
 

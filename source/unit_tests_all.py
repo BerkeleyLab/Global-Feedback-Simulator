@@ -10,6 +10,7 @@ import matplotlib.pylab as plt
 import cavity_test
 import rf_station_test
 import cryomodule_test
+import doublecompress_test
 
 # import unit_tests_components
 # import unit_test_bbf
@@ -34,13 +35,21 @@ if __name__ == "__main__":
         result = 'FAIL'
     print "===== RF Station tests >>> " + result + " =====\n"
 
-    print "===== Cryomodule tests: rf_station_test.py ====="
+    print "===== Cryomodule tests: cryomodule_test.py ====="
     cryomodule_pass = cryomodule_test.perform_tests()
     if (cryomodule_pass):
         result = 'PASS'
     else:
         result = 'FAIL'
     print "===== Cryomodule tests >>> " + result + " =====\n"
+    
+    print "===== DoubleCompress test: doublecompress_test.py ====="
+    doublecompress_pass = doublecompress_test.perform_tests()
+    if (doublecompress_pass):
+        result = 'PASS'
+    else:
+        result = 'FAIL'
+    print "===== DoubleCompress tests >>> " + result + " =====\n"
     
     # print "===== LLRF Components: unit_tests_components.py ====="
     # utc = unit_tests_components.perform_tests()
@@ -51,7 +60,7 @@ if __name__ == "__main__":
 
     # if ut and utc and utb:
     # if rf_station_pass and cavity_pass:
-    if rf_station_pass & cavity_pass & cryomodule_pass:
+    if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass:
         print "ooooo ALL TESTS PASSED ooooo"
     else:
         print "xxxxx ALL TESTS FAILED xxxxx"

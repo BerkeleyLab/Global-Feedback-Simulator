@@ -46,7 +46,6 @@ void Delay_Deallocate(Delay *delay)
   delay->size = 0;
 }
 
-
 double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_state)
 {
   double complex out;

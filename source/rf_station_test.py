@@ -219,7 +219,7 @@ def unit_SSA(showplots=True,TOL=1.0e-14):
     test_file = "source/configfiles/unit_tests/SSA_test.json"
 
     # Get SWIG-wrappped C handles for RF Station
-    rf_station, rf_state, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
+    rf_station, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
 
     # Simulation duration
     Tmax = 1e-6
@@ -234,11 +234,11 @@ def unit_SSA(showplots=True,TOL=1.0e-14):
     sout = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
 
     # Set drive signal to 60% of full power
-    drive = rf_station.PAscale*0.6
+    drive = rf_station.C_Pointer.PAscale*0.6
 
     # Run numerical simulation    
     for i in xrange(1,nt):
-            sout[i] = acc.SSA_Step(rf_station,drive,rf_state)
+            sout[i] = acc.SSA_Step(rf_station.C_Pointer,drive,rf_station.State)
 
     # Format plot
     plt.plot(trang,np.abs(sout),'-', label='SSA output', linewidth=3)
@@ -263,7 +263,7 @@ def run_RF_Station_test(Tmax, test_file):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    rf_station, rf_state, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
+    rf_station, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
     
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
@@ -279,10 +279,10 @@ def run_RF_Station_test(Tmax, test_file):
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v[i] = acc.RF_Station_Step(rf_station, 0.0, 0.0, 0.0, 0.0, 0, rf_state)
-        set_point[i] = rf_station.fpga.set_point
-        fpga_drive_out[i] = rf_state.fpga_state.drive
-        error[i] = rf_state.fpga_state.err
+        cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, 0.0, 0.0, 0.0, 0, rf_station.State)
+        set_point[i] = rf_station.C_Pointer.fpga.set_point
+        fpga_drive_out[i] = rf_station.State.fpga_state.drive
+        error[i] = rf_station.State.fpga_state.err
 
     fund_k_probe = fund_mode_dict['k_probe']
     fund_k_drive = fund_mode_dict['k_drive']

@@ -36,6 +36,7 @@ typedef Linac* Linac_p;
 typedef Linac ** Linac_dp;
 
 Cryomodule *Get_Cryomodule(Linac *linac, int index);
+Cryomodule_State *Get_Cryo_State(Linac_State *linac, int index);
 void Linac_Allocate_In(Linac *linac, Cryomodule_dp cryo_net, int n_cryos,
 	double dE, double R56, double T566, double phi, double lam, double s0, double a, double L);
 Linac * Linac_Allocate_New(Cryomodule_dp cryo_net, int n_cryos,
