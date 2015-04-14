@@ -22,7 +22,7 @@
  #include "cavity.h"
 
 /*
- * Data structure storing the paramters of the FPGA controller
+ * Data structure storing the parameters of the FPGA controller
  */
 typedef struct str_FPGA {
   double gain;
@@ -35,7 +35,7 @@ typedef struct str_FPGA {
  * section comprised of multiple cavities.
  */
 typedef struct str_linac_param {
-  /* Paramters that are used by double compress */
+  /* Parameters that are used by double compress */
   double dE, R56, T566, phi, lam, s0, a, L;
 
   /* Parameters used to set up my cavity */
@@ -64,7 +64,7 @@ typedef Linac_Param ** LINdp;
  */
 
 typedef struct str_gun_param {
-  /* Paramters that are used by double compress */
+  /* Parameters that are used by double compress */
   /* and for calculating dE_E */
   double E, sz0, sd0;
   double Q;
@@ -76,9 +76,9 @@ typedef struct str_gun_param {
  * Does not allocate.
  */
 void Linac_Config(Linac_Param * linp,
-		  // General (nonphysical) simulation paramters
+		  // General (nonphysical) simulation parameters
 		  double dt,
-		  // Linac paramters
+		  // Linac parameters
 		  double dE, double R56, double T566, double phi,
 		  double lam, double s0, double a, double L,
 		  // Double compress parameters

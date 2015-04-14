@@ -10,9 +10,9 @@ import linac
 # Full_dc_matrix:
 #     This function builds a jacobian/sensitivty
 #     matrix from all accelerator inputs (Voltage
-#     and phase) to all accelrator ouputs (dE_E,sz,dt,sd). 
+#     and phase) to all accelerator ouputs (dE_E,sz,dt,sd). 
 #     this forms a (4*Nlinac)x(2*Nlinac) matrix
-#     The derivatives to calcualte the jacobian
+#     The derivatives to calculate the Jacobian
 #     are calculated numerically using a midpoint 
 #     approximation and evaluations of 
 #     doublecompress_new.c

@@ -115,7 +115,7 @@ The FPGA integrator in step_llrf does not take into account the simulation
 \begin_inset Quotes erd
 \end_inset
 
-, so it is sensitive to the simulation paramters.
+, so it is sensitive to the simulation parameters.
  Another FPGA loop routine called step_PI_fpga that follows a more traditional
  formulation was tossed in the code in step_llrf.c and can be used to start
  fixing this error.

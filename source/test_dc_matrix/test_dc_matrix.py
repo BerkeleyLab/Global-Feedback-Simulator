@@ -12,7 +12,7 @@
 # the octave routine
 #
 # Random values are selected for the input fields testnum times
-# and the ouputs are compared. If the maximum difference is greater 
+# and the outputs are compared. If the maximum difference is greater 
 # than tol the test is considered a failure
 #
 # LBL July 2013
@@ -92,7 +92,7 @@ for cnt in range(testnum):
         params.phiv[0][l]=360.0*rand()
         params.s0v[0][l]=3.0*rand()+.5
 
-        #copy and do unit conversion for c verion
+        #copy and do unit conversion for c version
         linp_arr[l].lam=params.lamv[0][l]
         linp_arr[l].L=params.Lv[0][l]
         linp_arr[l].a=params.av[0][l]/1000.0

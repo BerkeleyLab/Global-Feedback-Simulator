@@ -7,9 +7,9 @@
 //#endif
 
 void Linac_Config(Linac_Param * linp,
-		  // General (nonphysical) simulation paramters
+		  // General (nonphysical) simulation parameters
 		  double dt,
-		  // Linac paramters
+		  // Linac parameters
 		  double dE, double R56, double T566, double phi,
 		  double lam, double s0, double a, double L,
 		  // Double compress parameters,
@@ -108,7 +108,7 @@ void Gun_Config(Gun_Param * gun,
 		 double E, double sz0, double sd0, double Q)
 {
   /*
-   * Input paramters
+   * Input parameters
    */
   gun->E = E;
   gun->sz0 = sz0;

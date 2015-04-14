@@ -17,7 +17,7 @@
  * section comprised of multiple Cryomodules.
  */
 typedef struct str_Linac {
-	// Paramters used by double compress
+	// Parameters used by double compress
 	double dE, R56, T566, phi, lam, s0, a, L;
 
 	// Array of Cryomodules in a Linac

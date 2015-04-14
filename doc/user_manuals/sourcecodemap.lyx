@@ -238,7 +238,7 @@ noise_config.py Configures the noise data structures using a dictionary.
 
 \begin_layout Description
 readjson/loadconfig.py Routines to read in JSON configuration files and alocate
- and configure the C paramter data structures.
+ and configure the C parameter data structures.
 \end_layout
 
 \begin_layout Description
