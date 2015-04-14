@@ -23,10 +23,25 @@ Full documenation can be found in the `doc/` directory.
 
 * SWIG:
 
+The version used for development:
+
 		$ swig -version 
 		SWIG Version 3.0.5
 		Compiled with g++ [x86_64-unknown-linux-gnu]
 		Configured options: +pcre
 
+This version has also been tested to work:
+
+		$ swig -version
+		SWIG Version 2.0.7
+		Compiled with g++ [x86_64-unknown-linux-gnu]
+		Configured options: +pcre
+
 * Pydot - Python wrapper of Graphviz, used for generating images of connectivities.
-* Oct2py: Python to GNU Octave bridge --> run m-files from Python for some unit tests.
+* [Oct2py](https://pypi.python.org/pypi/oct2py): Python to GNU Octave bridge --> run m-files from Python for some unit tests.
+
+## Dependencies
+
+To run a basic run of unit tests, type (from the top directory):
+		
+		$ make unit_tests.log
