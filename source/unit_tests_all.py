@@ -15,8 +15,6 @@ import doublecompress_test
 # import unit_tests_components
 # import unit_test_bbf
 
-# import test_doublecompress.test_doublecompress
-
 if __name__ == "__main__":
 
     print "===== Cavity tests: cavity_test.py ====="
