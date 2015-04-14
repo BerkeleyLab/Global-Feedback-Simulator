@@ -1,23 +1,8 @@
-#def double_compress_unit_test():
-####################################################################
-#
-# unit test for doublecompress.c
-# Uses Oct2Py to call the octave version double_compressxv.m
-# and compares the two output for accuracy
-# 
-# reads inputs from footest.cfg and default.cfg to set up
-# data stuctures for the c routine
-# double_compress_params_octave.sav has the parameter structure for
-# the octave routine
-#
-# Random values are selected for the input fields testnum times
-# and the ouputs are compared. If the maximum difference is greater 
-# than tol the test is considered a failure
-#
-#LBL July 2013
-#Daniel Driver
-####################################################################
+#!/usr/bin/python
 
+#
+# A Unit tests for doublecompress.c/h
+#
 
 import numpy as np
 from numpy.random import rand
@@ -29,6 +14,13 @@ import oct2py
 
 
 def unit_doublecompress(Verbose=False):
+    """ unit test for doublecompress.c
+        Uses Oct2Py to call the octave version double_compressxv.m
+        and compares the two output for accuracy. It reads inputs from:
+            - doublecompress_test.json to set up data stuctures for the C routine
+            - double_compress_params_octave.sav has the parameter structure for the Octave routine.
+        Random values are selected for the input fields testnum times and the ouputs are compared. 
+        If the maximum error is greater than a threshold the test FAILs """
     
     from get_configuration import Get_SWIG_Simulation
 
