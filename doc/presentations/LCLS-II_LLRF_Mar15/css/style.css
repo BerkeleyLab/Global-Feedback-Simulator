@@ -165,7 +165,12 @@ blockquote .author {
 #features-bg:not(.active) { opacity: 0; }
 
 #how-text-bg:not(.active) { opacity: 0.1; }
+#how-text-bg-fpga:not(.active) { opacity: 0; }
+#how-text-bg-demo:not(.active) { opacity: 0; }
 #how-text-engine:not(.active) { opacity: 0.01; }
+
+#how-text-fpga:not(.active) { opacity: 0; }
+#how-text-engine-fpga:not(.active) { opacity: 0.01; }
 
 #who-real-not { font-size: 36px; padding-bottom: 10px; position: relative; left: 3px; }
 #who-real-real { font-size: 93px; }
