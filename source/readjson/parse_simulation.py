@@ -19,7 +19,7 @@ def ParseSimulation(file_list, Verbose=True):
     conf_dictionary = loadConfig(file_list, Verbose)
 
     # Instantiate accelerator class using configuration in the dictionary
-    simulation = read_acc.readSimulation(conf_dictionary)
+    simulation = read_acc.Simulation(conf_dictionary)
 
     return simulation
 

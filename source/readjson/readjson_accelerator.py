@@ -3,18 +3,24 @@
 #
 # Accelerator-specific configuration file:
 #    Defines all the Python classes involved in the simulation.
-#    Parses configuration information from a dictionary and instantiates Python objects with the configuration values.
+#    Parses configuration information from a dictionary and instantiates 
+#    Python objects with the configuration values.
 #
 # Classes defined:
 #   Simulation
-#   Accelerator
+#   Gun
+#   Linac
 #   Cryomodule
+#   Station
+#   Controller
 #   Cavity
 #   ElecMode
 #   MechMode
 #   Piezo
+#   ADC
+#   ZFilter
 #
-# Call the readConfiguration function in order to get a full collection of instances for a simulation run.
+# Get a Simulation Class instance in order to get a full collection of instances for a simulation run.
 #
 # readjson_accelerator.py
 #
@@ -25,7 +31,6 @@ from math import pi
 # Define Simulation time step as global
 Tstep_global = 0.0
 
-
 class Synthesis:
     """ Synthesis class: contains parameters specific to a Synthesis run.
     The parameters in this class are not run-time configurable. They therefore
@@ -33,11 +38,18 @@ class Synthesis:
     register settings.
     """
 
-    def __init__(self, name, comp_type, n_mech_modes, df_scale):
-        self.name = name
-        self.type = comp_type
-        self.n_mech_modes = n_mech_modes
-        self.df_scale = df_scale
+    def __init__(self, confDict):
+        """ Synthesis Constructor:
+            Input:
+                confDict: Global configuration dictionary."""
+
+         # Read name and component type (strings, no need to go through readentry)
+        self.name = confDict["Synthesis"]["name"]
+        self.comp_type = confDict["Synthesis"]["type"]
+
+        # Read rest of configuration parameters
+        self.n_mech_modes = readentry(confDict, confDict["Synthesis"]["n_mech_modes"])
+        self.df_scale = readentry(confDict, confDict["Synthesis"]["df_scale"])
 
     def __str__ (self):
         """str: Convinient concatenated string output for printout"""
@@ -48,45 +60,59 @@ class Synthesis:
          + "n_mech_modes: " + str(self.n_mech_modes) + "\n"
          + "df_scale: " + str(self.df_scale) + "\n")
 
-def readSynthesis(simDict):
-    """ readSynthesis: Takes the global configuration dictionary and
-    returns a Synthesis object with the configuration values filled in"""
-
-    # Read name and component type (strings, no need to go through readentry)
-    name = simDict["Synthesis"]["name"]
-    comp_type = simDict["Synthesis"]["type"]
-
-    # Read rest of configuration parameters
-    n_mech_modes = readentry(simDict, simDict["Synthesis"]["n_mech_modes"])
-    df_scale = readentry(simDict, simDict["Synthesis"]["df_scale"])
-
-    # Instantiate Synthesis object and return
-    synthesis = Synthesis(name, comp_type, n_mech_modes, df_scale)
-
-    return synthesis
-
 class Cavity:
     """ Cavity class: contains parameters specific to a cavity,
             including a nested list of electrical modes"""
-    def __init__(self, name, comp_type, param_dic, elec_modes):
-        """ Cavity constructor:
+    
+    def __init__(self, confDict, cav_entry, cryomodule_entry):
+        """ Cavity constructor: includes a recursive read of
+            electrical modes in each cavity, where ElecMode objects are created for each electrical mode
+            and contained as a list of ElecMode objects in the Cavity object.
+
             Inputs:
+                confDict: Global configuration dictionary,
+                cav_entry: Name of the cavity to be read (string).
+                cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
+            
+            Attributes:
                 name: Cavity instance name,
                 comp_type: component type (Cavity),
-                param_dic: dictionary containing all the Cavity parameters.
                 elec_modes: list of ElecMode objects (one per electrical mode).
-            Output: Cavity object."""
 
-        # Name and component type (strings, no need to go through readentry)
-        self.name = name
-        self.type = comp_type
+            (The mechanical mode list, wich is used as a consistency check to generate mechanical
+            coupling vectors for each electrical mode)"""
 
-        # Rest of configuration parameters
-        self.L = param_dic["L"]
-        self.nom_grad = param_dic["nom_grad"]
-
-        # List of electrical mode (ElecMode) instances (objects)
-        self.elec_modes = elec_modes
+        # Read name and component type
+        self.name = confDict[cav_entry]['name']
+        self.type = confDict[cav_entry]['type']
+    
+        # Read and store the rest of the parameters in a dictionary
+        cav_param_dic = {}
+    
+        self.L = readentry(confDict,confDict[cav_entry]["L"])
+        self.nom_grad = readentry(confDict,confDict[cav_entry]["nom_grad"])
+    
+        # Grab the list of electrical modes
+        elec_mode_connect = confDict[cav_entry]["elec_mode_connect"]
+        n_elec_modes = len(elec_mode_connect) # Number of electrical modes
+    
+        elec_mode_list = []
+    
+        ## Start of loop through electrical modes
+        # Cycle through electrical modes, read parameters from global dictionary and append to list of modes.
+        for m in range(n_elec_modes):
+            # Take mth element of mode list
+            elecMode_entry = elec_mode_connect[m]
+    
+            # Instantiate ElecMode object
+            elec_mode = ElecMode(confDict, elecMode_entry, cryomodule_entry)
+    
+            # Append to list of electrical modes
+            elec_mode_list.append(elec_mode)
+        ## End of loop through electrical modes
+    
+        # Make the List of Electrical Modes an attribute of the Cavity object
+        self.elec_modes = elec_mode_list
 
         # Find the fundamental mode based on coupling to the beam
         ## Criterium here is the fundamental mode being defined as that with the highest shunt impedance (R/Q)
@@ -164,29 +190,38 @@ class Cavity:
         return cavity_state
 
 class ElecMode:
-    def __init__(self, name, comp_type, mode_name, param_dic, mech_couplings_list):
+    def __init__(self, confDict, elecMode_entry, cryomodule_entry):
         """ ElecMode class: contains parameters specific to an electrical mode,
             including a dictionary specifying the mechanical couplings.
             Note the absence of a readElecMode method, the process for parsing
             the global configuration dictionary and creating ElecMode objects
             is done recursively in Cavity.readCavity(...)"""
 
-        self.name = name
-        self.type = comp_type
-        self.mode_name = mode_name
+        # Read component name and type
+        self.name = confDict[elecMode_entry]['name']
+        self.type = confDict[elecMode_entry]['type']
 
-        self.RoverQ = param_dic["RoverQ"]
-        self.foffset = param_dic["foffset"]
-        self.peakV = param_dic["peakV"]
-        self.Q_0 = param_dic["Q_0"]
-        self.Q_drive = param_dic["Q_drive"]
-        self.Q_probe = param_dic["Q_probe"]
-        self.phase_rev = param_dic["phase_rev"]
-        self.phase_probe = param_dic["phase_probe"]
+        # Identifier for mode (e.g pi, 8pi/9, etc.)
+        self.mode_name = confDict[elecMode_entry]['mode_name']
+
+        # Read rest of parameters and store in dictionary
+        self.RoverQ = readentry(confDict,confDict[elecMode_entry]["RoverQ"])
+        self.foffset = readentry(confDict,confDict[elecMode_entry]["foffset"])
+        self.peakV = readentry(confDict,confDict[elecMode_entry]["peakV"])
+        self.Q_0 = readentry(confDict,confDict[elecMode_entry]["Q_0"])
+        self.Q_drive = readentry(confDict,confDict[elecMode_entry]["Q_drive"])
+        self.Q_probe = readentry(confDict,confDict[elecMode_entry]["Q_probe"])
+        self.phase_rev = readentry(confDict,confDict[elecMode_entry]["phase_rev"])
+        self.phase_probe = readentry(confDict,confDict[elecMode_entry]["phase_probe"])
+
+        # Read dictionary of couplings from global configuration dictionary
+        mech_couplings = readentry(confDict,confDict[elecMode_entry]["mech_couplings"]["value"])
+        # Get a coupling list of length M (number of mechanical modes),
+        # filled with 0s if no coupling is specified by user
+        self.mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
+
         ## Add (replicate) a parameter that will be filled after object instance
         self.LO_w0 = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
-
-        self.mech_couplings_list = mech_couplings_list
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -231,17 +266,24 @@ class ElecMode:
         return mode_dict
 
 class MechMode:
-    """ MechMode class: contains parameters specific to a mechanical mode.
+    """ MechMode Class: contains parameters specific to a mechanical mode.
         Information concerning couplings with electrical modes and Piezos is
         contained in ElecMode and Piezo objects respectively."""
 
-    def __init__(self, name, comp_type, param_dic):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, mechMode_entry):
+        """ MechMode Constructor:
+                Inputs:
+                    confDict: Global configuration dictionary,
+                    mech_mode_entry: Name of the mechanical mode to be read (string)"""
 
-        self.f0 = param_dic["f0"]
-        self.Q = param_dic["Q"]
-        self.full_scale= param_dic["full_scale"]
+        # Read name and component type
+        self.name = confDict[mechMode_entry]['name']
+        self.type = confDict[mechMode_entry]['type']
+
+        # Read the rest of the configuration parameters and store in a dictionary
+        self.f0 = readentry(confDict,confDict[mechMode_entry]["f0"])
+        self.Q = readentry(confDict,confDict[mechMode_entry]["Q"])
+        self.full_scale = readentry(confDict,confDict[mechMode_entry]["full_scale"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -270,16 +312,32 @@ class MechMode:
         return mechMode
 
 class Piezo:
-    """ Piezo class: contains couplings between the Piezo and each
+    """ Piezo Class: contains couplings between the Piezo and each
     one of the mechanical modes (MechMode instances)."""
 
-    def __init__(self, name, comp_type, mech_couplings_list, VPmax):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, piezo_entry, cryomodule_entry):
+        """ Piezo Constructor:
+                 Inputs:
+                    confDict: Global configuration dictionary,
+                    piezo_entry: Name of the Piezo to be read (string).
+                    cryomodule_entry: Cryomodule entry in global dictionary in order to access
+                        the proper cryomodule's mechanical mode list, wich is used as a consistency
+                        check to generate mechanical coupling vectors for each Piezo."""
+        
+        # Read name and component type
+        self.name = confDict[piezo_entry]['name']
+        self.type = confDict[piezo_entry]['type']
+        
+        # Read rest of parameters
+        self.VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
+        
+        # Read dictionary of couplings from global configuration dictionary
+        mech_couplings = readentry(confDict,confDict[piezo_entry]["mech_couplings"]["value"])
 
-        self.VPmax = VPmax
-        self.mech_couplings_list = mech_couplings_list
-
+        # Check consistency of coupling entries with the list of mechanical modes,
+        # and get a coupling dictionary of length M (number of mechanical modes)
+        self.mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
+     
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
@@ -289,30 +347,6 @@ class Piezo:
         + "VPmax: " + str(self.VPmax) + "\n"
         + "mech_couplings_list: " + str(self.mech_couplings_list))
 
-def readMechMode(confDict, mech_mode_entry):
-    """ readMechMode: Takes the global configuration dictionary and
-    returns a MechMode object with the configuration values filled in
-    Inputs:
-        confDict: Global configuration dictionary,
-        mech_mode_entry: Name of the mechanical mode to be read (string)
-    Output:
-        mech_mode: MechMode object"""
-
-    # Read name and component type
-    name = confDict[mech_mode_entry]['name']
-    comp_type = confDict[mech_mode_entry]['type']
-
-    # Read the rest of the configuration parameters and store in a dictionary
-    param_dic = {}
-
-    param_dic["f0"] = readentry(confDict,confDict[mech_mode_entry]["f0"])
-    param_dic["Q"] = readentry(confDict,confDict[mech_mode_entry]["Q"])
-    param_dic["full_scale"] = readentry(confDict,confDict[mech_mode_entry]["full_scale"])
-
-    # Create and return a mechanical mode (MechMode) instance
-    mech_mode = MechMode(name, comp_type, param_dic)
-
-    return mech_mode
 
 def readCouplings(confDict, mech_couplings, cryomodule_entry):
     """ readCouplings: Takes the global configuration dictionary and a dictionary containing non-zero
@@ -339,125 +373,19 @@ def readCouplings(confDict, mech_couplings, cryomodule_entry):
 
     return mech_couplings_list
 
-def readCavity(confDict, cav_entry, cryomodule_entry):
-    """ readCavity: Takes the global configuration dictionary and returns a Cavity object
-    with the configuration values filled in. The process includes a recursive read of
-    electrical modes in each cavity, where ElecMode objects are created for each electrical mode
-    and contained as a list of ElecMode objects in the Cavity object.
-    Inputs:
-        confDict: Global configuration dictionary,
-        cav_entry: Name of the cavity to be read (string).
-        cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
-            mechanical mode list, wich is used as a consistency check to generate mechanical
-            coupling vectors for each electrical mode.
-    Output:
-        cavity: Cavity object."""
 
-    # Read name and component type
-    name = confDict[cav_entry]['name']
-    cav_comp_type = confDict[cav_entry]['type']
-
-    # Read and store the rest of the parameters in a dictionary
-    cav_param_dic = {}
-
-    cav_param_dic["L"] = readentry(confDict,confDict[cav_entry]["L"])
-    cav_param_dic["nom_grad"] = readentry(confDict,confDict[cav_entry]["nom_grad"])
-
-    # Grab the list of electrical modes
-    elec_mode_connect = confDict[cav_entry]["elec_mode_connect"]
-    n_elec_modes = len(elec_mode_connect) # Number of electrical modes
-
-    elec_mode_list = []
-
-    ## Start of loop through electrical modes
-    # Cycle through electrical modes, read parameters from global dictionary and append to list of modes.
-    for m in range(n_elec_modes):
-        # Take mth element of mode list
-        elec_mode_now = elec_mode_connect[m]
-
-        # Read component name and type
-        elec_mode_name = confDict[elec_mode_now]['name']
-        elec_comp_type = confDict[elec_mode_now]['type']
-
-        # Identifier for mode
-        mode_name = confDict[elec_mode_now]['mode_name']
-
-        # Create dictionary to store electrical mode parameters
-        elec_param_dic = {}
-
-        # Read rest of parameters and store in dictionary
-        elec_param_dic["RoverQ"] = readentry(confDict,confDict[elec_mode_now]["RoverQ"])
-        elec_param_dic["foffset"] = readentry(confDict,confDict[elec_mode_now]["foffset"])
-        elec_param_dic["peakV"] = readentry(confDict,confDict[elec_mode_now]["peakV"])
-        elec_param_dic["Q_0"] = readentry(confDict,confDict[elec_mode_now]["Q_0"])
-        elec_param_dic["Q_drive"] = readentry(confDict,confDict[elec_mode_now]["Q_drive"])
-        elec_param_dic["Q_probe"] = readentry(confDict,confDict[elec_mode_now]["Q_probe"])
-        elec_param_dic["phase_rev"] = readentry(confDict,confDict[elec_mode_now]["phase_rev"])
-        elec_param_dic["phase_probe"] = readentry(confDict,confDict[elec_mode_now]["phase_probe"])
-
-        # Read dictionary of couplings from global configuration dictionary
-        mech_couplings = readentry(confDict,confDict[elec_mode_now]["mech_couplings"]["value"])
-
-        # Get a coupling list of length M (number of mechanical modes),
-        # filled with 0s if no coupling is specified by user
-        mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
-
-        # Instantiate ElecMode object
-        elec_mode = ElecMode(elec_mode_name, elec_comp_type, mode_name, elec_param_dic, mech_couplings_list)
-
-        # Append to list of electrical modes
-        elec_mode_list.append(elec_mode)
-    ## End of loop through electrical modes
-
-    # Instantiate Cavity object and return
-    cavity = Cavity(name, cav_comp_type, cav_param_dic, elec_mode_list)
-
-    return cavity
-
-def readPiezo(confDict, piezo_entry, cryomodule_entry):
-    """ readPiezo: Takes the global configuration dictionary and returns a Piezo object
-    with the configuration parameters and the couplings with each one of the the mechanical
-    modes values filled in.
-    Inputs:
-        confDict: Global configuration dictionary,
-        piezo_entry: Name of the Piezo to be read (string).
-        cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
-            mechanical mode list, wich is used as a consistency check to generate mechanical
-            coupling vectors for each Piezo.
-    Output:
-        piezo: Piezo object."""
-
-    # Read name and component type
-    name = confDict[piezo_entry]['name']
-    piezo_comp_type = confDict[piezo_entry]['type']
-
-    # Read dictionary of couplings from global configuration dictionary
-    mech_couplings = readentry(confDict,confDict[piezo_entry]["mech_couplings"]["value"])
-
-    # Check consistency of coupling entries with the list of mechanical modes,
-    # and get a coupling dictionary of length M (number of mechanical modes)
-    mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
-
-    # Read rest of parameters
-    VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
-
-    # Create a Piezo instance and return
-    piezo = Piezo(name, piezo_comp_type, mech_couplings_list, VPmax)
-
-    return piezo
-
-def readList(confDict, list_in, readFunction, cryomodule_entry=None):
+def readList(confDict, list_in, constructor, cryomodule_entry=None):
     """ readList: Generic function to read list of componentns.
     Takes the global configuration dictionary, cycles through the list of components
     (list of names, list_in), uses the names to identify the configuration entries in
-    the global dictionary, calls the proper read function for each component (readFunction),
+    the global dictionary, calls the proper Constructor for each component (constructor),
     and returns a list of instances (objects).
     Inputs:
         confDict: Global configuration dictionary,
         list_in: list of components to cycle through (list of strings),
-        readFunction: name of the read function for the component,
+        constructor: name of Constructor for the component,
         cryomodule_entry: necessary in some cases in order to pass along cryomodule entry information,
-            needed by readStation and readPiezo in order to find the mechanical modes in
+            needed by readStation and Piezo in order to find the mechanical modes in
             their corresponding Cryomodule.
     Output:
         list_out: List of component objects"""
@@ -469,9 +397,9 @@ def readList(confDict, list_in, readFunction, cryomodule_entry=None):
     for k in range(len(list_in)):
         # Read component configuration and create component instance
         if cryomodule_entry == None:
-            component = readFunction(confDict, list_in[k])
+            component = constructor(confDict, list_in[k])
         else:
-            component = readFunction(confDict, list_in[k], cryomodule_entry)
+            component = constructor(confDict, list_in[k], cryomodule_entry)
         # Append object to the component list
         list_out.append(component)
 
@@ -481,11 +409,13 @@ def readList(confDict, list_in, readFunction, cryomodule_entry=None):
 class Controller:
     """ Controller class: contains parameters specific to a Controller configuration"""
 
-    def __init__(self, name, comp_type, stable_gbw):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, controller_entry):
+        # Read name and component type
+        name = confDict[controller_entry]['name']
+        self.type = confDict[controller_entry]['type']
 
-        self.stable_gbw = stable_gbw
+        # Read the rest of parameters
+        self.stable_gbw = readentry(confDict,confDict[controller_entry]["stable_gbw"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -495,30 +425,19 @@ class Controller:
         + "type: " + self.type + "\n"
         + "stable_gbw: " + str(self.stable_gbw) + "\n")
 
-def readController(confDict, controller_entry):
-
-     # Read name and component type
-    name = confDict[controller_entry]['name']
-    controller_comp_type = confDict[controller_entry]['type']
-
-    # Read the rest of parameters
-    stable_gbw = readentry(confDict,confDict[controller_entry]["stable_gbw"])
-
-    # Create a Controller instance and return
-    controller = Controller(name, controller_comp_type, stable_gbw)
-
-    return controller
-
 class ZFilter:
     """ ZFilter class: contains parameters specific to a Filter configuration"""
 
-    def __init__(self, name, comp_type, order, nmodes, poles):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, zfilter_entry):
+        
+        # Read name and component type
+        self.name = confDict[zfilter_entry]['name']
+        self.type = confDict[zfilter_entry]['type']
 
-        self.order = order
-        self.nmodes = nmodes
-        self.poles = poles
+        # Read the rest of parameters
+        self.order = readentry(confDict,confDict[zfilter_entry]["order"])
+        self.nmodes = readentry(confDict,confDict[zfilter_entry]["nmodes"])
+        self.poles = readentry(confDict,confDict[zfilter_entry]["poles"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -530,32 +449,19 @@ class ZFilter:
         + "nmodes: " + str(self.nmodes) + "\n"
         + "poles: " + str(self.poles) + "\n")
 
-def readZFilter(confDict, zfilter_entry):
-
-    # Read name and component type
-    name = confDict[zfilter_entry]['name']
-    zfilter_comp_type = confDict[zfilter_entry]['type']
-
-    # Read the rest of parameters
-    order = readentry(confDict,confDict[zfilter_entry]["order"])
-    nmodes = readentry(confDict,confDict[zfilter_entry]["nmodes"])
-    poles = readentry(confDict,confDict[zfilter_entry]["poles"])
-
-    # Create a ZFilter instance and return
-    zfilter =  ZFilter(name, zfilter_comp_type, order, nmodes, poles)
-
-    return zfilter
-
 class ADC:
     """ ADC class: contains parameters specific to a ADC configuration"""
 
-    def __init__(self, name, comp_type, adc_max, adc_off, noise_psd):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, adc_entry):
+        
+        # Read name and component type
+        self.name = confDict[adc_entry]['name']
+        self.type = confDict[adc_entry]['type']
 
-        self.adc_max = adc_max
-        self.adc_off = adc_off
-        self.noise_psd = noise_psd
+        # Read the rest of parameters
+        self.adc_max = readentry(confDict,confDict[adc_entry]["adc_max"])
+        self.adc_off = readentry(confDict,confDict[adc_entry]["adc_off"])
+        self.noise_psd = readentry(confDict,confDict[adc_entry]["noise_psd"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -567,34 +473,20 @@ class ADC:
         + "adc_off: " + str(self.adc_off) + "\n"
         + "noise_psd: " + str(self.noise_psd) + "\n")
 
-def readADC(confDict, adc_entry):
-
-    # Read name and component type
-    name = confDict[adc_entry]['name']
-    adc_comp_type = confDict[adc_entry]['type']
-
-    # Read the rest of parameters
-    adc_max = readentry(confDict,confDict[adc_entry]["adc_max"])
-    adc_off = readentry(confDict,confDict[adc_entry]["adc_off"])
-    noise_psd = readentry(confDict,confDict[adc_entry]["noise_psd"])
-
-    # Create an ADC instance and return
-    adc = ADC(name, adc_comp_type, adc_max, adc_off, noise_psd)
-
-    return adc
-
-
 class Amplifier:
     """ Amplifier class: contains parameters specific to a Amplifier configuration"""
 
-    def __init__(self, name, comp_type, PAmax, PAbw, Clip, top_drive):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, amplifier_entry):
+        
+        # Read name and component type
+        self.name = confDict[amplifier_entry]['name']
+        self.type = confDict[amplifier_entry]['type']
 
-        self.PAmax = PAmax
-        self.PAbw = PAbw
-        self.Clip = Clip
-        self.top_drive = top_drive
+        # Read the rest of parameters
+        self.PAmax = readentry(confDict,confDict[amplifier_entry]["PAmax"])
+        self.PAbw = readentry(confDict,confDict[amplifier_entry]["PAbw"])
+        self.Clip = readentry(confDict,confDict[amplifier_entry]["Clip"])
+        self.top_drive = readentry(confDict,confDict[amplifier_entry]["top_drive"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -636,46 +528,52 @@ class Amplifier:
 
         return V_sat.real
 
-def readAmplifier(confDict, amplifier_entry):
-
-    # Read name and component type
-    name = confDict[amplifier_entry]['name']
-    amplifier_comp_type = confDict[amplifier_entry]['type']
-
-    # Read the rest of parameters
-    PAmax = readentry(confDict,confDict[amplifier_entry]["PAmax"])
-    PAbw = readentry(confDict,confDict[amplifier_entry]["PAbw"])
-    Clip = readentry(confDict,confDict[amplifier_entry]["Clip"])
-    top_drive = readentry(confDict,confDict[amplifier_entry]["top_drive"])
-
-    # Create an Amplifier instance and return
-    amplifier = Amplifier(name, amplifier_comp_type, PAmax, PAbw, Clip, top_drive)
-
-    return amplifier
-
 class Station:
     """ Station class: contains parameters specific to a Station configuration"""
 
-    def __init__(self, name, comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list, N_Stations):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, station_entry, cryomodule_entry):
+        
+        # Read name and component type
+        self.name = confDict[station_entry]['name']
+        self.type = confDict[station_entry]['type']
 
-        self.amplifier = amplifier
-        self.cavity = cavity
-        self.rx_filter = rx_filter
-        self.tx_filter1 = tx_filter1
-        self.tx_filter2 = tx_filter2
-        self.controller = controller
-        self.loop_delay_size = loop_delay_size
-        self.cav_adc = cav_adc
-        self.fwd_adc = fwd_adc
-        self.rfl_adc = rfl_adc
-        self.piezo_list = piezo_list
-        self.N_Stations = N_Stations
+        # Read all the station components
+        amplifier_entry = confDict[station_entry]['Amplifier']
+        self.amplifier = Amplifier(confDict, amplifier_entry)
+
+        cavity_entry = confDict[station_entry]['Cavity']
+        self.cavity = Cavity(confDict, cavity_entry, cryomodule_entry)
+
+        rx_filter_entry = confDict[station_entry]['Rx_filter']
+        self.rx_filter = ZFilter(confDict, rx_filter_entry)
+
+        tx_filter1_entry = confDict[station_entry]['Tx_filter1']
+        self.tx_filter1 = ZFilter(confDict, tx_filter1_entry)
+
+        tx_filter2_entry = confDict[station_entry]['Tx_filter2']
+        self.tx_filter2 = ZFilter(confDict, tx_filter2_entry)
+
+        controller_entry = confDict[station_entry]['Controller']
+        self.controller = Controller(confDict, controller_entry)
+
+        self.loop_delay_size = readentry(confDict, confDict[station_entry]['loop_delay_size'])
+
+        cav_adc_entry = confDict[station_entry]['cav_adc']
+        self.cav_adc = ADC(confDict, cav_adc_entry)
+
+        rfl_adc_entry = confDict[station_entry]['rfl_adc']
+        self.rfl_adc = ADC(confDict, rfl_adc_entry)
+
+        fwd_adc_entry = confDict[station_entry]['fwd_adc']
+        self.fwd_adc = ADC(confDict, fwd_adc_entry)
+
+        piezo_connect = confDict[station_entry]['piezo_connect']
+        self.piezo_list = readList(confDict, piezo_connect, Piezo, cryomodule_entry)
+
+        self.N_Stations = confDict[station_entry]['N_Stations']
 
         ## Add (replicate) parameters that will be filled after object instance
         self.max_voltage = {"value" : 0.0, "units" : "V", "description" : "Maximum accelerating voltage"}
-
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -742,62 +640,24 @@ class Station:
 
         return rf_state
 
-def readStation(confDict, station_entry, cryomodule_entry):
-
-    # Read name and component type
-    name = confDict[station_entry]['name']
-    station_comp_type = confDict[station_entry]['type']
-
-    # Read all the station components
-    amplifier_entry = confDict[station_entry]['Amplifier']
-    amplifier = readAmplifier(confDict, amplifier_entry)
-
-    cavity_entry = confDict[station_entry]['Cavity']
-    cavity = readCavity(confDict, cavity_entry, cryomodule_entry)
-
-    rx_filter_entry = confDict[station_entry]['Rx_filter']
-    rx_filter = readZFilter(confDict, rx_filter_entry)
-
-    tx_filter1_entry = confDict[station_entry]['Tx_filter1']
-    tx_filter1 = readZFilter(confDict, tx_filter1_entry)
-
-    tx_filter2_entry = confDict[station_entry]['Tx_filter2']
-    tx_filter2 = readZFilter(confDict, tx_filter2_entry)
-
-    controller_entry = confDict[station_entry]['Controller']
-    controller = readController(confDict, controller_entry)
-
-    loop_delay_size = readentry(confDict, confDict[station_entry]['loop_delay_size'])
-
-    cav_adc_entry = confDict[station_entry]['cav_adc']
-    cav_adc = readADC(confDict, cav_adc_entry)
-
-    rfl_adc_entry = confDict[station_entry]['rfl_adc']
-    rfl_adc = readADC(confDict, rfl_adc_entry)
-
-    fwd_adc_entry = confDict[station_entry]['fwd_adc']
-    fwd_adc = readADC(confDict, fwd_adc_entry)
-
-    piezo_connect = confDict[station_entry]['piezo_connect']
-    piezo_list = readList(confDict, piezo_connect, readPiezo, cryomodule_entry)
-
-    N_Stations = confDict[station_entry]['N_Stations']
-
-    # Create a Station instance and return
-    station = Station(name, station_comp_type, amplifier, cavity, rx_filter, tx_filter1, tx_filter2, controller, loop_delay_size, cav_adc, fwd_adc, rfl_adc, piezo_list, N_Stations)
-
-    return station
-
 class Cryomodule:
     """ Cryomodule class: contains parameters specific to a Cryomodule configuration"""
 
-    def __init__(self, name, comp_type, station_list, mechanical_mode_list, lp_shift):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict, cryomodule_entry):
+        # Read name and component type
+        self.name = confDict[cryomodule_entry]['name']
+        self.type = confDict[cryomodule_entry]['type']
 
-        self.station_list = station_list
-        self.mechanical_mode_list = mechanical_mode_list
-        self.lp_shift = lp_shift
+        # Read the station and mechanical mode connectivity
+        station_connect = confDict[cryomodule_entry]['station_connect']
+        mechanical_mode_connect = confDict[cryomodule_entry]['mechanical_mode_connect']
+
+        # Read list of stations and mechanical modes recursively
+        self.station_list = readList(confDict, station_connect, Station, cryomodule_entry)
+        self.mechanical_mode_list = readList(confDict, mechanical_mode_connect, MechMode)
+
+        # Read lp_shift
+        self.lp_shift = readentry(confDict,confDict[cryomodule_entry]["lp_shift"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -864,49 +724,32 @@ class Cryomodule:
         # Return State C pointer
         return cryo_state
 
-def readCryomodule(confDict, cryomodule_entry):
-
-    # Read name and component type
-    name = confDict[cryomodule_entry]['name']
-    cryomodule_comp_type = confDict[cryomodule_entry]['type']
-
-    # Read the station and mechanical mode connectivity
-    station_connect = confDict[cryomodule_entry]['station_connect']
-    mechanical_mode_connect = confDict[cryomodule_entry]['mechanical_mode_connect']
-
-    # Read list of stations and mechanical modes recursively
-    station_list = readList(confDict, station_connect, readStation, cryomodule_entry)
-    mechanical_mode_list = readList(confDict, mechanical_mode_connect, readMechMode)
-
-    # Read lp_shift
-    lp_shift = readentry(confDict,confDict[cryomodule_entry]["lp_shift"])
-
-    # Create a Cryomodule instance and return
-    cryomodule = Cryomodule(name, cryomodule_comp_type, station_list, mechanical_mode_list, lp_shift)
-
-    return cryomodule
-
 class Linac:
     """ Linac class: contains parameters specific to a Linac configuration"""
 
-    def __init__(self, name, comp_type, param_dic, cryomodule_list):
+    def __init__(self, confDict, linac_entry):
 
         import numpy as np
 
-        self.name = name
-        self.type = comp_type
+        # Read name and component type
+        name = confDict[linac_entry]['name']
+        self.type = confDict[linac_entry]['type']
 
-        self.f0 = param_dic["f0"]
-        self.E = param_dic["E"]
-        self.phi = param_dic["phi"]
+        self.f0 = readentry(confDict,confDict[linac_entry]["f0"])
+        self.E = readentry(confDict,confDict[linac_entry]["E"])
+        self.phi = readentry(confDict,confDict[linac_entry]["phi"])
         self.phi['value'] = self.phi['value']*np.pi/180    # Convert degrees to radians
-        self.s0 = param_dic["s0"]
-        self.iris_rad = param_dic["iris_rad"]
-        self.R56 = param_dic["R56"]
-        self.dds_numerator = param_dic["dds_numerator"]
-        self.dds_denominator = param_dic["dds_denominator"]
+        self.s0 = readentry(confDict,confDict[linac_entry]["s0"])
+        self.iris_rad = readentry(confDict,confDict[linac_entry]["iris_rad"])
+        self.R56 = readentry(confDict,confDict[linac_entry]["R56"])
+        self.dds_numerator = readentry(confDict,confDict[linac_entry]["dds_numerator"])
+        self.dds_denominator = readentry(confDict,confDict[linac_entry]["dds_denominator"])
+        
+        # Read the cryomodule connectivity
+        cryomodule_connect = confDict[linac_entry]['cryomodule_connect']
 
-        self.cryomodule_list = cryomodule_list
+        # Read list of modules recursively
+        self.cryomodule_list = readList(confDict, cryomodule_connect, Cryomodule)
 
         # Add parameters that will be filled after object instance
         self.dE = {"value" : 0.0, "units" : "eV", "description" : "Energy increase in Linac (final minus initial Energy)"}
@@ -921,9 +764,8 @@ class Linac:
         # T566 deduced from R56 (small angle approximation)
         self.T566 = {"value" : -1.5*self.R56['value'], "units" : "m", "description" : "Nominal T566 (always >= 0)"}
 
-
         # Need to manually propagate values down to the Cavity and Electrical Mode level
-        for cryomodule in cryomodule_list:
+        for cryomodule in self.cryomodule_list:
             for station in cryomodule.station_list:
                 # Indicate each cavity the nominal beam phase for the Linac
                 station.cavity.rf_phase["value"] = self.phi["value"]
@@ -1013,58 +855,79 @@ class Linac:
         # Return State C pointer
         return linac_state
 
-def readLinac(confDict, linac_entry):
-
-    # Read name and component type
-    name = confDict[linac_entry]['name']
-    linac_comp_type = confDict[linac_entry]['type']
-
-    # Read and store the rest of the parameters in a dictionary
-    linac_param_dic = {}
-
-    linac_param_dic["f0"] = readentry(confDict,confDict[linac_entry]["f0"]) # Resonance frequency [Hz]
-    linac_param_dic["E"] = readentry(confDict,confDict[linac_entry]["E"])
-    linac_param_dic["phi"] = readentry(confDict,confDict[linac_entry]["phi"])
-    linac_param_dic["s0"] = readentry(confDict,confDict[linac_entry]["s0"])
-    linac_param_dic["iris_rad"] = readentry(confDict,confDict[linac_entry]["iris_rad"])
-    linac_param_dic["R56"] = readentry(confDict,confDict[linac_entry]["R56"])
-    linac_param_dic["dds_numerator"] = readentry(confDict,confDict[linac_entry]["dds_numerator"])
-    linac_param_dic["dds_denominator"] = readentry(confDict,confDict[linac_entry]["dds_denominator"])
-
-    # Read the cryomodule connectivity
-    cryomodule_connect = confDict[linac_entry]['cryomodule_connect']
-
-    # Read list of modules recursively
-    cryomodule_list = readList(confDict, cryomodule_connect, readCryomodule)
-
-    # Instantiate Linac object and return
-    linac = Linac(name, linac_comp_type, linac_param_dic, cryomodule_list)
-
-    return linac
-
 class Simulation:
     """ Simulation class: contains parameters specific to a Simulation run, 
-    as well as all parameters in the Accelerator configuration"""
+    as well as all parameters in the Accelerator configuration. This Class is 
+    to be instantiated from upper level programs in order to obtain all necessary instances
+    to run a full simulation"""
 
-    def __init__(self, name, comp_type, Tstep, time_steps, nyquist_sign, synthesis, bunch_rate, E, gun, linac_list):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict):
+        """Simulation Constructor:
+            Inputs:
+                confDict: Global configuration dictionary."""
 
-        # Parameters specific to a Simulation run
-        self.Tstep = Tstep
-        self.time_steps = time_steps
-        self.nyquist_sign = nyquist_sign
-        self.synthesis = synthesis
+        import numpy as np
+
+        # Read name and component type
+        self.name = confDict["Accelerator"]["name"]
+        self.type = confDict["Accelerator"]["type"]
+
+        # Read rest of configuration parameters
+        self.Tstep = readentry(confDict, confDict["Simulation"]["Tstep"])
+        self.time_steps = readentry(confDict, confDict["Simulation"]["time_steps"])
+        self.nyquist_sign = readentry(confDict,confDict["Simulation"]["nyquist_sign"])
+
+        # Check if simulation dictionary has a Synthesis entry, and if so parse it
+        if confDict["Simulation"].has_key("Synthesis"):
+            self.synthesis = Synthesis(confDict["Simulation"])
+        else:
+            self.synthesis = None
 
         # Accelerator parameters
-        self.bunch_rate = bunch_rate
-        self.E = E
-        self.gun = gun
-        self.linac_list = linac_list
+        self.bunch_rate = readentry(confDict,confDict["Accelerator"]["bunch_rate"])
+        
+        # Read Accelerator components (Gun + series of linacs)
+        # # Read gun
+        self.gun = Gun(confDict)
+        Egun = self.gun.E['value'] # Gun exit Energy
+        
+        # # Read connectivity of linacs
+        linac_connect = confDict["Accelerator"]["linac_connect"]
+        # # Read linacs recursively
+        self.linac_list = readList(confDict, linac_connect, Linac)
 
+        # Now that the Array of Linacs has been instantiated and their final Energies are known,
+        # fill in the Energy increase parameter for each Linac.
+        ## Start with the Energy out of the Gun
+        Elast = Egun
+        # Iterate over Linacs
+        for linac in self.linac_list:
+            # Energy increase is the difference between Linac's final and initial Energy
+            linac.dE["value"] = linac.E["value"] - Elast
+            Elast = linac.E["value"]
+
+            # Check if Energy increase is compatible with Linac configuration
+            sp_ratio = linac.dE["value"]/np.cos(linac.phi["value"])/linac.max_voltage["value"]
+            if np.abs(sp_ratio) > 1.0:
+                error_1 = "Linac "+ linac.name + ": Energy increase higher than tolerated:\n"
+                error_2 = "\tEnergy increase requested = %.2f eV"%linac.dE["value"]
+                error_3 = "\tAt Beam phase = %.2f deg"%linac.phi["value"]
+                error_4 = "\tand Maximum Accelerating Voltage = %.2f V"%linac.max_voltage["value"]
+                error_text = error_1 + error_2 + error_3 + error_4
+                raise Exception(error_text)
+            else:
+                # Once Energy increase is known, calculate set-point for each RF Station
+                for cryo in linac.cryomodule_list:
+                    for station in cryo.station_list:
+                        station_max_voltage = station.max_voltage['value']
+                        station.cavity.design_voltage['value'] = station_max_voltage*sp_ratio
+
+        # Add a parameter which was not parsed from configuration but deduced
+        self.E = {"value" : Elast, "units" : "eV", "description" : "Final Accelerator Energy"}
+        
         # Assign Tstep to the global variable
         global Tstep_global
-        Tstep_global = Tstep['value']
+        Tstep_global = self.Tstep['value']
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -1126,14 +989,18 @@ class Simulation:
 class Gun:
     """ Gun class: contains parameters specific to an Gun configuration"""
 
-    def __init__(self, name, comp_type, Q, sz0, sd0, E):
-        self.name = name
-        self.type = comp_type
+    def __init__(self, confDict):
+        
+        # Read name and component type
+        gun_entry = confDict["Accelerator"]['gun']
 
-        self.Q = Q
-        self.sz0 = sz0
-        self.sd0 = sd0 
-        self.E = E
+        self.name = confDict[gun_entry]['name']
+        self.type = confDict[gun_entry]['type']
+
+        self.Q = readentry(confDict,confDict[gun_entry]["Q"])
+        self.sz0 = readentry(confDict,confDict[gun_entry]["sz0"])
+        self.sd0 = readentry(confDict,confDict[gun_entry]["sd0"])
+        self.E = readentry(confDict,confDict[gun_entry]["E"])
 
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
@@ -1156,93 +1023,3 @@ class Gun:
         self.C_Pointer = gun
 
         return gun
-
-def readGun(confDict):
-
-    # Read name and component type
-    gun_entry = confDict["Accelerator"]['gun']
-
-    name = confDict[gun_entry]['name']
-    gun_comp_type = confDict[gun_entry]['type']
-
-    Q = readentry(confDict,confDict[gun_entry]["Q"])
-    sz0 = readentry(confDict,confDict[gun_entry]["sz0"])
-    sd0 = readentry(confDict,confDict[gun_entry]["sd0"])
-    E = readentry(confDict,confDict[gun_entry]["E"])
-
-    # Instantiate Gun object
-    gun = Gun(name, gun_comp_type, Q, sz0, sd0, E)
-
-    # Return Gun object along with its energy
-    Egun = E["value"]
-
-    return gun, Egun
-
-def readSimulation(confDict):
-    """ readSimulation : Takes the global configuration dictionary and
-    return a Simulation object. This routine is to be called
-    from upper level programs in order to obtain the necessary instances
-    to run a full simulation."""
-
-    import numpy as np
-
-    # Read name and component type
-    name = confDict["Accelerator"]["name"]
-    comp_type = confDict["Accelerator"]["type"]
-
-    # Read rest of configuration parameters
-    Tstep = readentry(confDict, confDict["Simulation"]["Tstep"])
-    time_steps = readentry(confDict, confDict["Simulation"]["time_steps"])
-    nyquist_sign = readentry(confDict,confDict["Simulation"]["nyquist_sign"])
-
-    # Check if simulation dictionary has a Synthesis entry, and if so parse it
-    if confDict["Simulation"].has_key("Synthesis"):
-        synthesis = readSynthesis(confDict["Simulation"])
-    else:
-        synthesis = None
-
-    # Read other parameters
-    bunch_rate = readentry(confDict,confDict["Accelerator"]["bunch_rate"])
-
-    # Read Accelerator components (Gun + series of linacs)
-    # # Read gun
-    gun, Egun = readGun(confDict)
-
-    # # Read connectivity of linacs
-    linac_connect = confDict["Accelerator"]["linac_connect"]
-    # # Read linacs recursively
-    linac_list = readList(confDict, linac_connect, readLinac)
-
-    # Now that the Array of Linacs has been instantiated and their final Energies are known,
-    # fill in the Energy increase parameter for each Linac.
-    ## Start with the Energy out of the Gun
-    Elast = Egun
-    # Iterate over Linacs
-    for linac in linac_list:
-        # Energy increase is the difference between Linac's final and initial Energy
-        linac.dE["value"] = linac.E["value"] - Elast
-        Elast = linac.E["value"]
-
-        # Check if Energy increase is compatible with Linac configuration
-        sp_ratio = linac.dE["value"]/np.cos(linac.phi["value"])/linac.max_voltage["value"]
-        if np.abs(sp_ratio) > 1.0:
-            error_1 = "Linac "+ linac.name + ": Energy increase higher than tolerated:\n"
-            error_2 = "\tEnergy increase requested = %.2f eV"%linac.dE["value"]
-            error_3 = "\tAt Beam phase = %.2f deg"%linac.phi["value"]
-            error_4 = "\tand Maximum Accelerating Voltage = %.2f V"%linac.max_voltage["value"]
-            error_text = error_1 + error_2 + error_3 + error_4
-            raise Exception(error_text)
-        else:
-            # Once Energy increase is known, calculate set-point for each RF Station
-            for cryo in linac.cryomodule_list:
-                for station in cryo.station_list:
-                    station_max_voltage = station.max_voltage['value']
-                    station.cavity.design_voltage['value'] = station_max_voltage*sp_ratio
-
-    # Add a parameter which was not parsed from configuration but deduced
-    E = {"value" : Elast, "units" : "eV", "description" : "Final Accelerator Energy"}
-
-    # Get Accelerator instance and return
-    simulation = Simulation(name, comp_type, Tstep, time_steps, nyquist_sign, synthesis, bunch_rate, E, gun, linac_list)
-
-    return simulation
