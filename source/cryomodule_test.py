@@ -72,7 +72,6 @@ def unit_Cryomodule():
 
     Tmax = 0.05
     
-    # test_file = "source/configfiles/unit_tests/cavity_test_step1.json"
     test_file = "source/configfiles/unit_tests/cryomodule_test.json"
 
     run_Cryomodule_test(Tmax, test_file)
