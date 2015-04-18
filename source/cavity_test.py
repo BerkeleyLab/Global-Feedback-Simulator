@@ -196,7 +196,7 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
     curve_fit = cavity_curve_fit(Tstep, drive_in, cav_v, beam_charge)
 
     # Measure mode's offset frequency
-    foffset_meas = -np.imag(curve_fit[2])/(Tstep*2.0*np.pi)
+    foffset_meas = np.imag(curve_fit[2])/(Tstep*2.0*np.pi)
 
     # Return results
     # drive_step and beam_step contain: [a, b, c, cav_v_meas, bw_meas, cav_v]
@@ -335,7 +335,9 @@ def cavity_test_freqs():
     fit_pass = True
     fit_threshold = 1e-3
 
-    print "\n**** Test detuning...\n"
+    print "\n**** Test detuning..."
+    print "******* Iterate over basis frequency offset...\n"
+
     # Iterate over simulation tests
     for idx, test_file in enumerate(test_files):
         # Run numerical simulation
@@ -356,24 +358,57 @@ def cavity_test_freqs():
         else: this_fit_pass = False
         fit_pass = fit_pass & this_fit_pass
 
+    # Now exercise the dynamic deturning input
+    # List the detune frequencies to test
+    delta_fs = [0.0,10.0, 20.0]  # [Hz]
+    test_file = test_files[0] # Use test file with no basis frequency offset
+
+    # Empty lists to append simulation results to
+    drive_in_list2 = []
+    cav_v_list2 = []
+    mode_dicts2 = []
+
+    print "\n******* Iterate over frequency perturbation (basis offset = 0)...\n"
+    # Iterate over detune frequencies
+    for idx, delta_f in enumerate(delta_fs):
+        # Run numerical simulation
+        trang, cav_v, drive_in, beam_charge, mode_dict, curve_fit, foffset_meas = run_cavity_freq_test(Tmax, test_file, 2.0*np.pi*delta_f)
+        # Store signals
+        drive_in_list2.append(drive_in)
+        cav_v_list2.append(cav_v)
+        mode_dicts2.append(mode_dict)
+
+        print "Mode "+str(idx+1)+":"
+        print '  Fit RMS error is {:.2e}'.format(fit_error)
+        print '  Offset: Measured = %.2f Hz, Set to = %.2f Hz' %(foffset_meas, delta_f)
+
+        # Compare error to threshold and establish PASS/FAIL
+        if fit_error < fit_threshold: this_fit_pass = True
+        else: this_fit_pass = False
+        fit_pass = fit_pass & this_fit_pass
 
     # Plot title    
     plt.title("Cavity Step Response: Drive @ "+r'$\omega_0$', fontsize=40, y=1.05)
 
     # Iterate over modes and plot amplitude
+    # # First, basis frequency offset tests
     for idx, mode_dict in enumerate(mode_dicts):
-        plt.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=2)
-    
+        plt.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'basis offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=5)
+
+    # # Then perturbation frequency detuning tests
+    for idx, mode_dict in enumerate(mode_dicts):
+        plt.plot(np.real(cav_v_list2[idx]),np.imag(cav_v_list2[idx]),'-', label= 'perturbation offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=2)     
+
     # Format plot
     plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
     plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
-    plt.ylim([-1e5,9e5])
-    plt.axis('equal')
+    plt.ylim([-0.5e5,6e5])
+    plt.xlim([-0.5e5,6e5])
     plt.xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
     plt.ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
     plt.rc('font',**{'size':20})
     plt.legend(loc='upper right')
-
+    
     # Show figure
     plt.show()
 
@@ -382,90 +417,7 @@ def cavity_test_freqs():
         result = 'PASS' 
     else:
         result = 'FAIL'
-    print "\n*** Detuning test >>> " + result 
-
-    # Return PASS/FAIL boolean
-    return fit_pass
-
-def cavity_test_noise():
-
-    # Configuration file for specific test configuration
-    # (to be appended to standard test cavity configuration)
-    test_file = "source/configfiles/unit_tests/cavity_test_freqs1.json"
-
-    # Total simulation time 
-    Tmax = 1
-
-    # Empty lists to append simulation results to
-    drive_in_list = []
-    cav_v_list = []
-    mode_dicts = []
-
-    # Pass/FAIL boolean for curve fits
-    # True = curve fit RMS error are under threshold
-    fit_pass = True
-    fit_threshold = 1e-3
-
-    print "\n**** Test Noise...\n"
-    
-    # Try different detuning frequencies
-    # delta_fs = [0, 10, 20]
-    delta_fs = np.arange(0,6,2)
-
-    
-    # Iterate over simulation tests
-    for idx, delta_f in enumerate(delta_fs):
-        # Run numerical simulation
-        trang, cav_v, drive_in, beam_charge, mode_dict, curve_fit, foffset_meas = run_cavity_freq_test(Tmax, test_file, 2.0*np.pi*delta_f)
-    
-        # Store signals
-        drive_in_list.append(drive_in)
-        cav_v_list.append(cav_v)
-        mode_dicts.append(mode_dict)
-    
-        # Calculate error RMS on curve fit
-        fit_error = linalg.norm(np.abs(curve_fit[5])-np.abs(curve_fit[3]))/linalg.norm(np.abs(curve_fit[5]))
-        print "Test "+str(idx+1)+":"
-        print '  Fit RMS error is {:.2e}'.format(fit_error)
-        print '  Offset: Measured = %.2f Hz, Set to = %.2f Hz' %(foffset_meas, mode_dict['foffset'])
-    
-        # Compare error to threshold and establish PASS/FAIL
-        if fit_error < fit_threshold: this_fit_pass = True
-        else: this_fit_pass = False
-        fit_pass = fit_pass & this_fit_pass
-    
-
-    # Plot title
-    plt.title("Cavity Step Response: Drive @ "+r'$\omega_0$', fontsize=40, y=1.05)
-
-    # Iterate over modes and plot amplitude
-    for idx, delta_f in enumerate(delta_fs):
-        plt.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'offset = ' + str(delta_f) + ' Hz', linewidth=2)
-    
-    f_circle = np.arange(0,-100,-1)
-    # v_circle =  np.abs(mode_dicts[0]['k_drive'])*1/(1+1j*f_circle)
-    # v_circle =  np.sqrt(np.square(np.abs(mode_dicts[0]['k_drive']))-*np.exp(-1j*f_circle))
-    # plt.plot(np.real(v_circle),np.imag(v_circle), '--')
-
-    # Format plot
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
-    plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
-    plt.ylim([-1e5,9e5])
-    plt.axis('equal')
-    plt.xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
-    plt.ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
-    plt.rc('font',**{'size':20})
-    plt.legend(loc='upper right')
-
-    # Show figure
-    plt.show()
-
-    # print PASS/FAIL
-    if (fit_pass):
-        result = 'PASS' 
-    else:
-        result = 'FAIL'
-    print "\n*** Noise test >>> " + result 
+    print "\n*** Detuning tests >>> " + result 
 
     # Return PASS/FAIL boolean
     return fit_pass
@@ -474,9 +426,8 @@ def unit_cavity():
     print "\n**** Test Cavity step response..."
     test_step_pass = cavity_test_step()
     test_freqs_pass = cavity_test_freqs()
-    test_noise_pass = cavity_test_noise()
 
-    return test_step_pass & test_freqs_pass & test_noise_pass
+    return test_step_pass & test_freqs_pass
 
 def perform_tests():
     print "\n****\nTesting Filter..."

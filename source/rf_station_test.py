@@ -209,6 +209,7 @@ def unit_saturate():
 #
 # Unit test for SSA
 #
+
 def unit_SSA(showplots=True,TOL=1.0e-14):
 
      # Import JSON parser module
@@ -317,7 +318,6 @@ def unit_RF_Station():
 ######################################
 
 def perform_tests():
-
 
     print "\n****\nTesting Phase_Shift..."
     phase_shift_pass = unit_phase_shift()

@@ -48,13 +48,17 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Linac nominal angular frequency
   elecMode -> LO_w0 = LO_w0;
 
+  // Mode's resonance frequency (RF frequency + offset)
   double omega_0_mode = LO_w0 + 2*M_PI*foffset;
   // Mode's open-loop bandwidth 
   elecMode -> omega_f = omega_0_mode/(2*Q_L);
+
+  // Mode's baseline frequency offset
+  elecMode -> omega_d_0 = 2*M_PI*foffset;
   
   // Mode's single-pole, low-pass filter allocation
   // Calculate pole (mode's bandwidth)
-  double complex mode_p = -elecMode -> omega_f - I*2*M_PI*foffset;
+  double complex mode_p = -elecMode -> omega_f;
 
   // Append mode to cavity filter
   Filter_Append_Modes(&elecMode->fil, &mode_p, 1, Tstep);
@@ -159,8 +163,10 @@ double complex ElecMode_Step(ElecMode *elecMode,
   // RF drive term
   v_drive = Kg_fwd * elecMode -> k_drive; // Drive term (k_drive = 2*sqrt(Q_drive*(R/Q))
 
-  // Integrate detuning angular frequency to obtain phase
-  d_phase_now = elecMode_state-> d_phase + elecMode_state->delta_omega * elecMode->Tstep;
+  // Integrate mode's offset frequency to obtain phase
+  // Add baseline frequency offset to perturbation (delta_omega) to obtain total frequency offset
+  omega_now = elecMode->omega_d_0 + elecMode_state->delta_omega;
+  d_phase_now = elecMode_state-> d_phase + omega_now * elecMode->Tstep;
   elecMode_state-> d_phase = d_phase_now; // Store phase state
 
   // Calculate mode's driving term (drive + beam)

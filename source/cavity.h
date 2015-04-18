@@ -10,7 +10,7 @@
 
 typedef struct str_elecmode{
   double LO_w0;
-  double omega_f;
+  double omega_f, omega_d_0;
 	double complex k_drive, k_beam, k_probe, k_em;
 	double Tstep;
 	Filter fil;

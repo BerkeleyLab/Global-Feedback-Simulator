@@ -5,8 +5,9 @@ import readjson.parse_simulation as parseSim
 
 def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 
-    if Verbose: print "\nLoading JSON configuration files ..."
     # Get the Simulation object from the JSON parser
+    if Verbose: print "\nLoading JSON configuration files ..."
+
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json",
@@ -28,8 +29,9 @@ def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 
 def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
 
-    if Verbose: print "\nLoading JSON configuration files ..."
     # Get the Simulation object from the JSON parser
+    if Verbose: print "\nLoading JSON configuration files ..."
+
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
@@ -47,7 +49,7 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
 
     fund_mode_dict = rf_station_object.cavity.elec_modes[fund_index].Compute_ElecMode(Tstep, rf_phase)
 
-    # Overwrite settings for Set-point from Linac configuration
+    # Overwrite pre-computed settings for Set-point from Linac configuration
     nom_grad = rf_station_object.cavity.nom_grad['value']
     L = rf_station_object.cavity.L['value']
     rf_station_object.cavity.design_voltage['value'] = nom_grad*L
@@ -59,8 +61,9 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True):
 
 def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
 
-    if Verbose: print "\nLoading JSON configuration files ..."
     # Get the Simulation object from the JSON parser
+    if Verbose: print "\nLoading JSON configuration files ..."
+
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
@@ -84,17 +87,15 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
         fund_mode_dict = rf_station.cavity.elec_modes[fund_index].Compute_ElecMode(Tstep, rf_phase)
         fund_mode_dicts.append(fund_mode_dict)
 
-    # return cryo, cryo_state, Tstep, fund_mode_dicts, rf_station_pointers, mechMode_pointers
     return cryo_object, Tstep, fund_mode_dicts
 
 def Get_SWIG_Simulation(sim_test_file=None, Verbose=True):
 
-    if Verbose: print "\nLoading JSON configuration files ..."
     # Get the Simulation object from the JSON parser
+    if Verbose: print "\nLoading JSON configuration files ..."
+
     file_list =  [
         "source/configfiles/unit_tests/default_accelerator.json"]
-        # "./doublecompress_test.json"]
-        # "../configfiles/unit_tests/LCLS-II_accelerator.json"]
 
     if sim_test_file:
         file_list.append(sim_test_file)
