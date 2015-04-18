@@ -12,7 +12,6 @@ import rf_station_test
 import cryomodule_test
 import doublecompress_test
 
-# import unit_tests_components
 # import unit_test_bbf
 
 if __name__ == "__main__":
