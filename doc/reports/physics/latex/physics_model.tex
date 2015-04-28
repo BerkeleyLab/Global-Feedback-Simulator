@@ -20,7 +20,8 @@
 \lstset{
    breaklines=true,
    basicstyle=\ttfamily}
-% \usepackage{draftwatermark}\usepackage[figurewithin=section,tablewithin=section]{caption}
+% \usepackage{draftwatermark}
+\usepackage[figurewithin=section,tablewithin=section]{caption}
 %\usepackage{subfigure}
 \setcounter{secnumdepth}{4}
 
@@ -34,7 +35,7 @@
 \begin{document}
 \numberwithin{equation}{section} 
 \maketitle
-\setcounter{tocdepth}{3}
+\setcounter{tocdepth}{2}
 \tableofcontents
 
 \newpage
@@ -263,7 +264,7 @@ In Fig.~\ref{fig:cav_step2} we introduce a step signal on the beam input signal 
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.27]{../figures/cavity_test_freqs.png}
+\includegraphics[scale=0.26]{../figures/cavity_test_freqs.png}
 \caption{Cavity unit test: Step response RF drive coupling at $\omega_{\rm ref}$ for three different frequency offsets.}
 \label{fig:cav_step3}
 \end{figure}
@@ -274,7 +275,7 @@ In Fig~\ref{fig:cav_step3} we introduce a unit amplitude step signal on the RF d
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.27]{../figures/cavity_test_detune.png}
+\includegraphics[scale=0.26]{../figures/cavity_test_detune.png}
 \caption{Cavity unit test: Step response RF drive coupling at $\omega_{\rm ref}$ and step on the detune frequency.}
 \label{fig:cav_step4}
 \end{figure}
@@ -500,6 +501,9 @@ Let us now calculate the expected noise levels in both amplitude and phase when 
 \end{equation}
 which can then be approximated to amplitude and phase errors using Eqs.~\eqref{eq:a_noise} and~\eqref{eq:p_noise}, where the amplitude error is expressed in normalized units (normalizing factor being the nominal cavity voltage), and the phase error is expressed in radians.
 
+\subsection{Simulation results}
+
+
 \newpage
 
 \section{Cryomodule}
@@ -699,18 +703,19 @@ b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}}
 c_{\nu} = -\frac{\omega_{\nu}}{k_{\nu}b_{\nu}}
 \ee
 
-These displacements influence each electrical mode's instantaneous eigenmode frequency $\omega_{\mu}$ as following
+These displacements influence each electrical mode's instantaneous eigenmode frequency $\omega_{\mu}$ as follows:
+
 \be
-\label{eq_wmu}
 \omega_\mu = \sum_\nu C_{\mu\nu} x_\nu
+\label{eq:sum_w_mu}
 \ee
 
 \noindent where $C$ is the coupling matrix from mechanics to EM.
 
-As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}. In this case, the variable matching is as follows:
+The combination of Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} is illustrated in Fig.~\ref{fig:mech_state_space}, where the 2nd-oder low-pass filter is implemented as two cascading 1st-order low-pass filters. The blocks labeled ``$LPF@a_{\nu}$'' are instances of the same block used in the cavity state-space model. As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}. In this case, the variable matching is as follows:
 
 \begin{equation}
- \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}~~~.
+ \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}~~~,
 \end{equation}
 
 \noindent and
@@ -720,75 +725,16 @@ As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{e
 \end{equation}
 
 \noindent respectively.
-% 
-% 
-% These electromagnetic fields interact mechanically.
-% 
-% The presence of an EM field inside the cavity generates forces on the cavity walls, resulting in deformation of the cavity and subsequently in a shift of the cavity resonant frequency~\cite{ref:delayen}, designated previously as detune frequency $\omega_{d_\mu}$.
-% 
-% Each mode's fields generate a force proportional to $V_\mu^2 = |\vec V_\mu|^2$ given by
-% 
-% \begin{equation}
-% F_\nu = \sum_\mu A_{\nu\mu} V_\mu^2 
-% \end{equation}
-% 
-% where $A$ is the coupling matrix from EM to mechanics and the subscript $\nu$ indexes the mechanical eigenmodes.
-% 
-% This force is usually minimized using  piezoelectric actuators in the cavity. If we designate by $V_\kappa$ the amplitude of their voltages, the force becomes. 
-% 
-% \begin{equation}
-% F_\nu = \sum_\mu A_{\nu\mu} V_\mu^2  + \sum_\kappa B_{\nu\kappa} V_\kappa
-% \label{eq_F}
-% \end{equation}
-% 
-% where $B$ is the coupling matrix from piezo to mechanics.\\
-% 
-% The resulting mechanical displacements are governed by
-% \begin{equation}
-% \frac{d}{dt} \begin{pmatrix}
-%               x_{\nu} \\
-%               y_{\nu}
-%              \end{pmatrix}
-%              = \begin{pmatrix}
-%                 a_{\nu} & -b_{\nu} \\
-%                 b_{\nu} & a_{\nu} \\
-%                \end{pmatrix}
-%                \begin{pmatrix}
-%                 x_{\nu}\\
-%                 y_{\nu}
-%                \end{pmatrix}
-%                +c_{\nu} \begin{pmatrix}
-%                   0 \\
-%                   F_{\nu}
-%                  \end{pmatrix}
-% \label{eq: state_space}
-% \end{equation}
-% 
-% where 
-% 
-% \begin{equation}
-% a_{\nu} =  \frac{-\omega_{\nu}}{2Q_{\nu}} 
-% \end{equation}
-% \begin{equation}
-% b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}} 
-% \end{equation}
-% 
-% \begin{equation}
-% c_{\nu} = -\frac{\omega_{\nu}}{k_{\nu}b_{\nu}}
-% \end{equation}
-% 
-% These displacement influence each mode's instantaneous  eigenmode frequency $\omega_{\mu}$ as following
-% 
-% \begin{equation}
-% \omega_\mu = \sum_\nu C_{\mu\nu} x_\nu
-% \end{equation}
-% 
-% 
-% where $C$ is the coupling matrix from mechanics to EM.
+
+At this point we have covered the mechanical state-space model physics and software implementation, as well as the electro-mechanical interactions. We have then all the elements needed in order to perform time-series simulation runs and some results are presented next.
+
+\subsection{Simulation results}
 
 \newpage
 
-\section{Linac section}
+\section{Linac Section}
+
+A Linac section is composed of a series of cryomodules potentially followed by a bunch compressor. It is at this level that the longitudinal beam dynamics phase-state model is computed along with the state-space models we have described so far for each one of the Linac components.
 
 \begin{figure}
 \centering
@@ -797,9 +743,14 @@ As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{e
 \label{fig:Linac_block_diagram}
 \end{figure}
 
-\subsection{Particle tracking model}
+\subsection{Longitudinal Dynamics Phase-Space model}
 
+\section{Accelerator Model}
+
+\subsection{Noise sources}
 \subsection{Beam-based feedback model}
+\subsection{State-Space \& Phase-Space Integration}
+
 
 \section{Conclusions}
 
