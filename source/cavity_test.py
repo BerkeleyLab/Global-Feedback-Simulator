@@ -101,7 +101,7 @@ def cavity_curve_fit(Tstep, drive_in, cav_v, beam_charge):
     # Return fitted coefficients
     return a, b, c, cav_v_meas, bw_meas, cav_v
 
-def run_cavity_step_test(Tmax, test_file, drive_on = True, beam_on = False):
+def run_cavity_step_test(Tmax, test_file):
 
     # Import JSON parser module
     from get_configuration import Get_SWIG_Cavity
@@ -201,6 +201,51 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
     # Return results
     # drive_step and beam_step contain: [a, b, c, cav_v_meas, bw_meas, cav_v]
     return trang, cav_v, drive_in, beam_charge, mode_dict, curve_fit, foffset_meas
+
+def run_cavity_detune_test(Tmax, test_file, delta_omega_step=0.0):
+
+    # Import JSON parser module
+    from get_configuration import Get_SWIG_Cavity
+
+    # Configuration file for specific test configuration
+    # (to be appended to standard test cavity configuration)
+    cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
+    
+    # Create time vector
+    trang = np.arange(0,Tmax,Tstep)
+    
+    # Number of points
+    nt = len(trang)
+
+    # Initialize vectors for test
+    cav_v = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
+
+    # Drive signal
+    drive_in = np.ones(nt,dtype=np.complex)
+    
+    drive_in[0:int(nt*0.1)] = 0.0
+    # Beam charge
+    beam_charge = np.zeros(nt,dtype=np.complex)
+
+    # Frequency offset
+    w_offset = np.zeros(nt,dtype=np.complex)
+
+    delta_tz = 0.0  # Timing noise
+
+    elecMode_state = acc.ElecMode_State_Get(cav.State,0);
+    elecMode_state.delta_omega = 0.0
+    # Run Numerical Simulation
+    for i in xrange(1,nt):
+        if(i>int(nt*0.4)): elecMode_state.delta_omega = delta_omega_step
+        cav_v[i] = acc.Cavity_Step(cav.C_Pointer, delta_tz, drive_in[i], beam_charge[i], cav.State)
+        w_offset[i] = elecMode_state.delta_omega
+
+    # Pass along the 1st mode configuration dictionary (useful for single mode tests)
+    mode_dict = modes_config[0]
+
+    # Return results
+    return trang, cav_v, drive_in, beam_charge, mode_dict, w_offset
+
 
 def show_cavity_step(title):
     plt.title(title, fontsize=40, y=1.02)
@@ -320,8 +365,8 @@ def cavity_test_freqs():
     # (to be appended to standard test cavity configuration)
     test_files = ["source/configfiles/unit_tests/cavity_test_freqs1.json", \
         "source/configfiles/unit_tests/cavity_test_freqs2.json", \
-        "source/configfiles/unit_tests/cavity_test_freqs3.json"]
-
+        "source/configfiles/unit_tests/cavity_test_freqs3.json", \
+        "source/configfiles/unit_tests/cavity_test_freqs4.json"]
     # Total simulation time 
     Tmax = 1
 
@@ -360,7 +405,7 @@ def cavity_test_freqs():
 
     # Now exercise the dynamic deturning input
     # List the detune frequencies to test
-    delta_fs = [0.0,10.0, 20.0]  # [Hz]
+    delta_fs = [0.0,10.0, 20.0, 100.0]  # [Hz]
     test_file = test_files[0] # Use test file with no basis frequency offset
 
     # Empty lists to append simulation results to
@@ -422,12 +467,83 @@ def cavity_test_freqs():
     # Return PASS/FAIL boolean
     return fit_pass
 
+def cavity_test_detune():
+
+    # Configuration file for specific test configuration
+    # (to be appended to standard test cavity configuration)
+    test_file = "source/configfiles/unit_tests/cavity_test_freqs1.json"
+
+    # Total simulation time 
+    Tmax = 0.5
+
+    # Empty lists to append simulation results to
+    drive_in_list = []
+    cav_v_list = []
+    mode_dicts = []
+    w_offset_list = []
+    
+    delta_fs = [100.0, 200.0]   # [Hz]
+
+    print "\n**** Test detuning step..."
+    print ">>> (Visual inspection only)\n" 
+
+    # # First, basis frequency offset tests
+    for idx, delta_f in enumerate(delta_fs):
+        # Run numerical simulation
+        trang, cav_v, drive_in, beam_charge, mode_dict, w_offset = run_cavity_detune_test(Tmax, test_file, 2.0*np.pi*delta_f)
+        # Store signals
+        drive_in_list.append(drive_in)
+        cav_v_list.append(cav_v)
+        w_offset_list.append(w_offset)
+        mode_dicts.append(mode_dict)
+
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # Plot title    
+    plt.title("Cavity Test: Fill & Step on Detune Frequency", fontsize=40, y=1.05)
+
+    # Format plots
+    # # Cavity fields for the two simulation runs
+    lns1 = ax.plot(trang,np.abs(cav_v_list[0]),'-', label= 'Cavity Field ('+r'$\Delta f_1$'+')', linewidth=2)
+    lns2 = ax.plot(trang,np.abs(cav_v_list[1]),'-', label= 'Cavity Field ('+r'$\Delta f_2$'+')', linewidth=2)
+    # # Drive signal is identical for both
+    lns3 = ax.plot(trang,np.abs(drive_in_list[0]*mode_dicts[0]['k_drive']),'-', label= 'Drive', linewidth=2)
+    ax2 = ax.twinx()
+    # # Plot frequency offset as a function of time
+    lns4 = ax2.plot(trang, w_offset_list[0]/2.0/np.pi,'-c', label= r'$\Delta f_1$', linewidth=2)
+    lns5 = ax2.plot(trang, w_offset_list[1]/2.0/np.pi,'-m', label= r'$\Delta f_2$', linewidth=2)
+
+    # Add all the lines
+    lns = lns1 + lns2 + lns3 + lns4 + lns5
+    labs = [l.get_label() for l in lns]
+    ax.legend(lns, labs, loc=0)
+
+    # Format plot
+    ax.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
+    ax.set_ylim([0,6e5])
+    ax.set_xlabel('Time [s]', fontsize=30)
+    # Y axis label for voltages
+    ax.set_ylabel('Amplitude [V]', fontsize=30)
+    # Y axis label for frequency shifts
+    ax2.set_ylabel('Frequency [Hz]', fontsize=30)
+    ax2.set_ylim(0,delta_f*1.5)
+    plt.rc('font',**{'size':20})
+    
+    # Show figure
+    plt.show()
+
+    # Return PASS/FAIL boolean (this is not a PASS/FAIL test)
+    return True
+
+
 def unit_cavity():
     print "\n**** Test Cavity step response..."
     test_step_pass = cavity_test_step()
     test_freqs_pass = cavity_test_freqs()
+    test_detune_pass = cavity_test_detune()
 
-    return test_step_pass & test_freqs_pass
+    return test_step_pass & test_freqs_pass & test_detune_pass
 
 def perform_tests():
     print "\n****\nTesting Filter..."
