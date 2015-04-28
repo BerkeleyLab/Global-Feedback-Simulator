@@ -50,8 +50,7 @@
 
 During the design, commissioning and operations of a Linac-driven FEL it is useful to have modeling capabilities to abstract and analyze some of the complex problems involved in LLRF and beam-based feedback in the comfortable environment of computer simulations. The simulation framework presented here is a dramatic improvement of a previous version written in Octave/Matlab~\cite{ref:model-paper}, where extensively tested LLRF models are integrated with a longitudinal phase space tracking simulator~\cite{ref:litrack} along with the interaction between the two via beam-based feedback using a computationally efficient simulation engine. 
 
-The models include beam instrumentation, considerations on loop delays for in both the LLRF and beam-based feedback loops, as well as the ability to inject noise (both correlated and uncorrelated) at different points of the machine including a full characterization of the electron gun performance parameters. The Linac is divided into generic compounds composed of an accelerating section followed by a bunch compressor (where the bunch compressor can be enabled/disabled) and beam performance parameters are measured at any stage of the machine for characterization and/or for use to apply beam-based feedback. Time-series data is computed at a configurable repetition rate and results can be visualized in both time and frequency domain, including transfer functions between any noise source and beam performance parameters.
-
+The models include beam instrumentation, considerations on loop delays for in both the LLRF and beam-based feedback loops, as well as the ability to inject noise (both correlated and uncorrelated) at different points of the machine including a full characterization of the electron gun performance parameters. The Linac is divided into generic compounds composed of an accelerating section followed by a bunch compressor (where the bunch compressor can be enabled/disabled) and beam performance parameters are measured at any stage of the machine for characterization and/or for use to apply beam-based feedback. Time-series data is computed at a configurable simulation step size and results can be visualized in both time and frequency domain, including transfer functions between any noise source and beam performance parameters.
 
 Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the LCLS-II layout, as configured at the time of this writing. The model described here represents each component of the machine in a way that configuration parameters can be adapted as the machine layout and configuration evolves (during the design or in future upgrades), where the contribution of each noise source (correlated or uncorrelated) to the machine performance budget can be quantified, including the ability to represent the effectiveness of different feedback loops to reduce noise contributions under different configurations. 
 
@@ -66,9 +65,9 @@ Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the
 
 The accelerator model is intended to be modular in order to adapt to different configurations. The motivation behind this partitioning is to allow for different types of studies. For example, one can focus on some localized effects at the RF station level where only one station is simulated, or inspect how different cavities interact mechanically inside a cryomodule, or run studies at a machine level in order to analyze slow beam-based feedback performance where not much detail on the internals of RF stations is desired.
 
-The different model configurations described above are put in practice using a model hierarchy shown in Figure~\ref{fig:model_hierarchy}. The first component is a simulation entity, which describes simulation parameters such as time step size, total simulation time, etc. The simulation then includes an accelerator which can be composed of one or more Linac sections, including a longitudinal beam dynamics simulation to represent beam propagating from one Linac section to the next. One linac section is then represented as a series of cryomodules (or modules), optionally followed by a bunch compressor. This is the fundamental building block of the accelerator, where one can imagine to have the case of L1 in Fig.~\ref{fig:lclsII-feedback_layout} with two cryomodules and no bunch compressor, followed by HL (with different frequency, beam phase relative to the RF, etc), this time followed by a bunch compressor (BC1 in this case).
+The different model configurations described above are put in practice using a model hierarchy shown in Figure~\ref{fig:model_hierarchy}. The first component is a simulation entity, which describes simulation parameters such as time step size, total simulation time, etc. The simulation then includes an accelerator which can be composed of one or more Linac sections, including a longitudinal beam dynamics simulation to represent beam propagating from one Linac section to the next. One linac section is then represented as a series of cryomodules, optionally followed by a bunch compressor. This is the fundamental building block of the accelerator, where one can imagine to have the case of L1 in Fig.~\ref{fig:lclsII-feedback_layout} with two cryomodules and no bunch compressor, followed by HL (with different frequency, beam phase relative to the RF, etc), this time followed by a bunch compressor (BC1 in this case).
 
-Each module is then represented by a collection of RF stations, including inter-station interactions through a model of the mechanical resonances in the cryomodule. The electro-mechanical couplings between the mechanical modes and individual electrical modes in the cavities are represented, as well as the effect of tuners and piezos on these resonances. Each station is composed of the typical RF system layout, with an N-cell cavity (including several normal modes), a high-power RF source, an FPGA controller, and the analog front-end (which represents anti-alias filtering, LLRF noise. etc). The last stage of the hierarchy is the cavity electrical modes, which each have their own resonance frequency, Q and couplings with mechanical modes in a module.
+Each cryomodule is then represented by a collection of RF stations, including inter-station interactions through a model of the mechanical resonances in the cryomodule. The electro-mechanical couplings between the mechanical eigenmodes and individual electrical eigenmodes in the cavities are represented, as well as the effect of tuners and piezos on the mechanical resonances. Each RF station is composed of the typical RF system components, with an N-cell cavity (including a configurable number of normal modes), a high-power RF source, an FPGA controller, and the analog front-end (which represents anti-alias filtering, LLRF noise, etc). The last stage of the hierarchy is the cavity electrical eigenmodes, which each have their own resonance frequency, Qs and couplings with mechanical modes in a cryomodule.
 
 In the next few sections we describe the models used in each layer of the hierarchy shown in Fig.~\ref{fig:model_hierarchy}, starting bottom up so that the reader progressively understands every component in each layer without making any assumptions.
 
@@ -79,21 +78,21 @@ In the next few sections we describe the models used in each layer of the hierar
 \begin{figure}
 \centering
 \includegraphics[scale=0.75]{../figures/Station_rf_blocks.png}
-\caption{Station block diagram.}
+\caption{RF Station block diagram.}
 \label{fig:Station_block_diagram}
 \end{figure}
 
-The model includes a multi-cell cavity (including different normal modes, detuning and their different couplings), an FPGA controller, a saturation model for the RF source, filters, etc. The RF station is modeled at baseband, where up and down conversions in the real system are not considered and only the slowly varying amplitude and phase modulations (or In-phase and Quadrature, I\&Q) of a carrier at the RF reference frequency are represented. The FPGA controller in a real system typically works on I-Q sampled cavity fields. Representing the rest of the components in the RF station model at baseband allows for a more computationally efficient implementation of the simulation code, while not losing information of interest on the different signals. 
+The RF station model includes a multi-cell cavity (including different normal modes, detuning and their different couplings), an FPGA controller, a saturation model for the RF source, filters, etc. The RF station is modeled at baseband, where up and down conversions in the real system are not considered and only the slowly varying amplitude and phase modulations (or In-phase and Quadrature, I\&Q) of a carrier at the RF reference frequency are represented. The FPGA controller in a real system typically works on I-Q sampled cavity fields. Representing the rest of the components in the RF station model at baseband allows for a more computationally efficient implementation of the simulation code, while not losing information of interest on the different complex signals. This approximation will be specifically demonstrated when describing the cavity model equations.
 
-The RF station model responds to the typical RF system topology, with an FPGA-based system controlling the EM field inside an accelerating cavity as shown in Fig.~\ref{fig:Station_block_diagram}. The different components of the RF station model are described in the rest of this section.
+The RF station model responds to the typical RF system topology, with an FPGA-based system controlling the EM field inside an accelerating cavity as shown in Fig.~\ref{fig:Station_block_diagram}. It also includes the cavity-beam interaction through beam loading, as well as different noise sources, which can be either correlated or non-correlated. The different components of the RF station model are described in the rest of this section.
 
 \subsection{Cavity model}
 
-In each cavity of a particle accelerator, we want the highest possible $\vec{E}$ field amplitude along the particles' acceleration direction in order to transmit the maximum energy to them.  From EM theory, we know $\vec{E}$ and $\vec{B}$ fields inside a cavity can be broken down into independent eigenmodes (independent solutions to Maxwell's equations inside a cavity or waveguide). For a 9-cell cavity, the highest $\vec{E}$ field along the cavity axis is obtained for the $\pi$-mode. The electrical input to apply to a cavity to obtain that mode only is known from theory. However, it is hard to reach in practice as some other modes are usually present as well due to geometrical errors in the cavity shape or further deformation due to mechanical forces that are generated.
+From EM theory, we know $\vec{E}$ and $\vec{B}$ fields inside a cavity can be broken down into independent eigenmodes (independent solutions to Maxwell's equations inside a cavity or waveguide). For a 9-cell cavity, the highest $\vec{E}$ field along the cavity axis is obtained for the $\pi$-mode. Ideally we would like to only excite that mode applying the proper input signal, which is only is known from theory. However, this is hard to achieve in practice as some other modes are present due to geometrical errors in the cavity shape or further deformation due to mechanical forces that are generated.
 
-The cavity model described here responds to the typical multi-cell cavity structure, with couplings to the RF source, a probe, and the beam of particles. There are two aspects to representing this problem: the complete electro-magnetic field description inside the cavity and the equivalent circuit representation, where the field description is needed in order to define the equivalent-circuit using simulation codes like Superfish~\cite{ref:superfish}. It is convenient to use the equivalent-circuit representation in order to model the cavity behavior as well as its interactions with the RF system and the beam.
+The cavity model described here responds to a multi-cell cavity structure, with couplings to the RF source, a cavity field probe and the beam. There are two aspects to representing this problem: the complete EM field description inside the cavity and the equivalent circuit representation, where the field description is needed in order to define the equivalent circuit using simulation codes like Superfish~\cite{ref:superfish}. It is convenient to use the equivalent circuit representation in order to model the cavity behavior as well as its interactions with the RF system and the beam.
 
-Ideally, we would like to measure the EM fields from each mode present in the cavity in order to control them appropriately. However, the best  we can do is measure the overall field in the cavity, designated here by $\vec E_{\rm probe}$. It is measured in practice using a probe, and is theoretically given by
+Ideally, we would like to measure the EM fields from each mode present in the cavity in order to control them appropriately. However, the best  we can do is measure the overall field in the cavity, designated here by $\vec E_{\rm probe}$. It is measured in practice using a probe antenna, and is theoretically given by
 
 \begin{equation}
   \vec E_{\rm probe} = \sum_{\mu} \vec{V}_{\mu} /\sqrt{Q_{\rm p_{\mu}}(R/Q)_{\mu}}
@@ -120,9 +119,9 @@ Alternatively, the expression for reverse (a.k.a.~reflected) wave travelling out
 \label{fig:cav_eq_circuit}
 \end{figure}
 
-A multi-cell cavity is represented by a series of coupled resonators (one per cell in the cavity), each represented by an RLC circuit~\cite{ref:montgomery}. The equivalent circuit used to represent one cavity mode is shown in Fig.~\ref{fig:cav_eq_circuit}, where each mode's accelerating voltage is added in order to obtain the cavity overall accelerating voltage~\cite{ref:cell_modes}, as deduced from Equation~\ref{eq:E_probe}. Each mode has its own value of $\vec V$, $(R/Q)$, $Q_x$, and other characteristics that will be introduced later.
+A multi-cell cavity is represented by a series of coupled resonators (one per cell in the cavity), each represented by an RLC circuit~\cite{ref:montgomery}. Decomposing the EM cavity fields into eigenmodes and applying the principle of superposition we obtain the representation expressed by equation~\ref{eq:E_probe}~\cite{ref:cell_modes}. The equivalent circuit used to represent one cavity mode is shown in Fig.~\ref{fig:cav_eq_circuit}, where each mode's accelerating voltage is added in order to obtain the cavity overall accelerating voltage, as deduced from Equation~\ref{eq:E_probe}. Each mode has its own value of $\vec V$, $(R/Q)$, $Q_x$, and other characteristics that will be introduced later.
 
-If we apply Kirchhoff's current law to the mode's RLC equivalent circuit (see figure~\ref{fig:cav_eq_circuit}), we get:
+If we apply Kirchhoff's current law to the mode's RLC equivalent circuit (see figure~\ref{fig:cav_eq_circuit}, $\mu$ refers to a particular eigenmode), we get:
 
 \begin{equation}
   \centering \vec I_{\mu} = \vec I_{\rm C_{\mu}} + \vec I_{\rm R_{\mu}} + \vec I_{\rm L_{\mu}}
@@ -149,14 +148,14 @@ Differentiating both sides of equation~\ref{eq:currents} and substituting using 
   \label{eq:2nd_order}
 \end{equation}
 
-Taking the slowly varying envelope approximation~\cite{ref:svea} and separating voltage and current into real and imaginary parts we can reduce the order of equation~\ref{eq:2nd_order} (a second-order band-pass filtered centered at the resonance frequency) to a first-order low-pass filter at baseband~\cite{ref:schilcher}:
+Taking the slowly varying envelope approximation~\cite{ref:svea} ($\omega_{f_{\mu}} \ll \omega_{0_{\mu}}$), separating voltage and current into real and imaginary parts, assuming that the detune frequency varies slowly with respect to the carrier frequency ($\omega_{d_{\mu}} \ll \omega_{0_{\mu}}$) and that $Q_{\rm L_{\mu}} \gg 1$, we can reduce the order of equation~\ref{eq:2nd_order} (a second-order band-pass filter centered at the resonance frequency) to a first-order low-pass filter at baseband~\cite{ref:schilcher}:
 
 \begin{equation}
   \left(1-j\frac{\omega_{d_{\mu}}}{\omega_{f_{\mu}}}\right)\vec V_{\mu} + \frac{1}{\omega_{f_{\mu}}}\frac{d\vec V_{\mu}}{dt} = R_{\rm L_{\mu}} \vec I_{\mu}
   \label{eq:1st_order1}
 \end{equation}
 
-\noindent where $\omega_{f_{\mu}}=\omega_{0_{\mu}}/2Q_{L_{\mu}}$ is the mode's bandwidth and $\omega_{d_{\mu}}=2\pi\Delta f_{\mu}$ is the (time varying) detune frequency,  , given as $\omega_{d_{\mu}}=\omega_{0_{\mu}}-\omega_{ref}$, {\it i.e.}, the difference between actual eigenmode frequency $\omega_{0_{\mu}}$ and the accelerator's time base $\omega_{ref}$.
+\noindent where $\omega_{f_{\mu}}=\omega_{0_{\mu}}/2Q_{L_{\mu}}$ is the mode's bandwidth and $\omega_{d_{\mu}}=2\pi\Delta f_{\mu}$ is the (time varying) detune frequency, given as $\omega_{d_{\mu}}=\omega_{0_{\mu}}-\omega_{ref}$, {\it i.e.}, the difference between actual eigenmode frequency $\omega_{0_{\mu}}$ and the accelerator's time base $\omega_{\rm ref}$.
 
 Transposing the cavity drive term into a combination of the RF source incident wave and beam loading (opposite sign indicating energy absorption by the beam), we can express eq.~\ref{eq:1st_order1} as:
 
@@ -175,7 +174,19 @@ The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{
 
 The only assumptions in the above formulation are that the cavity losses are purely resistive, and thus expressible with a fixed $Q_{0_{\mu}}$, and that no power is launched into the cavity from the field probe.  If other ports have incoming power, there would be additional terms of the same form as $2\vec K_g\sqrt{R_g}$.
 
-The $\frac{\omega_{d_\mu}}{\omega_{f}}\vec{V}_{\mu}$ term in \ref{eq:1st_order2} will be relatively small compared to the other terms. To appropriately take it into account it is better to isolate it by defining  a vector $\vec{S}_{\mu}$ such that $\vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}$, with $d\theta_{\mu}/dt = \omega_{d_{\mu}}$, yielding: 
+The $\frac{\omega_{d_\mu}}{\omega_{f}}\vec{V}_{\mu}$ term in \ref{eq:1st_order2} will be relatively small compared to the other terms. To appropriately take it into account it is better to isolate it by defining  a vector $\vec{S}_{\mu}$ such that:
+
+\begin{equation}
+\vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}
+\label{eq:V_mu}
+\end{equation}
+
+\begin{equation}
+\frac{d\theta_{\mu}}{dt} = \omega_{d_\mu}
+\label{eq: d0_dt}
+\end{equation}
+
+\noindent yielding:
 
 \begin{equation}
 \left(1 - j\frac{\omega_{d_\mu}}{\omega_{f_{\mu}}}\right)\vec{S}_{\mu}e^{j\theta_{\mu}} + \frac{1}{\omega_{f_{\mu}}}
@@ -183,12 +194,7 @@ The $\frac{\omega_{d_\mu}}{\omega_{f}}\vec{V}_{\mu}$ term in \ref{eq:1st_order2}
 \label{eq Gov_S}
 \end{equation}
 
-\noindent The governing equation for the mode's accelerating voltage can thus be written as a set of two first order differential equations
-
-\begin{equation}
-\frac{d\theta_{\mu}}{dt} = \omega_{d_\mu}
-\label{eq: d0_dt}
-\end{equation}
+\noindent The governing equation for the mode's accelerating voltage can thus be written as a set of two first order differential equations (eqs.~\ref{eq: dS_dt} and~\ref{eq: d0_dt}):
 
 \begin{equation}
   \frac{d\vec{S}_{\mu}}{dt} = -\omega_{f_{\mu}}\vec{S}_{\mu} + \omega_{f_{\mu}}e^{-j\theta_{\mu}}\left(2\vec{K}_g\sqrt{R_{g_{\mu}}} 
@@ -211,14 +217,14 @@ We started this section with the definition of $\vec E_{\rm probe}$ and $\vec E_
 
 Figure~\ref{fig:RF_cavity_block_diagram} shows the data path implemented in software in order to compute the response of a nine-cell cavity (which can be configured for any type of cavity given the definition of the electrical eigenmodes and couplings). Each internal bock represents the implementation of Eq.~\ref{eq: dS_dt} for each eigenmode, and the summing junction at the end (taking the pre-factored eigenmode voltages) represents the computation of $\vec E_{\rm probe}$ and $\vec E_{\rm reverse}$ using Equations \ref{eq:E_probe} and \ref{eq:E_reverse}.
 
-Note that there are two aspects represented in Fig.~\ref{fig:RF_cavity_block_diagram} which are not shown in the equations. The first one is the use of $\vec K_{\rm g_{rfl}}$ instead of $\vec K_{\rm g}$, as well as the terms $e^{j\varphi_{x}}$ in the factoring of each $\vec V_\mu$ term before the summing junctions. These terms represent frequency dependent propagation through cables and waveguides. In the case of the incident wave, if we define $TF_{\rm wg}(s)$ as the transfer function in Laplace domain of a wide-band filter representing the waveguide between the directional coupler on the high-power forward path and and the cavity, then:
+Note that there are two aspects represented in Fig.~\ref{fig:RF_cavity_block_diagram} which are not shown in the equations. The first one is the use of $\vec K_{\rm g_{rfl}}$ instead of $\vec K_{\rm g}$, as well as the terms $e^{j\varphi_{x}}$ in the factoring of each $\vec V_\mu$ term before the summing junctions. These terms represent frequency dependent propagation through cables and waveguides. In the case of the incident wave, if we define $TF_{\rm wg}(s)$ as the transfer function in Laplace domain of a wide-band filter representing the waveguide between the directional coupler on the high-power forward path and the cavity, we get:
 
 \begin{equation}
  \vec K_{\rm g_{rfl}}(s) = \vec K_{\rm g}(s) \cdot TF_{\rm wg}(s)
 \end{equation}
 
 \noindent where the minus sign of the reflection on the cavity coupler is represented in the summing junction. This transformation takes into account the propagation of the reflection of the incident wave back to the directional coupler.
-The cavity probe and reverse path also follow a similar transformation but in this case represented by a phase shift through the coaxial cable from the cavity probe and reverse ports and their respective ADCs in the LLRF. These phase shifts are represented by the $e^{j\varphi_{\rm rev_{\mu}}}$ and $e^{j\varphi_{\rm p_{\mu}}}$ terms in Fig.~\ref{fig:RF_cavity_block_diagram}, which are frequency dependent due to dispersion in the coaxial cable and it is therefore convenient to apply at this stage of the computation (before the summing junction).
+The cavity probe and reverse path also follow a similar transformation but in this case represented by a phase shift through the coaxial cable from the cavity probe and reverse ports and their respective ADCs in the LLRF. These phase shifts are represented by the $e^{j\varphi_{\rm rev_{\mu}}}$ and $e^{j\varphi_{\rm p_{\mu}}}$ terms in Fig.~\ref{fig:RF_cavity_block_diagram}, which are frequency dependent due to dispersion in the coaxial cables, and therefore need to be applied at this stage of the computation (before the summing junction).
 
 The second aspect which has not been covered yet is the numerical discretization of the first-order low-pass filter in the cavity response, represented by the blocks labeled $LPF@\omega_{f_{\mu}}$ in Fig.~\ref{fig:RF_cavity_block_diagram}. The ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equation~\ref{eq: dS_dt} can be written as Equation~\ref{eq:exp_diff2}, where
 
@@ -226,12 +232,53 @@ The second aspect which has not been covered yet is the numerical discretization
  \vec V_{\rm out} = \vec S_{\mu} \mbox{ , } p = -\omega_f \mbox{ and, } \vec V_{\rm in} = e^{-j\theta_{\mu}} \left(2\vec{K}_g\sqrt{R_{g_{\mu}}} - R_{b_{\mu}}\vec{I}_{\rm beam}\right)
 \end{equation}
 
-\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. 
+\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. This block solves for $\vec S_{\mu}$, which is transalated to the mode's accelerating voltage using equations~\ref{eq:V_mu} and~\ref{eq: d0_dt}, as indicated in the block diagram.
 
 In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diagram} (couplings, rotations, etc.) combined with the numerical discretization of the cavity filter described in Appendix~\ref{App:ODE_integration} applied every discrete simulation step, we can obtain time-series simulated data representing signal propagation through the multi-cell RF cavity, including the different eigenmodes and dispersion through cables and waveguides.
 
 \subsubsection{Simulation results}
 
+\begin{figure}
+\centering
+\includegraphics[scale=0.26]{../figures/cavity_test_drive.png}
+\caption{Cavity unit test: Cavity response to a step function on the RF drive signal, where the input signal is at the each mode's resonance frequency.}
+\label{fig:cav_step1}
+\end{figure}
+
+A few unit tests have been designed in order to check the correspondence between the numerical simulation results and the theoretical equations. The unit under test here is the cavity model illustrated in Fig.~\ref{fig:RF_cavity_block_diagram}. Some of these tests have little physical meaning and are even unrealizable in practice, however this is the beauty of the simulation world, where one can isolate effects in the calculations for different purposes, in this case in order to verify its own proper operation.
+
+Figures~\ref{fig:cav_step1} and~\ref{fig:cav_step2} show the step response of three individual eigenmodes ($\pi$, $8\pi/9$ and $\pi/9$ modes in this case). In these tests, the cavity routine is configured to have one individual mode and the time-series simulation is run three times to obtain each one of the three curves on the plots. This allows us to fit the step response curves for each eigenmode individually, thus deducing mode bandwidths and couplings from the curve fit results. Both the numerical curves and the curve fits are shown for each simulation run, where (in the absence of noise as in this case) there is a very good correspondance between the two (in the order of $10^{-5}$ RMS errors).
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.26]{../figures/cavity_test_beam.png}
+\caption{Cavity unit test: Step response, beam coupling.}
+\label{fig:cav_step2}
+\end{figure}
+
+In Fig.~\ref{fig:cav_step1} we introduce a unit amplitude step signal on the RF drive port at the mode's resonance frequency ($\omega_{0_{\mu}}$), which is equivalent to driving the input drive signal with a vector of unity length rotating at the mode's detune frequency ($\omega_{f_{\mu}}$). The input signals are then: $\vec K_{\rm g}=e^{j\theta_{\mu}}$ ($d\theta_{\mu}/dt = \omega_{d_\mu}$) and $\vec I_{\rm beam}=0$. As a result no ringing is observed. The model is designed to have unity gain at the mode's center frequency and one can therefore deduce couplings to the drive input by measuring the steady-state values. The step response is then fit to a 1st-order differential equation and the bandwidth of each mode is deduced, matching the configuration settings. This test provides a verification for the incident wave coupling impedance ($R_{\rm g_{\mu}}$ in eq.~\ref{eq: dS_dt}) as well as the mode's bandwidth ($\omega_{f_{\mu}}$ in the same equation).
+
+In Fig.~\ref{fig:cav_step2} we introduce a step signal on the beam input signal equivalent to 1 pC beam charge (this number is just anecdotal since we are interested in measuring couplings, etc.). In this case $\vec K_{\rm g}=0$, providing means to deduce the beam coupling impedance for each eigenmode in a similar manner as described in the previous test. In both tests we also evaluate the probe ($\vec E_{\rm probe}$ in eq.~\ref{eq:E_probe}) and reverse field signals ($\vec E_{\rm reverse}$ in eq.~\ref{eq:E_reverse}) and compare them to the accelerating voltages, therefore being able to deduce the coupling impedances to the probe and drive ports for each eigenmode ($Q_{\rm p_{\mu}}(R/Q)_{\mu}$ and $Q_{g_{\mu}}(R/Q)_\mu$ in eqs.~\ref{eq:E_probe} and~\ref{eq:E_reverse} respectively).
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.27]{../figures/cavity_test_freqs.png}
+\caption{Cavity unit test: Step response RF drive coupling at $\omega_{\rm ref}$ for three different frequency offsets.}
+\label{fig:cav_step3}
+\end{figure}
+
+At this point we have demonstrated the low-pass filter blocks in Fig.~\ref{fig:RF_cavity_block_diagram} as well as the couplings to the input and output ports. We are now going to demonstrate an important feature (cavity detuning). One can both configure an electrical eigenmode to have a static frequency offset with respect to the RF reference, as well as introducing a time-varying frequency offset due to Lorentz forces or other perturbances.
+
+In Fig~\ref{fig:cav_step3} we introduce a unit amplitude step signal on the RF drive port at the RF reference frequency ($\omega_{\rm ref}$) (instead of at each mode's resonance frequency as in the case of Fig.~\ref{fig:cav_step1}). Each curve is reproduced in two equivalent ways in order to exercise two features of the software: first by sweeping the setting for the so-called basis, or static, offset frequency (the frequency offset between the mode's resonance frequency and the RF reference), and second by sweeping the setting for the frequency shift due to perturbances such as Lorentz forces. All curves correspond to the same mode's accelerating voltage, where only the frequency offset changes, and is plotted in the complex plane to observe the different degrees of ringing as frequency offsets are introduced.
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.27]{../figures/cavity_test_detune.png}
+\caption{Cavity unit test: Step response RF drive coupling at $\omega_{\rm ref}$ and step on the detune frequency.}
+\label{fig:cav_step4}
+\end{figure}
+
+Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where the cavity mode is initially in perfect resonance. A step is applied to the drive signal at the mode's resonance frequency and the cavity field fills up following its time constant (quantified in previous tests). Then, we apply a step to the detune frequency of 10 to 20 times the badwidth of the cavity mode and we observe the cavity decay following its time constant along with ringing induced by the cavity being out of tune. Note that the frequency modulations of the cavity field correspond to the frequency offset applied in each case, and for the case where the step applied is of 100 Hz, the steady-state value is equivalent to the one observed in fig.~\ref{fig:cav_step3} for the same value of freqency offset.
 
 \subsection{FPGA Controller}
 
