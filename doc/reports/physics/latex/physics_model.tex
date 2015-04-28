@@ -74,6 +74,7 @@ In the next few sections we describe the models used in each layer of the hierar
 \newpage
 
 \section{RF Station}
+\label{sec:rf_station}
 
 \begin{figure}
 \centering
@@ -282,7 +283,7 @@ Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where th
 
 \subsection{FPGA Controller}
 
-A Proportional-Integrator (PI) Controller is generally used in RF cavities for particle accelerators to control the input driving signal in order to generate the desired field. A flow chart of this controller is shown below, followed by the mathematical expressions. 
+Feedback is necessary in order to guarantee the stability of the cavity fields. Latency of the control loop limits the performance of the system and is typically implemented in an FPGA in the form of a Proportional-Integrator (PI) Controller. A flow chart of this controller is shown below, followed by the mathematical expressions. 
 
 %Define block styles
 \tikzstyle{block} = [rectangle, draw, node distance = 2.5cm, text width =16em, text centered, rounded corners, minimum height=2em]
@@ -312,25 +313,25 @@ A Proportional-Integrator (PI) Controller is generally used in RF cavities for p
 	\path [line] (Cavity) -| node[near end]{$-\vec{E}_{\rm probe}$}(sum);
 	\path [line] (set point) -- (sum); 
 	\path [line] (Kp) -- (sum1);
-	\path [line] (sum1) -- node{$\vec{K}_{g}$}(6cm,0);
+	\path [line] (sum1) -- node{$\vec{K}_{\rm drive}$}(6cm,0);
 	
 	
 \end{tikzpicture}
 \caption{Flow chart of the PI controller}
 \end{figure}
 
-A set point $\vec{E}_{\rm sp}$ is chosen as a target prior to simulation. The error $e(t)$ is defined as the set point value minus the current $\vec{E}_{\rm probe}$ value:
+Based on different factors, a reference cavity field (set point, $\vec{E}_{\rm sp}$) is chosen as a target. The cavity field is entirely defined by three figures: frequency, amplitude and phase. The feedback control loop described here assumes a fixed frequency for the excitation signal (where cavity detuning can be measured and controlled using other feedback loops) and measures and controls the cavity field amplitude and phase. In the real system, the cavity field is measured using an antenna probe, downconverted, filtered and digitized in the LLRF. As explained earlier, this model works on complex vectors at baseband, where the up and downcoverter circuitry is ommitted. As a result, the model takes discrete values of a sampled cavity field as a complex input and produces a excitation signal to drive the high-power RF source, also a complex vector. In practice, this drive signal is digitized, filtered and up-converted in the LLRF. Here it will be directly connected to the RF amplifier model block as shown in Fig.~\ref{fig:Station_block_diagram}. The error $e(t)$ is defined as the difference between the reference value and the the current measurement of the cavity field $\vec{E}_{\rm probe}$, and the job of the control loop is to minimize this error as much as possible:
 
 \be
 e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 \ee
 
-\noindent This error is passed onto a proportional and integral gain, with respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the incident wave amplitude $\vec{K}_{g}$ is altered according to: 
+\noindent This error is passed onto a proportional and integral controller, with (following text book notation) respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the FPGA drive signal $\vec{K}_{\rm drive}$ is altered according to: 
 \be \label{eq: controller}
-\vec{K}_{g} = k_{p} e(t) + k_{i} \int_{\tau_{0}}^{t} e(t) d\tau
+\vec{K}_{\rm drive} = k_{p} e(t) + k_{i} \int_{\tau_{0}}^{t} e(t) d\tau
 \ee
 
-\noindent This new $\vec{K}_{g}$ value is sent to the cavity.
+\noindent where $\vec{K}_{\rm drive}$ value is used to drive the high-power RF source feeding the cavity.
 
 \subsubsection{Software implementation}
 
@@ -363,29 +364,32 @@ k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
 
 \noindent where again the superscript notation indicates the time step. 
 
-The overall update for $\vec{K}_{g}$ can then be expressed as:
+The overall update for $\vec{K}_{\rm drive}$ can then be expressed as:
 \be \label{eq: controller_dis}
-\vec{K}_{g}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
+\vec{K}_{\rm drive}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
 \ee
 
-Fig.~\ref{fig:fpga_unit_test} shows the result of a unit tests performed using the software implementation of eq.~\ref{eq: controller_dis}. The input signal and set-point are initially set to 0 and the FPGA routine is exercised individually, in absence of a plant or feedback loop. After 0.1 seconds of simulation, a step is introduced in the set-point (going from 0 to 1) and the drive signal is analyzed. Before any error signal is present in the integrator state, the drive signal is modulated by the set-point by a factor of $k_{\rm p}$. From that point the integrator behavior can be observed, where the slope of the drive signal is given by $k_{\rm i}$. The settings and the measured values of the controller constants are indicated in Fig.~\ref{fig:fpga_unit_test}. 
+Fig.~\ref{fig:fpga_unit_test} shows the result of a unit tests performed using the software implementation of Eq.~\ref{eq: controller_dis}. The input signal and set-point are initially set to 0 and the FPGA routine is exercised individually, in the absence of a plant or feedback loop. The PI controller is then configured to have certain values of proportional and integral gains ($k_{\rm p}$ and $k_{\rm i}$, as indicated in Fig.~\ref{fig:fpga_unit_test}) and a time-series simulation is run. After 0.1 seconds of simulation, a step is introduced in the set-point (going from 0 to 1) and the drive signal is analyzed. Before any error signal is present in the integrator state, the drive signal is modulated by the set-point by a factor of $k_{\rm p}$. From that point the integrator behavior can be observed, where the slope of the drive signal is given by the integral gain constant $k_{\rm i}$. The measured values of the controller constants (indicated in Fig.~\ref{fig:fpga_unit_test}) are compared with the configuration settings in order to verify the proper behavior of the model.
 
-\subsection{Amplifier}
+\subsection{RF Amplifier}
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.35]{../figures/saturation_test.png}
-\caption{Amplifier saturation test.}
+\caption{RF Amplifier saturation test, where the output is plotted as a function of the input for different values of the harshness parameter c in Equation~\ref{eq:clip}.}
 \label{fig:saturation_test}
 \end{figure}
 
-Triode clipping is described with a harshness parameter c, such that the output signal v o from the tube based on its input vi varies according to
+For the purposes of including the RF amplifier response in the LLRF simulations we have used two elements: clipping in order to emulate the amplifier saturation curve, combined with a low-pass filter to limit the bandwidth of the amplifier and therefore limit the speed at which the drive signal applied to the cavity can vary. It is useful, in practice, to tweak the configuration of this model in order to match measurements done on the real amplifier in use. Here we propose a clipping equation which has matched RF amplifier saturation curves well in the past. However, if this equation does not match well a particular instance other equations can be chosen.
+
+Amplifier clipping is then described with a harshness parameter c, such that the output signal $\vec V_{\rm out}$, based on its input $\vec V_{\rm in}$ varies according to:
 
 \begin{equation}
   \vec V_{\rm out} = \vec V_{\rm in} \cdot \left(1 + |\vec V_{\rm in}|^c\right)^{-1/c}
+  \label{eq:clip}
 \end{equation}
 
-The saturated output amplitude from this equation is 1. While some phase shift with drive level is observed, this effect is not yet included in the model. When c = 5, as provides a decent fit to measurements shown in figure 3, it takes about 1.5 (unitless) drive level from the control system to reach 97.5\% of this amplitude, 95\% of the power. This level should correspond to full scale digital output.
+The saturated output amplitude from this equation is 1. While some phase shift with drive level is observed in real amplifiers, this effect is not yet included in the model. Fig.~\ref{fig:saturation_test} shows the output of the saturation routine as a function of the input for different values of the harshness parameter c. Note the use of normalized units. In order to obtain units of power, the model is configured to scale these values by the amplifier full-scale input and output values. Also, as described earlier and not shown here is the use of a low-pass filter (typically configured with a cutoff frequency in the MHz range) in order to limit the bandwidth of the amplifier.
 
 \subsection{Phase Shifter}
 
@@ -498,33 +502,47 @@ which can then be approximated to amplitude and phase errors using Eqs.~\eqref{e
 
 \newpage
 
-\section{Module}
+\section{Cryomodule}
+
+The cryomodule model shown in Fig.~\ref{fig:Cryomodule_block_diagram} includes a configurable number of RF Station instances (described in detail in Section~\ref{sec:rf_station}), as well as cavity-to-cavity interactions through mechanical couplings. Here we describe the state-space model representing the dynamics of the mechanical resonances (also, as in the case of the electical modes in a cavity, decomposed into eigenmodes) as well as the interactions bewteen these mechanical eignenmodes and the cavity electrical eigenmodes (through Lorentz forces), piezos and tuners.
 
 \begin{figure}
 \centering
 \includegraphics[scale=0.3]{../figures/Cryomodule_block_diagram.png}
-\caption{Module block diagram.}
-\label{fig:Module_block_diagram}
+\caption{Cryomodule block diagram.}
+\label{fig:Cryomodule_block_diagram}
 \end{figure}
 
-\subsection{Mechanical model}
+\subsection{Electro-mechanical interactions}
 
-The presence of an EM field inside the cavity generates forces on the cavity walls, resulting in deformation of the cavity and subsequently in a shift of the cavity resonant frequency~\cite{ref:delayen}, designated previously as detune frequency $\omega_{d_\mu}$. Each mode's fields generate a force proportional to $V_\mu^2 = |\vec V_\mu|^2$, and mechanical displacements influence each mode's instantaneous detune frequency.  Construct the previous section's $\omega_d$ as
-a baseline $\omega_{d0}$ from the electrical mode solution ({\it e.g.}, $-2\pi (800\thinspace {\rm kHz})$ for the TTF cavity's $8\pi/9$ mode), plus a perturbation $\omega_{\mu}$ contributed from the mechanical mode deflections. 
+The presence of an EM field inside the cavity generates forces on the cavity walls, resulting in deformation of the cavity and subsequently in a shift of the cavity resonant frequency~\cite{ref:delayen}, designated in Section~\ref{sec:rf_station} as detune frequency $\omega_{d_\mu}$. Each mode's fields generate a force proportional to $V_\mu^2 = |\vec V_\mu|^2$, and mechanical displacements influence each mode's instantaneous detune frequency.  Construct $\omega_d$ in Section~\ref{sec:rf_station} as a baseline $\omega_{d0}$ from the electrical mode solution ({\it e.g.}, $-2\pi (800\thinspace {\rm kHz})$ for the TTF cavity's $8\pi/9$ mode), plus a perturbation $\omega_{\mu}$ contributed from the mechanical mode deflections. 
 
 Consider the electrical mode index $\mu$ to include not only electrical eigenmodes of one cavity, but modes of all cavities in the mechanical assembly ({\it e.g.}, cryomodule). Also include the dependence on piezoelectric actuator voltages $V_\kappa$. Then if the assembly's mechanical eigenmodes are indexed by $\nu$, mechanical forces $F_\nu$ and displacements $x_\nu$ of those eigenmodes are related to the electrical system by
 
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{../figures/EM_Coupling_blocks.png}
+\caption{Electro-mechanical coupling block diagram.}
+\label{fig:EM_couplings}
+\end{figure}
+
 \begin{equation}
 F_\nu = \sum_\mu A_{\nu\mu} V_\mu^2 + \sum_\kappa B_{\nu\kappa}V_\kappa
+\label{eq:F_nu}
 \end{equation}
 
 \begin{equation}
 \omega_\mu = \sum_\nu C_{\mu\nu} x_\nu~~~,
+\label{eq:omega_mu}
 \end{equation}
 
 \noindent where $A$, $B$, and $C$ are constant matrices.
 
-These expressions are understood to apply at every time instant; the quantities $V$, $F$, $x$, and $\omega$ all vary with time. The differential equation governing the dynamics of each mechanical eigenmode is that of a textbook second order low-pass filter.  In Laplace form,
+These matrix calculations are represented in Fig.~\ref{fig:EM_couplings}. Note that in the same way any electrical eignenmode can be coupled to any mechanical eigenmode, one can configure the matrix to define couplings only present for intra-cavity interactions. In Section~\ref{sec:rf_station} we described in detail how to solve for the accelerating voltages for each electrical mode independently, and the translation between Lorentz forces ($F_\nu$) and mechanical displacements ($x_\nu$) is represented by the state-space model of the mechanical eigenmode described next.
+
+\subsubsection{Mechanical Eignemodes}
+
+Equations~\ref{eq:F_nu} and~\ref{eq:omega_mu} are understood to apply at every time instant; the quantities $V$, $F$, $x$, and $\omega$ all vary with time. The differential equation governing the dynamics of each mechanical eigenmode is that of a textbook second order low-pass filter.  In Laplace form,
 
 \begin{equation}
 k_\nu x_\nu = \frac{F_\nu}{ \displaystyle 1 + \frac{1}{Q_\nu}\frac{s}{\omega_\nu} + \left(\frac{s}{\omega_\nu}\right)^2}~~~,
@@ -648,18 +666,28 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 
 \subsubsection{Software implementation}
 
-We now turn to the matrix Equation ~\ref{eq: state_space}. Two expressions appear:
+\begin{figure}
+\centering
+\includegraphics[scale=0.65]{../figures/mech_state_space_blocks.png}
+\caption{Mechanical mode dynamics block diagram, second order low-pass filter.}
+\label{fig:mech_state_space}
+\end{figure}
+
+The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every time step following Equations~\ref{eq:F_nu} and~\ref{eq:omega_mu}. The box labeled ``Mechanical Mode Dynamics, 2nd-order LPF'' takes Lorentz forces for each mechanical eigenmode as an input ($F_{\nu}$) and produces a mechanical displacement ($x_{\nu}$). This corresponds to Equation~\ref{eq: state_space}, the the state-space formulation of the 2nd-order low-pass filter. Expanding that equation in matrix form, two expressions appear:
+
 \begin{equation}
-  \frac{dx_{\nu}}{dt} = a_{\nu}x_{\nu} - b_{\nu}y_{\nu}
+  \frac{dx_{\nu}}{dt} = a_{\nu}x_{\nu} - b_{\nu}y_{\nu}~~~.
   \label{eq:dx/dt}
 \end{equation}
+
+\noindent and
 
 \begin{equation}
   \frac{dy_{\nu}}{dt} = b_{\nu}x_{\nu} + a_{\nu}y_{\nu} + c_{\nu}F_{\nu}
   \label{eq:dy/dt}
 \end{equation}
 
-where: 
+\noindent where: 
 
 \be
 a_{\nu} =  \frac{-\omega_{\nu}}{2Q_{\nu}} 
@@ -671,21 +699,21 @@ b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}}
 c_{\nu} = -\frac{\omega_{\nu}}{k_{\nu}b_{\nu}}
 \ee
 
-These displacement influence each mode's instantaneous  eigenmode frequency $\omega_{\mu}$ as following
+These displacements influence each electrical mode's instantaneous eigenmode frequency $\omega_{\mu}$ as following
 \be
 \label{eq_wmu}
 \omega_\mu = \sum_\nu C_{\mu\nu} x_\nu
 \ee
 
-where $C$ is the coupling matrix from mechanics to EM.
+\noindent where $C$ is the coupling matrix from mechanics to EM.
 
-As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}, where:
+As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}. In this case, the variable matching is as follows:
 
 \begin{equation}
- \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}
+ \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}~~~.
 \end{equation}
 
-\noindent and,
+\noindent and
 
 \begin{equation}
  \vec V_{\rm out} = y_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = b_{\nu}x_{\nu} + c_{\nu}F_{\nu}
