@@ -304,11 +304,8 @@ Feedback is necessary in order to guarantee the stability of the cavity fields. 
 	\node [block, left of= sum, text width = 1cm] (set point){$\vec{E}_{\rm sp}$}; 
 	\node [circ, right of= Kp] (sum1){$\Sigma$};
 
-	%\path [line] (timeupdate) -- ++ (-4cm, 0) |- (forloop);
 	\path [line] (sum) -- (-3cm,0) |- (integrator); 
 	\path [line] (sum) -- node[near start, anchor = south]{$e(t)$}(Kp);
-	%\path [line] (Kp) --; 
-	%\path [line] (Kp) -- node[near end]{$\vec{K}_{g}$}(6cm,0); 
 	\path [line] (integrator) -| (sum1);
 	\path [line] (sum1) -- (4cm,0) |- (Cavity); 
 	\path [line] (Cavity) -| node[near end]{$-\vec{E}_{\rm probe}$}(sum);
@@ -466,7 +463,7 @@ As mentioned earlier, we are interested in expressing the LLRF noise in normaliz
 %\end{equation}
 %and substituting Eq.~\ref{eq:power_fraction} into~\ref{eq:v_noise_norm_def}, we get:
 and defining $V_{\rm rms,norm}$ as the root-mean-square noise component added to
-normalized cavity voltage,
+normalized cavity voltage, we get:
 \begin{equation}
   \centering V_{\rm rms,norm} = 1.5 \cdot \sqrt{{\rm PSD}_{\rm LLRF} \cdot B}
   \label{eq:v_noise_final}
@@ -672,7 +669,7 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.65]{../figures/mech_state_space_blocks.png}
+\includegraphics[scale=0.55]{../figures/mech_state_space_blocks.png}
 \caption{Mechanical mode dynamics block diagram, second order low-pass filter.}
 \label{fig:mech_state_space}
 \end{figure}
