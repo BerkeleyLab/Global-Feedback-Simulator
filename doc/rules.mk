@@ -31,7 +31,9 @@ $(d)/publications/LLRF13/poster/poster77.ps: $(d)/publications/LLRF13/poster/pos
 
 $(d)/publications/LLRF13/poster/poster77.pdf: $(d)/publications/LLRF13/poster/poster77.ps
 	cd `dirname $@` && $(LOCAL_PS2PDF)
-	
+
+$(d)/reports/physics/latex/physics_model.pdf: $(d)/reports/physics/latex/physics_model.tex
+	cd `dirname $@` && pdflatex -interaction=nonstopmode `basename $<`
 
 LATEX_AUX_FILES := $(shell  find `pwd` -name "*.dvi" -o -name "*.aux" -o -name "*.nav" -o -name "*.toc" -o -name "*.log" -o -name "*.snm" -o -name "*.out" -type f)
 
