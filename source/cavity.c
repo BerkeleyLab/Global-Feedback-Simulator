@@ -69,11 +69,13 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   elecMode -> A = calloc(n_mech, sizeof(double));
 
   // Fill in coefficients given mechanical couplings
-  for(int i=0; i<n_mech;i++){
+  int i;
+  for(i=0; i<n_mech;i++){
     // mech_couplings (Hz/(MV/m)^2) are always negative but sometimes referred to as positive quantities
     // Take the absolute value to let user configuration the freedom of expressing it either way 
-    elecMode -> A[i] = (1/omega_0_mode)*sqrt(abs(mech_couplings[i]/RoverQ));
-    elecMode -> C[i] = -(omega_0_mode)*sqrt(abs(mech_couplings[i]*RoverQ));  }
+    elecMode -> A[i] = sqrt(abs(mech_couplings[i])/RoverQ)/omega_0_mode;
+    elecMode -> C[i] = -(omega_0_mode)*sqrt(abs(mech_couplings[i]*RoverQ));  
+  }
 }
 
 ElecMode * ElecMode_Allocate_New(
@@ -174,7 +176,6 @@ double complex ElecMode_Step(ElecMode *elecMode,
   // That term implies the unity gain at DC: normalization takes place in Filter_Step.
   v_in = (v_drive + v_beam)*cexp(-I*d_phase_now);
 
-  // double scale = (elecMode_state->delta_omega == 0.0) ? 1.0 : abs(elecMode_state->delta_omega);
   // Apply first-order low-pass filter
   v_out = Filter_Step(&(elecMode->fil), v_in, &(elecMode_state->fil_state))*cexp(I*d_phase_now);
 
@@ -275,58 +276,6 @@ double complex Cavity_Step(Cavity *cav, double delta_tz,
   // Return overall accelerating voltage (as seen by the beam)
   return v_out;
 }
-
-double complex ElecMode_Get(Cavity *cav, int idx, const char *k_type)
-{
-  // Check index bound
-   if(idx > cav->n_modes-1){
-      fprintf(stderr, "ElecMode_Get: Requested ElecMode index is too large\n");
-      exit(-1);
-  }
-  
-  if (!strcmp(k_type, "k_drive")){ 
-    printf("ElecMode_Get: k_drive = %f\n", cabs(cav->elecMode_net[idx]->k_drive));
-    return cav->elecMode_net[idx]->k_drive;
-  }
-  else if(!strcmp(k_type, "k_beam")){
-    printf("ElecMode_Get: k_beam = %f\n", cabs(cav->elecMode_net[idx]->k_beam));
-    return cav->elecMode_net[idx]->k_beam;
-  }
-  else if(!strcmp(k_type, "k_probe")) return cav->elecMode_net[idx]->k_probe;
-  else if(!strcmp(k_type, "k_em")) return cav->elecMode_net[idx]->k_em;
-  else if(!strcmp(k_type, "LO_w0")) return cav->elecMode_net[idx]->LO_w0;
-  else if(!strcmp(k_type, "omega_f")) return cav->elecMode_net[idx]->omega_f;
-  else{
-    printf("ElecMode_Get: Invalid k_type"); 
-    return -1;
-  }
-
-}
-
-void ElecMode_Set(Cavity *cav, int idx, const char *k_type, double complex new_value)
-{
-  // Check index bound
-   if(idx > cav->n_modes-1){
-      fprintf(stderr, "ElecMode_Set: Requested ElecMode index is too large\n");
-      exit(-1);
-  }
-  
-  if (!strcmp(k_type, "k_drive")) cav->elecMode_net[idx]->k_drive = new_value;
-  else if(!strcmp(k_type, "k_beam")) cav->elecMode_net[idx]->k_beam = new_value;
-  else{
-    printf("ElecMode_Set: Invalid k_type"); 
-  }
-
-}
-
-// double complex ElecMode_State_Get(Cavity_State *cav_state, int idx, const char *k_type)
-// {
-//   if (!strcmp(k_type, "k_drive")){ 
-//     printf("ElecMode_Get: k_drive = %f\n", cabs(cav->elecMode_net[idx]->k_drive));
-//     return cav->elecMode_net[idx]->k_drive;
-//   }
-// }
-
 
 void Cavity_Clear(Cavity *cav, Cavity_State *cav_state)
 {

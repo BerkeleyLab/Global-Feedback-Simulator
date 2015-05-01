@@ -96,7 +96,4 @@ double complex ElecMode_Step(ElecMode *elecMode, double complex Kg_fwd,
   ElecMode_State *elecMode_state,
   double complex *v_probe, double complex *v_em);
 
-double complex ElecMode_Get(Cavity *cav, int idx, const char *k_type);
-void ElecMode_Set(Cavity *cav, int idx, const char *k_type, double complex new_value);
-
 #endif
