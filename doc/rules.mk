@@ -35,6 +35,9 @@ $(d)/publications/LLRF13/poster/poster77.pdf: $(d)/publications/LLRF13/poster/po
 $(d)/reports/physics/latex/physics_model.pdf: $(d)/reports/physics/latex/physics_model.tex
 	cd `dirname $@` && pdflatex -interaction=nonstopmode `basename $<`
 
+$(d)/reports/physics/latex/cavity_model.pdf: $(d)/reports/physics/latex/cavity_model.tex
+	cd `dirname $@` && pdflatex -interaction=nonstopmode `basename $<`
+
 LATEX_AUX_FILES := $(shell  find `pwd` -name "*.dvi" -o -name "*.aux" -o -name "*.nav" -o -name "*.toc" -o -name "*.log" -o -name "*.snm" -o -name "*.out" -type f)
 
 CLEAN           := $(CLEAN) $(TGT_$(d)) $(d)/user_manuals/*.ps $(d)/diagrams/codeoutline.png $(LATEX_AUX_FILES) $(d)/publications/LLRF13/paper/system_feedback_models.ps $(d)/publications/LLRF13/poster/poster77.ps

@@ -55,7 +55,7 @@ include     $(dir)/rules.mk
 %.pdf:	%.tex
 		$(TEX2PDF)
 
-CLEAN := $(CLEAN) *.log physics_model.pdf
+CLEAN := $(CLEAN) *.log physics_model.pdf cavity_model.pdf
 
 # The variables TGT_*, CLEAN and CMD_INST* may be added to by the Makefile
 # fragments in the various subdirectories
@@ -86,4 +86,7 @@ unit_tests.log: $(SOURCE_DIR)/_accelerator.so $(UNIT_TEST_FILES)
 	python $(SOURCE_DIR)/unit_tests_all.py > $@
 
 physics_model.pdf: $(DOC_DIR)/reports/physics/latex/physics_model.pdf
+	mv $< $@
+
+cavity_model.pdf: $(DOC_DIR)/reports/physics/latex/cavity_model.pdf
 	mv $< $@
