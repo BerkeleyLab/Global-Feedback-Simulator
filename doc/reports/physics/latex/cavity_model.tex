@@ -125,7 +125,7 @@ The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{
 
 The only assumptions in the above formulation are that the cavity losses are purely resistive, and thus expressible with a fixed $Q_{0_{\mu}}$, and that no power is launched into the cavity from the field probe.  If other ports have incoming power, there would be additional terms of the same form as $2\vec K_g\sqrt{R_g}$.
 
-The $\frac{\omega_{d_\mu}}{\omega_{f}}\vec{V}_{\mu}$ term in \ref{eq:1st_order2} will be relatively small compared to the other terms. To appropriately take it into account it is better to isolate it by defining  a vector $\vec{S}_{\mu}$ such that:
+The $\frac{\omega_{d_\mu}}{\omega_{f}}$ term in \ref{eq:1st_order2} (the imaginary component of the cavity pole at baseband) represents detuning. In software or hardware implementations, we can alternatively modulate that term with Lorentz perturbations, or use a purely real pole ($\omega_f$) and modulate the frequency of the drive term. We prefer the latter, more convinient in computational terms. We then define a vector $\vec{S}_{\mu}$ such that:
 
 \begin{equation}
 \vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}
@@ -183,7 +183,7 @@ The second aspect which has not been covered yet is the numerical discretization
  \vec V_{\rm out} = \vec S_{\mu} \mbox{ , } p = -\omega_f \mbox{ and, } \vec V_{\rm in} = e^{-j\theta_{\mu}} \left(2\vec{K}_g\sqrt{R_{g_{\mu}}} - R_{b_{\mu}}\vec{I}_{\rm beam}\right)
 \end{equation}
 
-\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. This block solves for $\vec S_{\mu}$, which is transalated to the mode's accelerating voltage using equations~\ref{eq:V_mu} and~\ref{eq: d0_dt}, as indicated in the block diagram.
+\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. This block solves for $\vec S_{\mu}$, which is translated to the mode's accelerating voltage using equations~\ref{eq:V_mu} and~\ref{eq: d0_dt}, as indicated in the block diagram.
 
 In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diagram} (couplings, rotations, etc.) combined with the numerical discretization of the cavity filter described in Appendix~\ref{App:ODE_integration} applied every discrete simulation step, we can obtain time-series simulated data representing signal propagation through the multi-cell RF cavity, including the different eigenmodes and dispersion through cables and waveguides.
 
@@ -230,7 +230,7 @@ At this point we have demonstrated the low-pass filter blocks in Fig.~\ref{fig:R
 In Fig~\ref{fig:cav_step3} we introduce a unit amplitude step signal on the RF drive port at the RF reference frequency ($\omega_{\rm ref}$) (instead of at each mode's resonance frequency as in the case of Fig.~\ref{fig:cav_step1}). Each curve is reproduced in two equivalent ways in order to exercise two features of the software: first by sweeping the setting for the so-called basis, or static, offset frequency (the frequency offset between the mode's resonance frequency and the RF reference), and second by sweeping the setting for the frequency shift due to perturbances such as Lorentz forces. All curves correspond to the same mode's accelerating voltage, where only the frequency offset changes, and is plotted in the complex plane to observe the different degrees of ringing as frequency offsets are introduced.
 
 
-Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where the cavity mode is initially in perfect resonance. A step is applied to the drive signal at the mode's resonance frequency and the cavity field fills up following its time constant (quantified in previous tests). Then, we apply a step to the detune frequency of 10 to 20 times the badwidth of the cavity mode and we observe the cavity decay following its time constant along with ringing induced by the cavity being out of tune. Note that the frequency modulations of the cavity field correspond to the frequency offset applied in each case, and for the case where the step applied is of 100 Hz, the steady-state value is equivalent to the one observed in fig.~\ref{fig:cav_step3} for the same value of freqency offset.
+Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where the cavity mode is initially in perfect resonance. A step is applied to the drive signal at the mode's resonance frequency and the cavity field fills up following its time constant (quantified in previous tests). Then, we apply a step to the detune frequency of 10 to 20 times the bandwidth of the cavity mode and we observe the cavity decay following its time constant along with ringing induced by the cavity being out of tune. Note that the frequency modulations of the cavity field correspond to the frequency offset applied in each case, and for the case where the step applied is of 100 Hz, the steady-state value is equivalent to the one observed in fig.~\ref{fig:cav_step3} for the same value of freqency offset.
 
 \begin{figure}
 \centering
