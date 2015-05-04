@@ -164,7 +164,7 @@ Note that this state-variable equation is a pure low-pass filter, an advantage e
 \label{fig:RF_cavity_block_diagram}
 \end{figure}
 
-We started this section with the definition of $\vec E_{\rm probe}$ and $\vec E_{\rm reverse}$ (see Fig.~\ref{fig:Station_block_diagram}), given by equations \ref{eq:E_probe} and \ref{eq:E_reverse} respectively. These equations express the measured probe and reverse fields as a function of eigenmode voltages ($\vec V_\mu$) and their respective port couplings. We also defined the state-variable equation governing the accelerating voltage for each eigenmode in Equation~\ref{eq: dS_dt}, where $\vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}$. We can therefore compute the cavity probe and reverse signals as a function of the incident wave $\vec K_{\rm g}$ and the beam current $\vec I_{\rm beam}$.
+We started this section with the definition of $\vec E_{\rm probe}$ and $\vec E_{\rm reverse}$ given by equations \ref{eq:E_probe} and \ref{eq:E_reverse} respectively. These equations express the measured probe and reverse fields as a function of eigenmode voltages ($\vec V_\mu$) and their respective port couplings. We also defined the state-variable equation governing the accelerating voltage for each eigenmode in Equation~\ref{eq: dS_dt}, where $\vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}$. We can therefore compute the cavity probe and reverse signals as a function of the incident wave $\vec K_{\rm g}$ and the beam current $\vec I_{\rm beam}$.
 
 Figure~\ref{fig:RF_cavity_block_diagram} shows the data path implemented in software in order to compute the response of a nine-cell cavity (which can be configured for any type of cavity given the definition of the electrical eigenmodes and couplings). Each internal bock represents the implementation of Eq.~\ref{eq: dS_dt} for each eigenmode, and the summing junction at the end (taking the pre-factored eigenmode voltages) represents the computation of $\vec E_{\rm probe}$ and $\vec E_{\rm reverse}$ using Equations \ref{eq:E_probe} and \ref{eq:E_reverse}.
 
@@ -218,7 +218,7 @@ In Fig.~\ref{fig:cav_step2} we introduce a step signal on the beam input signal 
 \label{fig:cav_step3}
 \end{figure}
 
-At this point we have demonstrated the low-pass filter blocks in Fig.~\ref{fig:RF_cavity_block_diagram} as well as the couplings to the input and output ports. We are now going to demonstrate an important feature (cavity detuning). One can both configure an electrical eigenmode to have a static frequency offset with respect to the RF reference, as well as introducing a time-varying frequency offset due to Lorentz forces or other perturbances.
+At this point we have demonstrated the low-pass filter blocks in Fig.~\ref{fig:RF_cavity_block_diagram} as well as the couplings to the input and output ports. We are now going to demonstrate an important feature (cavity detuning). One can both configure an electrical eigenmode to have a static frequency offset with respect to the RF reference, as well as introducing a time-varying frequency offset due to Lorentz forces or other perturbations.
 
 \begin{figure}
 \centering
@@ -227,10 +227,7 @@ At this point we have demonstrated the low-pass filter blocks in Fig.~\ref{fig:R
 \label{fig:cav_step4}
 \end{figure}
 
-In Fig~\ref{fig:cav_step3} we introduce a unit amplitude step signal on the RF drive port at the RF reference frequency ($\omega_{\rm ref}$) (instead of at each mode's resonance frequency as in the case of Fig.~\ref{fig:cav_step1}). Each curve is reproduced in two equivalent ways in order to exercise two features of the software: first by sweeping the setting for the so-called basis, or static, offset frequency (the frequency offset between the mode's resonance frequency and the RF reference), and second by sweeping the setting for the frequency shift due to perturbances such as Lorentz forces. All curves correspond to the same mode's accelerating voltage, where only the frequency offset changes, and is plotted in the complex plane to observe the different degrees of ringing as frequency offsets are introduced.
-
-
-Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where the cavity mode is initially in perfect resonance. A step is applied to the drive signal at the mode's resonance frequency and the cavity field fills up following its time constant (quantified in previous tests). Then, we apply a step to the detune frequency of 10 to 20 times the bandwidth of the cavity mode and we observe the cavity decay following its time constant along with ringing induced by the cavity being out of tune. Note that the frequency modulations of the cavity field correspond to the frequency offset applied in each case, and for the case where the step applied is of 100 Hz, the steady-state value is equivalent to the one observed in fig.~\ref{fig:cav_step3} for the same value of freqency offset.
+In Fig~\ref{fig:cav_step3} we introduce a unit amplitude step signal on the RF drive port at the RF reference frequency ($\omega_{\rm ref}$) (instead of at each mode's resonance frequency as in the case of Fig.~\ref{fig:cav_step1}). Each curve is reproduced in two equivalent ways in order to exercise two features of the software: first by sweeping the setting for the so-called basis, or static, offset frequency (the frequency offset between the mode's resonance frequency and the RF reference), and second by sweeping the setting for the frequency shift due to perturbations such as Lorentz forces. All curves correspond to the same mode's accelerating voltage, where only the frequency offset changes, and is plotted in the complex plane to observe the different degrees of ringing as frequency offsets are introduced.
 
 \begin{figure}
 \centering
@@ -239,9 +236,12 @@ Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where th
 \label{fig:cav_step5}
 \end{figure}
 
-The frequency modulation can be better observed in Fig.~\ref{fig:cav_step5}, where the phase of the two cavity field signals is shown. The phase is 0 during the fill time when the cavity is perfectly tune, and starts varying when the frequency offset is applied. The slope of the phase corresponds to the angular frequency shift applied, as indicated in the figure.
+Fig.~\ref{fig:cav_step4} shows a combination of the previous exercises, where the cavity mode is initially in perfect resonance. A step is applied to the drive signal at the mode's resonance frequency and the cavity field fills up following its time constant (quantified in previous tests). Then, we apply a step to the detune frequency of 10 to 20 times the bandwidth of the cavity mode and we observe the cavity decay following its time constant along with ringing induced by the cavity being out of tune. Note that the frequency modulations of the cavity field correspond to the frequency offset applied in each case, and for the case where the step applied is of 100 Hz, the steady-state value is equivalent to the one observed in fig.~\ref{fig:cav_step3} for the same value of freqency offset.
 
-% \newpage
+
+The frequency modulation can be better observed in Fig.~\ref{fig:cav_step5}, where the phase of the two cavity field signals is shown. Note the 0 deg. phase during fill time when the cavity is perfectly in tune (and RF drive is purely real). The phase then starts varying when the frequency offset step is applied. The slope of the phase corresponding to the angular frequency shift applied, as indicated in the figure.
+
+\newpage
 
 \begin{appendix}
 
