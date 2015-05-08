@@ -288,10 +288,10 @@ def run_RF_Station_test(Tmax, test_file):
     fund_k_probe = fund_mode_dict['k_probe']
     fund_k_drive = fund_mode_dict['k_drive']
 
-    plt.plot(trang,np.abs(cav_v), '-', label='Cavity voltage')
-    plt.plot(trang,np.abs(fpga_drive_out*fund_k_drive), label='Drive')
-    plt.plot(trang,np.abs(set_point/fund_k_probe), label='Set-point')
-    plt.plot(trang,np.abs(error/fund_k_probe), label='Cavity field error')
+    plt.plot(trang,np.abs(cav_v), '-', label='Cavity voltage', linewidth=2)
+    plt.plot(trang,np.abs(fpga_drive_out*fund_k_drive), label='Drive', linewidth=2)
+    plt.plot(trang,np.abs(set_point/fund_k_probe), label='Set-point', linewidth=2)
+    plt.plot(trang,np.abs(error/fund_k_probe), label='Cavity field error', linewidth=2)
     
     plt.title('RF Station Test', fontsize=40, y=1.01)
     plt.xlabel('Time [s]', fontsize=30)
