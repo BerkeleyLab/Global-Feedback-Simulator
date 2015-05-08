@@ -206,7 +206,7 @@
 
         "mech_couplings" : {
             "value": {"MechMode0": 130.0, "MechMode1": 0.0, "MechMode2": 0.0},
-            "units": "Hz/(MV/m)^2",
+            "units": "(rad/s)/V^2",
             "description": ""
         }
     },
@@ -259,7 +259,7 @@
 
         "mech_couplings" : {
             "value": {"MechMode0": 0.0, "MechMode1": 0.0, "MechMode2": 0.0},
-            "units": "Hz/(MV/m)^2",
+            "units": "(rad/s)/V^2",
             "description": ""
         }
     },
@@ -312,7 +312,7 @@
 
         "mech_couplings" : {
             "value": {"MechMode0": 0.0, "MechMode1": 0.0, "MechMode2": 0.0},
-            "units": "Hz/(MV/m)^2",
+            "units": "(rad/s)/V^2",
             "description": ""
         }
     },
