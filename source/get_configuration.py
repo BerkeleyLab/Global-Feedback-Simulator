@@ -76,9 +76,6 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
     Tstep = simulation.Tstep['value']
     cryo_object = simulation.linac_list[0].cryomodule_list[0]
 
-    cryo = cryo_object.Get_C_Pointer()
-    cryo_state = cryo_object.Get_State_Pointer()
-
     fund_mode_dicts = []
     station_list = simulation.linac_list[0].cryomodule_list[0].station_list
     for rf_station in station_list:
@@ -86,6 +83,14 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
         fund_index = rf_station.cavity.fund_index['value']
         fund_mode_dict = rf_station.cavity.elec_modes[fund_index].Compute_ElecMode(Tstep, rf_phase)
         fund_mode_dicts.append(fund_mode_dict)
+
+        # Overwrite set-point values to maximum accelerating voltage for test
+        nom_grad = rf_station.cavity.nom_grad['value']
+        L = rf_station.cavity.L['value']
+        rf_station.cavity.design_voltage['value'] = nom_grad*L
+
+    cryo = cryo_object.Get_C_Pointer()
+    cryo_state = cryo_object.Get_State_Pointer()
 
     return cryo_object, Tstep, fund_mode_dicts
 

@@ -4,7 +4,7 @@
 /*
  *  cryomudule.h
  *
- * Routines for timestepping Cryomodule model
+ * Routines for time-stepping Cryomodule model
  *
  */
 
@@ -13,8 +13,9 @@
 
  typedef struct str_MechMode {
 	double f0, Q;
-	Filter fil_x, fil_y;
+	Filter fil;
 	double a_nu, b_nu, c_nu;
+	double Tstep;
 
 } MechMode;
 
@@ -22,8 +23,8 @@ typedef MechMode* MechMode_p;
 typedef MechMode** MechMode_dp;
 
 typedef struct str_MechMode_State {
-	Filter_State fil_state_x, fil_state_y;
-	double complex x_nu, y_nu;
+	Filter_State fil_state;
+	double x_nu;
 
 } MechMode_State;
 

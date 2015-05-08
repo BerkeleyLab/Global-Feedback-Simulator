@@ -312,7 +312,7 @@
 
         "mech_couplings" : {
             "value": {},
-            "units": "Hz/(MV/m)^2",
+            "units": "(rad/s)/V^2",
             "description": ""
         }
     }
