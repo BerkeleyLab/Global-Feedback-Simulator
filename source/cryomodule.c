@@ -42,7 +42,10 @@ void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k
 	// Calculate Filter coefficients
 	mechMode->a_nu = -omega_nu/(2.0*Q_nu);
 	mechMode->b_nu = omega_nu*sqrt(1-1/(4.0*pow(Q_nu,2.0)));
-	mechMode->c_nu = omega_nu/k_nu/mechMode->b_nu;
+	// c_nu is in the physics equations in order to normalize the filter gain at DC
+	// This normalization already takes place in the Filter routine (see filter.h),
+	// and therefore c_nu is included here to match the equations but is set to unity. 
+	mechMode->c_nu = 1.0/k_nu;
 	mechMode->Tstep = Tstep;
 
 	// Append modes to Mechanical Mode Filter
