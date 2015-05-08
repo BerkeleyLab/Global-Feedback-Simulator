@@ -71,10 +71,10 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Fill in coefficients given mechanical couplings
   int i;
   for(i=0; i<n_mech;i++){
-    // mech_couplings (Hz/(MV/m)^2) are always negative but sometimes referred to as positive quantities
+    // mech_couplings ((rad/s)/V^2) are always negative but sometimes referred to as positive quantities
     // Take the absolute value to let user configuration the freedom of expressing it either way 
-    elecMode -> A[i] = sqrt(abs(mech_couplings[i])/RoverQ)/omega_0_mode;
-    elecMode -> C[i] = -(omega_0_mode)*sqrt(abs(mech_couplings[i]*RoverQ));  
+    elecMode -> A[i] = sqrt(fabs(mech_couplings[i])/RoverQ)/omega_0_mode;
+    elecMode -> C[i] = -(omega_0_mode)*sqrt(fabs(mech_couplings[i]*RoverQ));
   }
 }
 
@@ -156,8 +156,8 @@ double complex ElecMode_Step(ElecMode *elecMode,
   double complex *v_probe, double complex *v_em)
 {
   // Intermediate signals
-  double complex v_beam, v_drive, v_in, v_out;
-  double omega_now, d_phase_now;
+  double complex v_beam=0.0, v_drive=0.0, v_in=0.0, v_out=0.0;
+  double omega_now=0.0, d_phase_now=0.0;
 
   // Beam-induced voltage (convert charge to voltage and add timing noise)
   v_beam = beam_charge * elecMode -> k_beam * cexp(-I*elecMode->LO_w0*delta_tz);  // k_beam = Tstep * (R/Q) * Q_L

@@ -27,7 +27,7 @@ typedef struct str_elecmode_state{
 	Filter_State fil_state;
 	double delta_omega;
 	double d_phase;
-	double complex V_2;
+	double V_2;
 } ElecMode_State;
 
 typedef struct str_cavity{
