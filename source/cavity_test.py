@@ -228,7 +228,7 @@ def run_cavity_detune_test(Tmax, test_file, delta_omega_step=0.0):
     beam_charge = np.zeros(nt,dtype=np.complex)
 
     # Frequency offset
-    w_offset = np.zeros(nt,dtype=np.complex)
+    w_offset = np.zeros(nt,dtype=np.double)
 
     delta_tz = 0.0  # Timing noise
 
@@ -432,27 +432,34 @@ def cavity_test_freqs():
         else: this_fit_pass = False
         fit_pass = fit_pass & this_fit_pass
 
-    # Plot title    
-    plt.title("Cavity Step Response: Drive @ "+r'$\omega_0$', fontsize=40, y=1.05)
+    # Plot cavity signals in complex plane
+    ## Make some arrangements so axis are equal and size of plot is fixed
+    dpi=96
+    f = plt.figure(figsize=(1400/dpi, 1350/dpi), dpi=dpi)
+    x = f.gca()
+    x.set_aspect("equal")
+
+    # Plot title
+    plt.title("Cavity Step Response: Drive @ "+r'$\omega_{\rm ref}$', fontsize=40, y=1.05)
 
     # Iterate over modes and plot amplitude
     # # First, basis frequency offset tests
     for idx, mode_dict in enumerate(mode_dicts):
-        plt.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'basis offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=5)
+        x.plot(np.real(cav_v_list[idx]),np.imag(cav_v_list[idx]),'-', label= 'basis offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=5)
 
     # # Then perturbation frequency detuning tests
     for idx, mode_dict in enumerate(mode_dicts):
-        plt.plot(np.real(cav_v_list2[idx]),np.imag(cav_v_list2[idx]),'-', label= 'perturbation offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=2)     
+        x.plot(np.real(cav_v_list2[idx]),np.imag(cav_v_list2[idx]),'-', label= 'perturbation offset = ' + str(mode_dict['foffset']) + ' Hz', linewidth=2)
 
     # Format plot
-    plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
-    plt.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
-    plt.ylim([-0.5e5,6e5])
-    plt.xlim([-0.5e5,6e5])
-    plt.xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
-    plt.ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
-    plt.rc('font',**{'size':20})
-    plt.legend(loc='upper right')
+    x.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
+    x.ticklabel_format(style='sci', axis='x', scilimits=(1,0))
+    x.set_ylim([-0.5e5,6e5])
+    x.set_xlim([-0.5e5,6e5])
+    x.set_xlabel(r'$\Re ( \vec V_{\mu})$ [V]', fontsize=30)
+    x.set_ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
+    plt.rc('font',**{'size':15})
+    x.legend(loc='upper right')
     
     # Show figure
     plt.show()
@@ -502,7 +509,7 @@ def cavity_test_detune():
 
     # Plot title    
     plt.title("Cavity Test: Fill & Step on Detune Frequency", fontsize=40, y=1.05)
-
+    
     # Format plots
     # # Cavity fields for the two simulation runs
     lns1 = ax.plot(trang,np.abs(cav_v_list[0]),'-', label= 'Cavity Field ('+r'$\Delta f_1$'+')', linewidth=2)
@@ -530,6 +537,38 @@ def cavity_test_detune():
     ax2.set_ylim(0,delta_f*1.5)
     plt.rc('font',**{'size':20})
     
+    # Show figure
+    plt.show()
+    
+    fig = plt.figure()
+    ax = fig.add_subplot(111)
+
+    # Plot title    
+    plt.title("Cavity Test: Fill & Step on Detune Frequency", fontsize=40, y=1.05)
+
+    # # Cavity fields for the two simulation runs
+
+    ln1 = ax.plot(trang, np.unwrap(np.angle(cav_v_list[0])),'-', label= 'Cavity Field ('+r'$\Delta f_1$'+')', linewidth=2)
+    ln2 = ax.plot(trang, np.unwrap(np.angle(cav_v_list[1])),'-', label= 'Cavity Field ('+r'$\Delta f_2$'+')', linewidth=2)
+
+    lns = ln1 + ln2
+    labs = [l.get_label() for l in lns]
+    ax.set_xlabel('Time [s]', fontsize=30)
+    ax.set_ylabel(r'$\angle \vec V_{\mu}$ [rad]', fontsize=30)
+    plt.rc('font',**{'size':20})
+    ax.legend(lns, labs, loc='upper right')
+    
+    ax.set_ylim([0,100])
+
+    ax.annotate(r'$d \theta_2/dt=\omega_{\rm d_2}=2\pi \, \Delta f_2\, rad/s$', xy=(0.245, 50), xytext=(0.295, 55),
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            )
+
+    ax.annotate(r'$d \theta_1/dt=\omega_{\rm d_1}=2\pi \, \Delta f_1\, rad/s$', xy=(0.23, 15), xytext=(0.28, 20),
+            arrowprops=dict(facecolor='black', shrink=0.05),
+            )
+
+
     # Show figure
     plt.show()
 
