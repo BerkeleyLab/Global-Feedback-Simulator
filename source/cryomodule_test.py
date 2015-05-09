@@ -80,9 +80,11 @@ def run_Cryomodule_test(Tmax, test_file):
     
     plt.title('Cryomodule Test', fontsize=40, y=1.01)
     plt.xlabel(r'Time [$\rm \mu s$]', fontsize=30)
-    plt.ylim(0, 55)
+    plt.ylim(0, 60)
     plt.ylabel('Amplitude [V]', fontsize=30)
     plt.legend(loc='upper right')
+    plt.rc('font',**{'size':25})
+
     plt.show()
     plt.figure()
 
@@ -94,6 +96,7 @@ def run_Cryomodule_test(Tmax, test_file):
     plt.xlabel(r'Time [$\rm \mu s$]', fontsize=30)
     plt.legend(loc='upper right')
     plt.ticklabel_format(style='sci', axis='y', scilimits=(0,0))
+    plt.ylim(0, 8e3)
     plt.show()
 
     # Plot cavity signals in complex plane

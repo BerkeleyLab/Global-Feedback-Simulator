@@ -241,6 +241,7 @@ The second aspect which has not been covered yet is the numerical discretization
 In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diagram} (couplings, rotations, etc.) combined with the numerical discretization of the cavity filter described in Appendix~\ref{App:ODE_integration} applied every discrete simulation step, we can obtain time-series simulated data representing signal propagation through the multi-cell RF cavity, including the different eigenmodes and dispersion through cables and waveguides.
 
 \subsubsection{Simulation results}
+\label{sec:cav_sim_results}
 
 \begin{figure}
 \centering
@@ -266,7 +267,7 @@ In Fig.~\ref{fig:cav_step2} we introduce a step signal on the beam input signal 
 
 \begin{figure}
 \centering
-\includegraphics[scale=0.24]{../figures/cavity_test_freqs.png}
+\includegraphics[scale=0.3]{../figures/cavity_test_freqs.png}
 \caption{Cavity unit test: Step response RF drive coupling at $\omega_{\rm ref}$ for three different frequency offsets.}
 \label{fig:cav_step3}
 \end{figure}
@@ -636,13 +637,15 @@ Suppose a mechanical eigenmode $\nu$ involves small deflections $x_{\nu}\cdot \v
 \noindent where $\vec n(\vec r)$ is the normal vector to the cavity surface $S$, and $F_{\mu}$ directly gives the force. Note in particular the subtraction of $E$ and $H$ terms, contrasted with the addition in the energy integral.  Also notice the dot product of the deflection shape with the surface normal.  Then
 
 \begin{equation}
-\Delta\omega_{\mu} = -x\omega_{0_{\mu}} \left(\frac{F}{U}\right)_{\mu}
+\Delta\omega_{\mu} = -x_{\nu}\omega_{0_{\mu}} \left(\frac{F}{U}\right)_{\mu}
+\label{eq:delta_omega_mu}
 \end{equation}
 
 \noindent and
 
 \begin{equation}
 F_{\mu} = \left(\frac{F}{U}\right)_{\mu} \cdot \frac{1}{(R/Q)_{\mu}\omega_{0_{\mu}}}  V_{\mu}^2~~~,
+\label{eq:F_mu}
 \end{equation}
 
 \noindent where $\left(F/U\right)_{\mu}$ is a property of the electrical eigenmode, independent of amplitude, with units of~\hbox{m$^{-1}$}. Thus 
@@ -679,14 +682,7 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 
 \subsubsection{Software implementation}
 
-\begin{figure}
-\centering
-\includegraphics[scale=0.55]{../figures/mech_state_space_blocks.png}
-\caption{Mechanical mode dynamics block diagram, second order low-pass filter.}
-\label{fig:mech_state_space}
-\end{figure}
-
-The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every time step following Equations~\ref{eq:F_nu} and~\ref{eq:omega_mu}. The box labeled ``Mechanical Mode Dynamics, 2nd-order LPF'' takes Lorentz forces for each mechanical eigenmode as an input ($F_{\nu}$) and produces a mechanical displacement ($x_{\nu}$). This corresponds to Equation~\ref{eq: state_space}, the the state-space formulation of the 2nd-order low-pass filter. Expanding that equation in matrix form, two expressions appear:
+The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every time step following equations~\ref{eq:F_nu} and~\ref{eq:omega_mu}. The box labeled ``Mechanical Mode Dynamics, 2nd-order LPF'' takes Lorentz forces for each mechanical eigenmode as an input ($F_{\nu}$) and produces a mechanical displacement ($x_{\nu}$). This corresponds to eq.~\ref{eq: state_space}, the the state-space formulation of the 2nd-order low-pass filter. Expanding that equation in matrix form, two expressions appear:
 
 \begin{equation}
   \frac{dx_{\nu}}{dt} = a_{\nu}x_{\nu} - b_{\nu}y_{\nu}~~~.
@@ -721,23 +717,56 @@ These displacements influence each electrical mode's instantaneous eigenmode fre
 
 \noindent where $C$ is the coupling matrix from mechanics to EM.
 
-The combination of Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} is illustrated in Fig.~\ref{fig:mech_state_space}, where the 2nd-oder low-pass filter is implemented as two cascading 1st-order low-pass filters. The blocks labeled ``$LPF@a_{\nu}$'' are instances of the same block used in the cavity state-space model. As in the case of the electrical eigenmodes, equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} are in the form of a 1st-order differential equation, for which the ODE integration is derived in Appendix~\ref{App:ODE_integration}, where Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt} can be written as Equation~\ref{eq:exp_diff2}. In this case, the variable matching is as follows:
+In order to discretize this equation, we will use the superscript $n$ to indicate the current time iteration. Hence the following time step is superscripted by $n+1$. We can thereby approximate a time derivative of a variable $A$ in the following fashion:
 
-\begin{equation}
- \vec V_{\rm out} = x_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = -b_{\nu}y_{\nu}~~~,
-\end{equation}
+\be
+\frac{dA}{dt} \approx \frac{A^{n+1} - A^{n}}{T}
+\ee
+where $T$ is the time step size (usually expressed as $\Delta t$). 
 
-\noindent and
-
-\begin{equation}
- \vec V_{\rm out} = y_{\nu} \mbox{ , } p = a_{\nu} \mbox{ and, } \vec V_{\rm in} = b_{\nu}x_{\nu} + c_{\nu}F_{\nu}
-\end{equation}
-
-\noindent respectively.
+Discretizing Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt}, we find: 
+\be
+\label{eq_x}
+x^{n+1}_{\nu} = x^{n}_{\nu} + T(ax^{n}_{\nu} - by^{n}_{\nu}) = x^{n}_{\nu}(1 + Ta_{\nu}) - Tb_{\nu}y^{n}_{\nu}
+\ee
+\be
+\label{eq_y}
+y^{n+1}_{\nu} = y^{n}_{\nu} + T(bx^{n}_{\nu} + ay^{n}_{\nu} + cF^{n}_{\nu}) = y^{n}_{\nu}(1+Ta_{\nu}) + T(b_{\nu}x^{n} + cF^{n}_{\nu})
+\ee
 
 At this point we have covered the mechanical state-space model physics and software implementation, as well as the electro-mechanical interactions. We have then all the elements needed in order to perform time-series simulation runs and some results are presented next.
 
 \subsection{Simulation results}
+
+We showed in Section~\ref{sec:cav_sim_results} the proper behavior of the cavity model in the presence of a frequency perturbation. Here we propose a simple exercise where one electrical eignemode ($\pi$-mode) interacts with one mechanical eigenmode following the equations described above. 
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{../figures/cryo_test_step.png}
+\caption{Cryomodule test. Step response of the cavity field in the presence of Lorentz forces.}
+\label{fig:cryo_test_step}
+\end{figure}
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{../figures/cryo_test_freqs.png}
+\caption{Cryomodule test. Lorentz force detune frequency as a function of time, along with the square of the cavity voltage multiplied by the Lorentz coupling coefficient $k_{\rm L}$ in $Hz/V^2$.}
+\label{fig:cryo_test_freqs}
+\end{figure}
+
+In this exercise, the RF controller is configured in open-loop mode, where the cavity is driven by a constant signal of 30 $\sqrt{W}$. Fig.~\ref{fig:cryo_test_step} shows the cavity signals. As the cavity fills up, Lorentz forces start shifting the mode's frequency and as a result the $\pi$-mode accelerating field ($\vec V_{\mu}$) starts decreasing, where the opposite effect can be observed on the reverse field ($\vec E_{\rm reverse}$). 
+
+Fig.~\ref{fig:cryo_test_freqs} shows the detune frequency in more detail. The frequency shift is proportional to the square of the voltage and the two are related by the Lorentz coupling ($k_{\rm L}$ in the figure, which has units of $\rm Hz/V^2$). The green curve shows the actual frequency shift, where the dynamics of the mechanical eigenmode are taken into account (see the block diagram in fig.~\ref{fig:EM_couplings}). Note the negative sign, introduced in order to facilitate the two curves to be plotted side-by-side, and showing that the frequency shifts in the right direction according to equations~\ref{eq:delta_omega_mu} and~\ref{eq:F_mu} derived above.
+
+Fig.~\ref{fig:cryo_test_pi_volts} shows the cavity signals in the complex plane. One can observe the cavity voltage start rising on tune (along the real axis) and curve into the imaginary plane as the energy in the cavity builds up. All signals are in units of Volts and their relationship is indicated in Eq.~\ref{eq:1st_order2}.
+
+
+\begin{figure}
+\centering
+\includegraphics[scale=0.30]{../figures/cryo_test_pi_volts.png}
+\caption{Cavity voltage in the complex plane.}
+\label{fig:cryo_test_pi_volts}
+\end{figure}
 
 \newpage
 
