@@ -5,7 +5,7 @@
 RF_State_dp RF_State_Allocate_Array(int n)
 {
   RF_State_dp rf_state_net = calloc(n, sizeof(RF_State *));
-  
+
   return rf_state_net;
 }
 
@@ -82,13 +82,13 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   double complex * p_TRF1, double complex * p_TRF2,
   // Properties of the RX Filter
   double complex * p_RXF,
-  
+
   // Cavity
   Cavity *cav,
   // FPGA controller
   double stable_gbw, // Gain-Bandwidth product
   double FPGA_out_sat,  // FPGA output saturation limit
-  
+
   // Loop Delay
   int loop_delay_size
   )
@@ -96,24 +96,24 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   rf_station->Clip = Clip;
   rf_station->PAscale = PAscale;
   rf_station->PAmax = PAmax;
-  
+
   /*
   * Configure the Filters using their poles
   */
-  
+
   Filter_Allocate_In(&rf_station->TRF1,2,2);
   for(int i=0;i<2;i++) {
     Filter_Append_Modes(&rf_station->TRF1, p_TRF1+i, 1,Tstep);
   }
-  
+
   Filter_Allocate_In(&rf_station->TRF2,1,1);
   Filter_Append_Modes(&rf_station->TRF2, p_TRF2, 1, Tstep);
-  
+
   Filter_Allocate_In(&rf_station->RXF,3,3);
   for(int i=0;i<3;i++) {
     Filter_Append_Modes(&rf_station->RXF,p_RXF+i,1,Tstep);
   }
-  
+
   /*
   * Assign previously configured Cavity
   */
@@ -130,7 +130,7 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   // Find fundamental mode couplings (could emulate some sort of calibration procedure here)
   double complex fund_k_probe = cav -> elecMode_net[cav->fund_index]-> k_probe;
   double complex fund_k_drive = cav -> elecMode_net[cav->fund_index]-> k_drive;
-  
+
   // Calculate the FPGA controller set-point
   // (scale using probe and drive couplings to the fundamental mode to convert to FPGA units)
   double complex set_point = cav->design_voltage*cexp(I*cav->rf_phase)*fund_k_probe;
@@ -154,20 +154,20 @@ RF_Station * RF_Station_Allocate_New(
   double complex * p_TRF1, double complex * p_TRF2,
   // Properties of the RX Filter
   double complex * p_RXF,
-  
+
   // Cavity
   Cavity *cav,
   // FPGA controller
   double stable_gbw, // Gain-Bandwidth product
   double FPGA_out_sat,  // FPGA output saturation limit
-  
+
   // Loop Delay
   int loop_delay_size) {
 
   RF_Station * rf_station;
   rf_station = calloc(1,sizeof(RF_Station));
 
-  RF_Station_Allocate_In(rf_station, Tstep, Clip, PAmax, PAscale, p_TRF1, p_TRF2, 
+  RF_Station_Allocate_In(rf_station, Tstep, Clip, PAmax, PAscale, p_TRF1, p_TRF2,
     p_RXF, cav, stable_gbw, FPGA_out_sat, loop_delay_size);
 
   return rf_station;
@@ -188,7 +188,6 @@ void RF_Station_Deallocate(RF_Station *rf_station)
   rf_station->Clip = 0.0;
   rf_station->PAscale = 0.0;
   rf_station->PAmax = 0.0;
-  rf_station->vacc_set_point = 0.0;
 
 }
 
@@ -201,7 +200,7 @@ void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
 
   rf_state->cav_state.E_probe = (double complex) 0.0;
   rf_state->cav_state.E_reverse = (double complex) 0.0;
-  
+
   rf_state->fpga_state.drive = (double complex) 0.0;
   rf_state->fpga_state.state = (double complex) 0.0;
   rf_state->fpga_state.openloop = (int) 0;
@@ -228,7 +227,7 @@ void FPGA_Allocate_In(FPGA * fpga,
   fpga->ki = ki;
 
   fpga->set_point = set_point;
-  
+
   // Saturation limits
   fpga->out_sat = out_sat;
   fpga->state_sat = out_sat;
@@ -258,7 +257,7 @@ double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stno
 {
 
   double state, drive, scale;
-  
+
   // Calculate error signal
   double complex err = cavity_vol - fpga->set_point;
 
@@ -272,7 +271,7 @@ double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stno
     scale = cabs(state)/fpga->state_sat;
     // Clip integrator state if above limit
     stnow->state = (scale > 1.0) ? state/scale : state;
-    
+
     // Drive signal
     drive = stnow->state + fpga->kp*err;
     // Compare output drive magnitude with saturation limit
@@ -294,7 +293,7 @@ double complex Saturate(double complex in, double harshness) {
 double complex SSA_Step(RF_Station *rf_station, double complex drive_in, RF_State *rf_state)
 {
   double complex trf1out, satout, trf2out;
-  
+
   // Scale input signal (sqrt(W) -> Normalized units)
   drive_in = drive_in/rf_station->PAscale;
   // Apply drive filter (TRF1)

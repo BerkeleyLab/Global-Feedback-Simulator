@@ -53,7 +53,7 @@ void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim)
 	sim_state->noise_srcs = (Noise_Srcs*)calloc(1,sizeof(Noise_Srcs));
 
 	// Allocate Doublecompress State
-	sim_state->dc_state =(Doublecompress_State_p)calloc(1,sizeof(Doublecompress_State));
+	sim_state->dc_state =(Doublecompress_State*)calloc(1,sizeof(Doublecompress_State));
 	Doublecompress_State_Allocate(sim_state->dc_state, sim->n_linacs);
 }
 
