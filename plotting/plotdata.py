@@ -108,7 +108,6 @@ def iodict_to_column_num(iodict,columndict,connect=None):
 
         col=int(columndict["globals"])+linnum*int(columndict["locals"]) \
             +int(column["index"])
-    #print col
     return col
 
 
@@ -205,55 +204,51 @@ def TF_plot(indata,outdata,indata_label, outdata_label, dt,
     from scipy import fft
     from scipy import signal
 
-    #steadyN = max(512, steadyN)
-
-    #cut out the beginning transient data if specificied
+    # Cut out transient data at the start  if specified
     trunc_indata=indata[steadyN:]
     trunc_outdata=outdata[steadyN:]
 
-    #use a windowing function in scipy.signal to condition
-    #data for fft. No window if not specified in file
+    # Use a windowing function in scipy.signal to condition
+    # data for FFT (no windowing if not specified in file)
     if(wintype):
         windcommand="signal.{0}(len(trunc_indata))".format(wintype)
         window=eval(windcommand)
         trunc_indata=trunc_indata*window
         trunc_outdata=trunc_outdata*window
 
-    #perform the ffts
+    # Perform the FFTs
     fft_in=fft(trunc_indata*scale_in)
     fft_out=fft(trunc_outdata*scale_out)
 
     # Add an infinitesimal to avoid division by 0
     fft_rat = (np.abs(fft_out) + np.spacing(1))/(np.abs(fft_in) + np.spacing(1))
-    #fft_rat = np.abs(fft_out) / np.abs(fft_in)
-    #form the magnitude and phase data and scale appropiately
+
+    # Form the magnitude and phase data and scale appropriately
     TF_mag=20*np.log10(fft_rat)
     TF_mag=TF_mag-OL_suppression
 
     TF_pha = (np.angle(fft_out/fft_in))
-    #TF_pha = np.angle(fft_out)-np.angle(fft_in)
+
     N=fft_in.size
     freq=np.arange(N)/(N*dt)
 
-    N_nyq=np.int(N/2) # only frequencys up to half the sampling frequency are
-                      #viable so divide in half and round down to cut out
-                      #negative(aliased?) results above 1/(2*dt)
+    # Only frequencies up to half the sampling frequency are
+    # present, so divide in half and round down to cut out
+    # aliased results above 1/(2*dt)
+    N_nyq=np.int(N/2)
 
     py.subplot(2,1,1)
-    #py.xlim(freq[0], freq[N_nyq-1])
     py.semilogx(freq[0:N_nyq],TF_mag[0:N_nyq])
-    #py.xlabel('Frequency [Hz]')
     py.ylabel('Power [dB]')
     py.title('Transfer Function: {0} vs. {1}'.format(indata_label,outdata_label))
     py.subplot(2,1,2)
-    #py.xlim(freq[0], freq[N_nyq-1])
     py.semilogx(freq[0:N_nyq],TF_pha[0:N_nyq]*180/np.pi)
     py.xlabel('Frequency [Hz]')
     py.ylabel('Phase [deg]')
 
     return 0
 
-# Make the plot autoexecutable
+# Make the plot auto-executable
 if __name__=="__main__":
     configfile= sys.argv[1]
     if len(sys.argv) > 2:
