@@ -45,6 +45,7 @@ def run_Cryomodule_test(Tmax, test_file):
     # FPGA controller will be operating in open-loop mode,
     # which is equivalent to driving the cavity with the set-point value
     cryo_object.station_list[0].C_Pointer.fpga.set_point = 30.0
+    cryo_object.station_list[0].State.fpga_state.openloop = 1
 
     # Get a C pointer to the Electrical Mode State to record its detune frequency
     elecMode_state = acc.ElecMode_State_Get(cryo_object.station_list[0].State.cav_state, 0);
@@ -52,7 +53,7 @@ def run_Cryomodule_test(Tmax, test_file):
     # Run Numerical Simulation
     for i in xrange(1,nt):
         # Run Cryomodule Step function
-        acc.Cryomodule_Step(cryo_object.C_Pointer, cryo_object.State, 0.0, 0.0, 0.0, 0.0, 1)
+        acc.Cryomodule_Step(cryo_object.C_Pointer, cryo_object.State, 0.0, 0.0)
 
         # Record some waveforms
         # Cavity state

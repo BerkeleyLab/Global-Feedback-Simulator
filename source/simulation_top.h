@@ -4,7 +4,7 @@
 /*
  * simulation_top.h/c
  *
- * The mainloop for the beam and accelerator simulation.
+ * The Top Level program for the beam and accelerator simulation.
  *
  */
 
@@ -36,12 +36,24 @@ typedef struct str_Simulation {
 	// BBF *bbf;
 
 	// Noise parameters
-	// Noise_Source *noise_src;
+	Noise_Srcs *noise_src;
 
 } Simulation;
 
 typedef struct str_Simulation_State {
+	// Array of Linac States
 	Linac_State **linac_state_net;
+
+	// Longitudinal beam dynamics noise sources
+	Noise_Srcs *noise_srcs;
+
+	// Doublecompress State
+	Doublecompress_State *dc_state;
+
+	// Array of Linac accelerating voltage errors (amplitude and phase)
+	// (amplitude normalized by Linac increase in Energy in eV)
+	double *amp_error_net, *phase_error_net; 
+
 } Simulation_State;
 
 void Sim_Allocate_In(Simulation *sim, double Tstep, int time_steps,
@@ -51,12 +63,11 @@ Simulation *Sim_Allocate_New(double Tstep, double time_steps,
 void Sim_Deallocate(Simulation *sim);
 
 void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim);
-void Sim_State_Dellocate(Simulation_State *sim_state, Simulation *sim);
+void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim);
 
 /*
  * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)
  */
-// void Simulation_Run(Simulation *sim, Simulation_State *sim_state,
-	// char * fname, int OUTPUTFREQ);
+void Simulation_Run(Simulation *sim, Simulation_State *sim_state,char * fname, int OUTPUTFREQ);
 
 #endif

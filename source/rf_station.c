@@ -124,7 +124,7 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   */
   // Grab cavity's open loop bandwidth and convert into Hz
   double cav_open_loop_bw = cav -> elecMode_net[cav->fund_index]->omega_f/(2.0*M_PI);
-  // Calculate proportional gain (kp) based on cavity's open-loop bandwith and controllers Gain-Bandwidth product
+  // Calculate proportional gain (kp) based on cavity's open-loop bandwidth and controllers Gain-Bandwidth product
   double kp =  -stable_gbw/cav_open_loop_bw;
 
   // Find fundamental mode couplings (could emulate some sort of calibration procedure here)
@@ -188,6 +188,7 @@ void RF_Station_Deallocate(RF_Station *rf_station)
   rf_station->Clip = 0.0;
   rf_station->PAscale = 0.0;
   rf_station->PAmax = 0.0;
+  rf_station->vacc_set_point = 0.0;
 
 }
 
@@ -203,6 +204,7 @@ void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
   
   rf_state->fpga_state.drive = (double complex) 0.0;
   rf_state->fpga_state.state = (double complex) 0.0;
+  rf_state->fpga_state.openloop = (int) 0;
 
   Delay_State_Allocate(&rf_station->loop_delay, &rf_state->loop_delay_state);
 }
@@ -249,11 +251,10 @@ void FPGA_Clear(FPGA_State * stnow)
   stnow-> drive = 0.0+0.0*_Complex_I;
   stnow-> state = 0.0+0.0*_Complex_I;
   stnow-> err = 0.0+0.0*_Complex_I;
+  stnow-> openloop = 0;
 }
 
-double complex FPGA_Step(FPGA *fpga,
-			    double complex cavity_vol,
-			    FPGA_State *stnow, int openloop)
+double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow)
 {
 
   double state, drive, scale;
@@ -261,7 +262,7 @@ double complex FPGA_Step(FPGA *fpga,
   // Calculate error signal
   double complex err = cavity_vol - fpga->set_point;
 
-  if(openloop == 1) { // Open loop
+  if(stnow->openloop == 1) { // Open loop
     stnow->drive = fpga->set_point;
     stnow->state = fpga->set_point;
   } else {  //Closed loop
@@ -320,16 +321,16 @@ double complex RF_Station_Step(
   RF_Station *rf_station,
   // Beam amplitude and phase noise (beam loading)
   double delta_tz, double complex beam_charge,
-  // LLRF noise (probe and reverse signals)
-  double complex probe_ns, double complex rev_ns,
-  // FPGA control boolean to open and close the feedback loop
-  int openloop,
   // State vectors
 	RF_State *rf_state)
 {
 
   // Intermediate signals
   double complex E_probe_delayed, E_probe_lp, sig_error, Kg, V_acc;
+
+  // LLRF noise (probe and reverse signals)
+  // (set noise to 0 for now)
+  double complex probe_ns=0.0, rev_ns=0.0;
 
   // // Apply LLRF Noise
   rf_state->cav_state.E_probe += probe_ns;
@@ -342,7 +343,7 @@ double complex RF_Station_Step(
   E_probe_lp = Filter_Step(&rf_station->RXF, E_probe_delayed, &rf_state->RXF);
 
   // // FPGA
-  sig_error = FPGA_Step(&rf_station->fpga,E_probe_lp, &rf_state->fpga_state, openloop);
+  sig_error = FPGA_Step(&rf_station->fpga, E_probe_lp, &rf_state->fpga_state);
 
   // // SSA (includes Tx filters and saturation)
   Kg = SSA_Step(rf_station, rf_state->fpga_state.drive, rf_state);
@@ -350,7 +351,7 @@ double complex RF_Station_Step(
   // Cavity
   V_acc = Cavity_Step(rf_station->cav, delta_tz, Kg, beam_charge, &rf_state->cav_state);
 
-  // Overall cavity accelerating voltage (as seen by the beam)
+  //  Overall cavity accelerating voltage (as seen by the beam)
   return V_acc;
 }
 

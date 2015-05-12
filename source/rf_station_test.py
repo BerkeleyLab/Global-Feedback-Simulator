@@ -97,6 +97,7 @@ def unit_fpga(Tstep=0.01):
     fpga_state = acc.FPGA_State()
     fpga_state.drive = 0.0 + 0.0j
     fpga_state.state = 0.0 + 0.0j
+    fpga_state.openloop = 0
     
     # Total simulation time for test (seconds)
     Tmax = 2.0
@@ -121,7 +122,7 @@ def unit_fpga(Tstep=0.01):
         if i == sp_step: fpga.set_point = set_point_step
 
         # Call FPGA_Step and record signals of interest
-        error[i] = acc.FPGA_Step(fpga, cav_in, fpga_state, open_loop)
+        error[i] = acc.FPGA_Step(fpga, cav_in, fpga_state)
         drive[i] = fpga_state.drive
         state[i] = fpga_state.state
 
@@ -280,7 +281,7 @@ def run_RF_Station_test(Tmax, test_file):
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, 0.0, 0.0, 0.0, 0, rf_station.State)
+        cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, 0.0, rf_station.State)
         set_point[i] = rf_station.C_Pointer.fpga.set_point
         fpga_drive_out[i] = rf_station.State.fpga_state.drive
         error[i] = rf_station.State.fpga_state.err

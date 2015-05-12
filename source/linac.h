@@ -13,7 +13,7 @@
 #include "cryomodule.h"
 
 /*
- * Data struture storing the parameters for a single Linac
+ * Data structure storing the parameters for a single Linac
  * section comprised of multiple Cryomodules.
  */
 typedef struct str_Linac {
@@ -29,6 +29,7 @@ typedef struct str_Linac {
 
 typedef struct str_Linac_State {
 	Cryomodule_State **cryo_state_net;
+	double amp_error, phase_error;
 } Linac_State;
 
 // Rename pointer for SWIG work around
@@ -45,13 +46,13 @@ void Linac_Deallocate(Linac *linac);
 Linac_dp Linac_Allocate_Array(int n);
 void Linac_Append(Linac** linac_arr, Linac* linac, int index);
 void Linac_State_Allocate(Linac_State *linac_state, Linac *linac);
-// void Linac_Step(Linac *linac, Linac_State * linac_state,
-	// double delta_tz, double complex beam_charge, double complex probe_ns, double complex rev_ns,
-	// int openloop);
 void Linac_State_Deallocate(Linac_State * linac_state, Linac *linac);
 
+double complex Linac_Step(Linac *linac, Linac_State *linac_state, double delta_tz, double beam_charge,\
+	double *amp_error, double *phase_error);
+
 /*
- * Data struture storing the beam parameters on 
+ * Data structure storing the beam parameters on
  * exit from gun for Double Compress
  */
 
