@@ -52,8 +52,8 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
 }
 
 /*
-	
-  Function to calculate bunch length and energy spread after a 
+
+  Function to calculate bunch length and energy spread after a
   compressor system (just like LCLS) where the E-z correlations are generated
   by linacs at off crest rf phases (not zero crossing).  The wakefield is
   included in linear form assuming rectangular z-distributions.  The rms
@@ -73,41 +73,41 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
   were added to the input parameters and are taken into account in the computations.
   The sign of the charge is ignored.
   Nov. 2012, S. Paret
-  
+
   Translated:
   Converted to C. New data stuctures added to encapsulate data. Units switched
-  to SI units(excepetion: electron volts) 
+  to SI units(excepetion: electron volts)
   NOTE: {} is the length of the array eg. {Nlinacs} indicates input array should have length Nlinacs
   July 2013, Daniel Driver
-  
+
   Inputs: gun.sz0:	Nominal initial rms bunch length [m]
           gun.sd0:	Nominal initial incoh. energy spread at Eg [fraction]
           gun.E:	Nominal gun exit energy [eV]
           gun.N:        Bunch population [e.g. 6.25E9]
-  
+
 	  linp_array[j].dE:	Energy difference of bunch from start to finish of linac j [eV]
 	  linp_array[j].R56:	Nominal R56 values for linac j (chicane-R56 < 0) [m]
 	  linp_array[j].T566:	Nominal T566 values for linac j (always > 0) [m]
-	  linp_array[j].phi:	Nominal linac RF phase for linac j (-30 deg accelerates 
+	  linp_array[j].phi:	Nominal linac RF phase for linac j (-30 deg accelerates
 	  and puts head energy lower than tail) [radians]
 	  linp_array[j].L:	linac length (scales wake) [m]
-	  linp_array[j].lam:	RF wavelength for each linac 
+	  linp_array[j].lam:	RF wavelength for each linac
 	                        (Sband=0.105m, Xband=0.02625m) [m]
 	  linp_array[j].s0:	Wakefield characteristic length (Sband=1.322mm), Xband=0.77mm) [m]
 	  linp_array[j].a:	Mean iris radius (Sband=11.654mm,Xband=4.72mm) [m]
-  
-	  dN_Nf:  Relative bunch population error [fraction] 
+
+	  dN_Nf:  Relative bunch population error [fraction]
 	          (e.g. -2 => 2-low in bunch charge)
 	  dtg:    Timing error of gun wrt RF (<0 is an early bunch) [sec]
 	  dEg:    Energy deviation at end of injector [eV]
 	  dsig_z: Deviation of bunch length from nominal length [m]
-	  dsig_E: Deviation of energy spread from nominal energy 
+	  dsig_E: Deviation of energy spread from nominal energy
 	  spread [fraction of nominal energy]
 	  chirp:  <Ez> correlation [m]
 	  dphivr: Vector of 5 linac RF phase errors (<0 is early bunch arrival) [rad] {Nlinacs}
 	  dV_Vvr: Vector of 5 linac RF relative voltage errors [fraction] {Nlinacs}
-  
-  Outputs: 
+
+  Outputs:
 
     Ipk:	Peak current at end of j-th linac [A] {Nlinacs}
 	  sz:	rms bunch length after j-th linac [m] {Nlinacs}
@@ -118,7 +118,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
 	  k:	<Ez> correlation const. of j-th linac [1/m] {Nlinacs}
 	  Eloss:	Energy loss per linac due to wake [eV] {Nlinacs}
 	  dE_Ei:	Relative energy offset of JUST j-th linac [fraction] {Nlinacs}
-	  dE_Ei2:Energy offset error relative to final energy of JUST 
+	  dE_Ei2:Energy offset error relative to final energy of JUST
 	  j-th linac [fraction] {Nlinacs}
 	  cor:  Signed-correlated energy spread (slope*sigz) [fraction] {Nlinacs+1}
 
@@ -130,7 +130,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
 #ifndef mu0
 #define mu0 4*M_PI*1e-7
 #endif
-#ifndef Z0 
+#ifndef Z0
 #define Z0 120.0*M_PI
 #endif
 #ifndef e
@@ -140,7 +140,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
 //1.60217656535E-19
 #define SQ(x) ((x)*(x))
 
-void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac, 
+void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
 			// Inputs which change with time potentially
 			Noise_Srcs * noise_srcs, double * dphivr, double * dV_Vvr,
 			// double_compress Outputs
@@ -158,29 +158,29 @@ void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
   double dE_Eprev=noise_srcs->dE_ing/gun->E;// relative energy error at start
   double dtprev=noise_srcs->dtg; // timing error of prev linac NOT THE TIME STEP!!!!
   double corprev=noise_srcs->dchirp;
-  
-  // Declarations just to reduce calculation and typeing
+
+  // Declarations just to reduce calculation and typing
   Linac * lin;
   double sqrt12=sqrt(12.0);
-  
-  double E; //Energy at the end of the current linac
-  double Er;  //energy ratio
-  double ds;  //FW bunch lenfht for uniform dist. [m]
-  double dphi; //total local phase error (gun, prev-R56 + local-rf) [rad]
-  double s0;  //Wakefield characteristic length [m]
-  double lambar; // lam/2*pi
-  double R56; //R56 value adjust for energy error
-  double C; //temp for cos(phir)
-  double kR561; double sd2; double sz2; 
-  double Nec;  //intermediate in calc of kw
-  double kw;  // /wake's effect on linear correlation factor (<0) [1/m]
-  double kn;  //rf phase induced linear correlation factor [1/m]
-  double k;   //k for the loop to reduce typing stored in dcs->k[j]
+
+  double E;     // Energy at the end of the current linac
+  double Er;    // Energy ratio
+  double ds;    // FW bunch length for uniform dist. [m]
+  double dphi;  // Total local phase error (gun, prev-R56 + local-rf) [rad]
+  double s0;    // Wakefield characteristic length [m]
+  double lambar;// lam/2*pi
+  double R56;   // R56 value adjust for energy error
+  double C;     // Temp for cos(phir)
+  double kR561; double sd2; double sz2;
+  double Nec;   // Intermediate in calc of kw
+  double kw;    // wake's effect on linear correlation factor (<0) [1/m]
+  double kn;    // RF phase induced linear correlation factor [1/m]
+  double k;     // k for the loop to reduce typing stored in dcs->k[j]
   for(int j=0;j<Nlinac;j++){
 
-    lin=linac_array[j]; //pullout current linac from pointer array
-    E=(Eprev+lin->dE); // calculate the energy after linac
-    Er=Eprev/E;  //calculate energy ratio
+    lin=linac_array[j]; // Pull out current Linac from pointer array
+    E=(Eprev+lin->dE);  // Calculate the Energy after Linac
+    Er=Eprev/E;         // Calculate Energy ratio
     ds=szprev*sqrt(12.0);
     lambar=lin->lam/2.0/M_PI;
     C = cos(lin->phi);
@@ -188,131 +188,131 @@ void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
     dphi= dtprev*c/lambar + dphivr[j];
     s0=lin->s0;
 
-    //Nec=2.0*gun->Q*s0*Z0*c/M_PI/SQ(lin->a);
     Nec=2.0*fabs(gun->Q)*s0*Z0*c/M_PI/SQ(lin->a);
 
-    //more physicsy stuff
-    //wake's effect on linear correlation factor (<0) [1/m]
+    // More Physics calculations
+    // Wake's effect on linear correlation factor (<0) [1/m]
     kw= -(1.0+dN_Nf)*(Nec*lin->L/(SQ(ds)*E))*
-      (1.0-(1.0+sqrt(ds/s0))*exp(-sqrt(ds/s0)));  
+      (1.0-(1.0+sqrt(ds/s0))*exp(-sqrt(ds/s0)));
 
-    // rf phase induced linear correlation factor [1/m]
+    // RF phase induced linear correlation factor [1/m]
     kn = (Er-1.0)*sin(lin->phi + dphi)/(lambar*C);
     k = kw + kn;
     dcs->k[j]=k;
 
-    // relative energy error, but only individual
-    // linac contribution (not original)
-    //changed by Stefan Paret (introduced dV_Vvr)
+    // Relative Energy error, but only individual
+    // Linac contribution (not original,
+    // changed by Stefan Paret and introduced dV_Vvr)
     dcs->dE_Ei[j]    = (1.0-Er)*((1.0+dV_Vvr[j])*cos(lin->phi + dphi)/C - 1.0);
 
-    //relative energy error due to dphase and dN error [ ]
-    //changed to use dcs->dE_Ei by Daniel Driver
+    // Relative energy error due to dphase and dN error [ ]
+    // (changed to use dcs->dE_Ei by Daniel Driver)
     dcs->dE_E[j]= dE_Eprev*Er + dcs->dE_Ei[j]+kw*dN_Nf/(1.0+dN_Nf)*ds/2.0;
 
-    //relative energy error, but only individual linac, relative to 
-    //final E (not original) (Note see below for division by final energy)
-    //changed to use dcs->dE_Ei by Daniel Driver
+    // Relative energy error, but only individual Linac, relative to
+    // final E (not original) (Note see below for division by final energy)
+    // (changed to use dcs->dE_Ei by Daniel Driver)
     dcs->dE_Ei2[j]   = dcs->dE_Ei[j]*E;
-    
-    // R56 value changed by T566*dE/E [m]; 
-    //changed by author(Paret?) (multiplication by 1 instead of 2)
+
+    // R56 value changed by T566*dE/E [m];
+    // (changed by S. Paret, multiplication by 1 instead of 2)
     R56 = lin->R56 + 1.0*dcs->dE_E[j]*lin->T566;
 
-    // approximate energy loss due to wake (>0) [GeV]
-    dcs->Eloss[j]    = -E*kw*ds/2.0; 
-    kR561       = 1.0+k*R56;                       // save computation time
-    sd2         = SQ(sdprev);                         // save computation time
-    sz2         = SQ(szprev);                         // save computation time
+    // Approximate energy loss due to wake (>0) [GeV]
+    dcs->Eloss[j]    = -E*kw*ds/2.0;
+    kR561       = 1.0+k*R56;    // save computation time
+    sd2         = SQ(sdprev);   // save computation time
+    sz2         = SQ(szprev);   // save computation time
 
-    // rms bunch length after linac and R56 #(j-1) [m]
-    dcs->sz[j] = sqrt(SQ(kR561)*sz2 + SQ(R56*Er*sdprev) + 
+    // RMS bunch length after Linac and R56 #(j-1) [m]
+    dcs->sz[j] = sqrt(SQ(kR561)*sz2 + SQ(R56*Er*sdprev) +
 		 2.0*Er*R56*kR561*corprev);
 
-    // rms energy spread after linac and R56 #(j-1) [
+    // RMS Energy spread after Linac and R56 #(j-1) [
     dcs->sd[j]       = sqrt(SQ(k)*sz2 + SQ(Er)*sd2 + 2.0*Er*k*corprev);
 
     // save new E-z correlation [m]
-    dcs->cor[j]   = k*kR561*sz2 + SQ(Er)*R56*sd2 + 
+    dcs->cor[j]   = k*kR561*sz2 + SQ(Er)*R56*sd2 +
       Er*(1.0+2.0*k*R56)*corprev;
 
-    //signed-correlated energy spread (slope*sigz) [ ]
-    dcs->sdsgn[j]    = dcs->cor[j]/dcs->sz[j]; 
+    // Signed-correlated energy spread (slope*sigz) [ ]
+    dcs->sdsgn[j]    = dcs->cor[j]/dcs->sz[j];
 
-    //Calculate peak current
-    //dcs->Ipk[j]=(1.0+dN_Nf)*gun->Q*c/sqrt12/dcs->sz[j];
+    // Calculate peak current
     dcs->Ipk[j]=(1.0+dN_Nf)*fabs(gun->Q)*c/sqrt12/dcs->sz[j];
 
     //timing error
-    dcs->dt[j]=dtprev + dcs->dE_E[j]*R56/c;  // timing error after linac k [s]
+    dcs->dt[j]=dtprev + dcs->dE_E[j]*R56/c;  // timing error after Linac k [s]
 
-    //move current to prev for the next linac step
-    Eprev=E;  
+    //move current to prev for the next Linac step
+    Eprev=E;
     dtprev=dcs->dt[j];
     szprev=dcs->sz[j];
     sdprev=dcs->sd[j];
     dE_Eprev=dcs->dE_E[j];
     corprev=dcs->cor[j];
   }
-  
-  //finish calculating dcs->dE_Ei2 which requires nomalization by the final energy
-  //I would like calculation to be all in one line above but we stored dE and added to energy at each
-  //step to get the final energy is so it is unknown until the end of the loop
-  //The E here is different from above. Before it changed with each loop and was the Energy
-  // of the beam after linac j. Now it is static and is the final energy after all linacs
+
+  /*
+  Finish calculating dcs->dE_Ei2, which requires normalization by the final Energy.
+  I would like calculation to be all in one line above but we stored dE and added to energy at each
+  step to get the final energy is so it is unknown until the end of the loop.
+  The E here is different from above. Before it changed with each loop and was the Energy
+  of the beam after Linac j. Now it is static and is the final energy after all Linacs
+  */
 
   for(int j=0;j<Nlinac;j++){
-    dcs->dE_Ei2[j]=dcs->dE_Ei2[j]/E;  
+    dcs->dE_Ei2[j]=dcs->dE_Ei2[j]/E;
 
   }
 
 }
 
 
-void Doublecompress_Octave_Benchmark(Gun * gun, Linac ** linac_array, int Nlinac, 
-			//Inputs which change with time potentially
+void Doublecompress_Octave_Benchmark(Gun * gun, Linac ** linac_array, int Nlinac,
+			// Time-varying inputs
 			Noise_Srcs * noise_srcs, double * dphivr, double * dV_Vvr,
-			//double_compress output states
+			// double_compress output states
 			Doublecompress_State * dcs
 			)
 {
 
-  //rename for some consistency with the original souble compress
+  // Rename for some consistency with the original double_compress
   double dN_Nf = noise_srcs->dQ_Q;
    //e used in octave code
   double e_oct = 1.602177E-19;
 
-  // stuff that gets updated with the linac here intial coditions are set
-  double Eprev=gun->E; //Energy after leaving gun [ev]
-  double szprev=gun->sz0+noise_srcs->dsig_z; //rms bunch length [m]
-  double sdprev=gun->sd0+noise_srcs->dsig_E; //incoh. energy spread [fraction]
-  double dE_Eprev=noise_srcs->dE_ing/gun->E;// relative energy error at start
-  double dtprev=noise_srcs->dtg; // timing error of prev linac NOT THE TIME STEP!!!!
+  // Variables which get updated with the Linac, here initial conditions are set
+  double Eprev=gun->E;                        // Energy after leaving gun [ev]
+  double szprev=gun->sz0+noise_srcs->dsig_z;  // RMS bunch length [m]
+  double sdprev=gun->sd0+noise_srcs->dsig_E;  // incoh. energy spread [fraction]
+  double dE_Eprev=noise_srcs->dE_ing/gun->E;  // Relative energy error at start
+  double dtprev=noise_srcs->dtg;              // Timing error of prev Linac NOT THE TIME STEP!!!!
   double corprev=noise_srcs->dchirp;
-  
-  //crap just to reduce calculation and typeing
+
+  // Variable definition just to reduce calculations and typing
   Linac * lin;
   double sqrt12=sqrt(12.0);
-  
-  double N = fabs(gun->Q)*6.241E18;//e; //particles from gun
-  double E; //Energy at the end of the current linac
-  double Er;  //energy ratio
-  double ds;  //FW bunch lenfht for uniform dist. [m]
-  double dphi; //total local phase error (gun, prev-R56 + local-rf) [rad]
-  double s0;  //Wakefield characteristic length [m]
-  double lambar; // lam/2*pi
-  double R56; //R56 value adjust for energy error
-  double C; //temp for cos(phir)
-  double kR561; double sd2; double sz2; 
-  double Nec;  //intermediate in calc of kw
-  double kw;  // /wake's effect on linear correlation factor (<0) [1/m]
-  double kn;  //rf phase induced linear correlation factor [1/m]
-  double k;   //k for the loop to reduce typing stored in dcs->k[j]
+
+  double N = fabs(gun->Q)*6.241E18;   // Number of particles from gun
+  double E;                           // Energy at the end of the current Linac
+  double Er;                          // Energy ratio
+  double ds;                          // FW bunch length for uniform dist. [m]
+  double dphi;                        // total local phase error (gun, prev-R56 + local-rf) [rad]
+  double s0;                          // Wakefield characteristic length [m]
+  double lambar;                      // lam/2*pi
+  double R56;                         // R56 value adjust for Energy error
+  double C;                           // Temp for cos(phir)
+  double kR561; double sd2; double sz2;
+  double Nec;                         // Intermediate in calc of kw
+  double kw;                          // Wake's effect on linear correlation factor (<0) [1/m]
+  double kn;                          // RF phase induced linear correlation factor [1/m]
+  double k;                           // k for the loop to reduce typing stored in dcs->k[j]
   for(int j=0;j<Nlinac;j++){
 
-    lin=linac_array[j]; //pullout current linac from pointer array
-    E=(Eprev+lin->dE); // calculate the energy after linac
-    Er=Eprev/E;  //calculate energy ratio
+    lin=linac_array[j];               // Pull out current Linac from pointer array
+    E=(Eprev+lin->dE);                // calculate the energy after Linac
+    Er=Eprev/E;                       // Calculate energy ratio
     ds=szprev*sqrt(12.0);
     lambar=lin->lam/2.0/M_PI;
     C = cos(lin->phi);
@@ -320,83 +320,81 @@ void Doublecompress_Octave_Benchmark(Gun * gun, Linac ** linac_array, int Nlinac
     dphi= dtprev*c/lambar + dphivr[j];
     s0=lin->s0;
 
-    //Nec=2.0*gun->Q*s0*Z0*c/M_PI/SQ(lin->a);
-    //Nec=2.0*fabs(gun->Q)*s0*Z0*c/M_PI/SQ(lin->a);
     Nec=2.0*N*e_oct*s0*Z0*c/M_PI/SQ(lin->a);
 
-    //more physicsy stuff
-    //wake's effect on linear correlation factor (<0) [1/m]
+    // More Physics calculations
+    // Wake's effect on linear correlation factor (<0) [1/m]
     kw= -(1.0+dN_Nf)*(Nec*lin->L/(SQ(ds)*E))*
-      (1.0-(1.0+sqrt(ds/s0))*exp(-sqrt(ds/s0)));  
+      (1.0-(1.0+sqrt(ds/s0))*exp(-sqrt(ds/s0)));
 
-    // rf phase induced linear correlation factor [1/m]
+    // RF phase induced linear correlation factor [1/m]
     kn = (Er-1.0)*sin(lin->phi + dphi)/(lambar*C);
     k = kw + kn;
     dcs->k[j]=k;
 
-    // relative energy error, but only individual
-    // linac contribution (not original)
-    //changed by Stefan Paret (introduced dV_Vvr)
+    // Relative Energy error, but only individual
+    // Linac contribution (not original,
+    // changed by Stefan Paret and introduced dV_Vvr)
     dcs->dE_Ei[j]    = (1.0-Er)*((1.0+dV_Vvr[j])*cos(lin->phi + dphi)/C - 1.0);
 
-    //relative energy error due to dphase and dN error [ ]
-    //changed to use dcs->dE_Ei by Daniel Driver
+    // Relative energy error due to dphase and dN error [ ]
+    // (changed to use dcs->dE_Ei by Daniel Driver)
     dcs->dE_E[j]= dE_Eprev*Er + dcs->dE_Ei[j]+kw*dN_Nf/(1.0+dN_Nf)*ds/2.0;
 
-    //relative energy error, but only individual linac, relative to 
+    //relative energy error, but only individual linac, relative to
     //final E (not original) (Note see below for division by final energy)
     //changed to use dcs->dE_Ei by Daniel Driver
     dcs->dE_Ei2[j]   = dcs->dE_Ei[j]*E;
-    
-    // R56 value changed by T566*dE/E [m]; 
-    //changed by author(Paret?) (multiplication by 1 instead of 2)
+
+    // R56 value changed by T566*dE/E [m];
+    // (changed by S. Paret, multiplication by 1 instead of 2)
     R56 = lin->R56 + 1.0*dcs->dE_E[j]*lin->T566;
 
-    // approximate energy loss due to wake (>0) [GeV]
-    dcs->Eloss[j]    = -E*kw*ds/2.0; 
-    kR561       = 1.0+k*R56;                       // save computation time
-    sd2         = SQ(sdprev);                         // save computation time
-    sz2         = SQ(szprev);                         // save computation time
+    // Approximate energy loss due to wake (>0) [GeV]
+    dcs->Eloss[j]    = -E*kw*ds/2.0;
+    kR561       = 1.0+k*R56;    // save computation time
+    sd2         = SQ(sdprev);   // save computation time
+    sz2         = SQ(szprev);   // save computation time
 
-    // rms bunch length after linac and R56 #(j-1) [m]
-    dcs->sz[j] = sqrt(SQ(kR561)*sz2 + SQ(R56*Er*sdprev) + 
+    // RMS bunch length after Linac and R56 #(j-1) [m]
+    dcs->sz[j] = sqrt(SQ(kR561)*sz2 + SQ(R56*Er*sdprev) +
 		 2.0*Er*R56*kR561*corprev);
 
-    // rms energy spread after linac and R56 #(j-1) [
+    // RMS energy spread after Linac and R56 #(j-1) [
     dcs->sd[j]       = sqrt(SQ(k)*sz2 + SQ(Er)*sd2 + 2.0*Er*k*corprev);
 
-    // save new E-z correlation [m]
-    dcs->cor[j]   = k*kR561*sz2 + SQ(Er)*R56*sd2 + 
+    // Save new E-z correlation [m]
+    dcs->cor[j]   = k*kR561*sz2 + SQ(Er)*R56*sd2 +
       Er*(1.0+2.0*k*R56)*corprev;
 
-    //signed-correlated energy spread (slope*sigz) [ ]
-    dcs->sdsgn[j]    = dcs->cor[j]/dcs->sz[j]; 
+    // Signed-correlated energy spread (slope*sigz) [ ]
+    dcs->sdsgn[j]    = dcs->cor[j]/dcs->sz[j];
 
-    //Calculate peak current
-    //dcs->Ipk[j]=(1.0+dN_Nf)*gun->Q*c/sqrt12/dcs->sz[j];
-    //dcs->Ipk[j]=(1.0+dN_Nf)*fabs(gun->Q)*c/sqrt12/dcs->sz[j];
+    // Calculate peak current
     dcs->Ipk[j]=(1.0+dN_Nf)*N*e_oct*c/sqrt12/dcs->sz[j];
 
-    //timing error
-    dcs->dt[j]=dtprev + dcs->dE_E[j]*R56/c;  // timing error after linac k [s]
+    // Timing error
+    dcs->dt[j]=dtprev + dcs->dE_E[j]*R56/c;  // timing error after Linac k [s]
 
-    //move current to prev for the next linac step
-    Eprev=E;  
+    // Move current to prev for the next Linac step
+    Eprev=E;
     dtprev=dcs->dt[j];
     szprev=dcs->sz[j];
     sdprev=dcs->sd[j];
     dE_Eprev=dcs->dE_E[j];
     corprev=dcs->cor[j];
   }
-  
-  //finish calculating dcs->dE_Ei2 which requires nomalization by the final energy
-  //I would like calculation to be all in one line above but we stored dE and added to energy at each
-  //step to get the final energy is so it is unknown until the end of the loop
-  //The E here is different from above. Before it changed with each loop and was the Energy
-  // of the beam after linac j. Now it is static and is the final energy after all linacs
+
+ /*
+  Finish calculating dcs->dE_Ei2, which requires normalization by the final Energy.
+  I would like calculation to be all in one line above but we stored dE and added to energy at each
+  step to get the final energy is so it is unknown until the end of the loop.
+  The E here is different from above. Before it changed with each loop and was the Energy
+  of the beam after Linac j. Now it is static and is the final energy after all Linacs
+  */
 
   for(int j=0;j<Nlinac;j++){
-    dcs->dE_Ei2[j]=dcs->dE_Ei2[j]/E;  
+    dcs->dE_Ei2[j]=dcs->dE_Ei2[j]/E;
 
   }
 
