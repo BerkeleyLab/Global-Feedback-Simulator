@@ -5,7 +5,8 @@
 #include <math.h>
 
 
-void Doublecompress_State_Allocate(Doublecompress_State * dcs, int Nlinac) {
+void Doublecompress_State_Allocate(Doublecompress_State * dcs, int Nlinac)
+{
   dcs->Ipk =    (double*)calloc(Nlinac,sizeof(double));
   dcs->sz =     (double*)calloc(Nlinac,sizeof(double));
   dcs->dE_E =   (double*)calloc(Nlinac,sizeof(double));
@@ -18,7 +19,9 @@ void Doublecompress_State_Allocate(Doublecompress_State * dcs, int Nlinac) {
   dcs->dE_Ei2 = (double*)calloc(Nlinac,sizeof(double));
   dcs->cor =    (double*)calloc(Nlinac,sizeof(double));
 }
-void Doublecompress_State_Deallocate(Doublecompress_State * dcs) {
+
+void Doublecompress_State_Deallocate(Doublecompress_State * dcs)
+{
   free(dcs->Ipk);
   free(dcs->sz);
   free(dcs->dE_E);
@@ -32,8 +35,7 @@ void Doublecompress_State_Deallocate(Doublecompress_State * dcs) {
   free(dcs->cor);
 }
 
-void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac,
-				 double * payload)
+void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double * payload)
 {
   dcs->Ipk = payload;
   dcs->sz = payload + Nlinac;
@@ -47,7 +49,6 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac,
   dcs->cor = payload + 9*Nlinac;
 
   // Payload better have been of size 10*Nlinac!
-
 }
 
 /*
@@ -63,7 +64,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac,
   T566 effect on R56 for mean-off-energy beams.  The bunch head is at z<0
   (same as LiTrack), so a chicane compressor has both R56 < 0 and phi < 0.
   Written by P. Emma
-  
+
   Modifications to Octave:
   A reference for most equations used below is 'doc/presentations/PE_slides/COMP_OPT1.pdf'
   Note that there are a few known differences from the above mentioned reference. These
@@ -107,7 +108,8 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac,
 	  dV_Vvr: Vector of 5 linac RF relative voltage errors [fraction] {Nlinacs}
   
   Outputs: 
-          Ipk:	Peak current at end of j-th linac [A] {Nlinacs}
+
+    Ipk:	Peak current at end of j-th linac [A] {Nlinacs}
 	  sz:	rms bunch length after j-th linac [m] {Nlinacs}
 	  dE_E:	Relative energy offset after j-th linac [fraction] {Nlinacs}
 	  sd:	rms rel. energy spread after j-th linac [fraction] {Nlinacs}
@@ -140,22 +142,22 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac,
 
 void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac, 
 			// Inputs which change with time potentially
-			Dynamic_Param * dynp, double * dphivr, double * dV_Vvr,
+			Noise_Srcs * noise_srcs, double * dphivr, double * dV_Vvr,
 			// double_compress Outputs
 			Doublecompress_State * dcs
 			)
 {
 
   // Rename for some consistency with the original double compress
-  double dN_Nf = dynp->dQ_Q;
+  double dN_Nf = noise_srcs->dQ_Q;
 
   // Values that get updated with the linac, here intial conditions are set
   double Eprev=gun->E; // Energy after leaving gun [ev]
-  double szprev=gun->sz0+dynp->dsig_z; //rms bunch length [m] 
-  double sdprev=gun->sd0+dynp->dsig_E; //incoh. energy spread [fraction]
-  double dE_Eprev=dynp->dE_ing/gun->E;// relative energy error at start
-  double dtprev=dynp->dtg; // timing error of prev linac NOT THE TIME STEP!!!!  
-  double corprev=dynp->dchirp;
+  double szprev=gun->sz0+noise_srcs->dsig_z; //rms bunch length [m]
+  double sdprev=gun->sd0+noise_srcs->dsig_E; //incoh. energy spread [fraction]
+  double dE_Eprev=noise_srcs->dE_ing/gun->E;// relative energy error at start
+  double dtprev=noise_srcs->dtg; // timing error of prev linac NOT THE TIME STEP!!!!
+  double corprev=noise_srcs->dchirp;
   
   // Declarations just to reduce calculation and typeing
   Linac * lin;
@@ -269,24 +271,24 @@ void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
 
 void Doublecompress_Octave_Benchmark(Gun * gun, Linac ** linac_array, int Nlinac, 
 			//Inputs which change with time potentially
-			Dynamic_Param * dynp, double * dphivr, double * dV_Vvr,
+			Noise_Srcs * noise_srcs, double * dphivr, double * dV_Vvr,
 			//double_compress output states
 			Doublecompress_State * dcs
 			)
 {
 
   //rename for some consistency with the original souble compress
-  double dN_Nf = dynp->dQ_Q;
+  double dN_Nf = noise_srcs->dQ_Q;
    //e used in octave code
   double e_oct = 1.602177E-19;
 
   // stuff that gets updated with the linac here intial coditions are set
   double Eprev=gun->E; //Energy after leaving gun [ev]
-  double szprev=gun->sz0+dynp->dsig_z; //rms bunch length [m] 
-  double sdprev=gun->sd0+dynp->dsig_E; //incoh. energy spread [fraction]
-  double dE_Eprev=dynp->dE_ing/gun->E;// relative energy error at start
-  double dtprev=dynp->dtg; // timing error of prev linac NOT THE TIME STEP!!!!  
-  double corprev=dynp->dchirp;
+  double szprev=gun->sz0+noise_srcs->dsig_z; //rms bunch length [m]
+  double sdprev=gun->sd0+noise_srcs->dsig_E; //incoh. energy spread [fraction]
+  double dE_Eprev=noise_srcs->dE_ing/gun->E;// relative energy error at start
+  double dtprev=noise_srcs->dtg; // timing error of prev linac NOT THE TIME STEP!!!!
+  double corprev=noise_srcs->dchirp;
   
   //crap just to reduce calculation and typeing
   Linac * lin;
