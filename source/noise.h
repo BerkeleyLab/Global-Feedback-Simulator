@@ -1,9 +1,5 @@
-#ifndef DYNAMIC_NOISE_H
-#define DYNAMIC_NOISE_H
-
-
-#include "doublecompress.h"
-
+#ifndef NOISE_H
+#define NOISE_H
 
 #define N_NOISE_PARAM 8
 #define N_NOISE_SET 2
