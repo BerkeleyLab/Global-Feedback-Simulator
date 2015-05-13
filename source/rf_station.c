@@ -144,7 +144,8 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
 }
 
 RF_Station * RF_Station_Allocate_New(
-  // General (nonphysical) simulation parameters
+
+  // General (non-physical) simulation parameters
   double Tstep,
   // Properties of the triode system
   double Clip,
