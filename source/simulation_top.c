@@ -70,6 +70,16 @@ void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim)
 	free(sim_state->dc_state);
 }
 
+void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
+{
+	Noise_Step(t_now, Tstep, noise_srcs->type[0], noise_srcs->attributes+N_NOISE_ATTRIBUTES*0, &noise_srcs->dQ_Q);
+	Noise_Step(t_now, Tstep, noise_srcs->type[1], noise_srcs->attributes+N_NOISE_ATTRIBUTES*1, &noise_srcs->dtg);
+	Noise_Step(t_now, Tstep, noise_srcs->type[2], noise_srcs->attributes+N_NOISE_ATTRIBUTES*2, &noise_srcs->dE_ing);
+	Noise_Step(t_now, Tstep, noise_srcs->type[3], noise_srcs->attributes+N_NOISE_ATTRIBUTES*3, &noise_srcs->dsig_z);
+	Noise_Step(t_now, Tstep, noise_srcs->type[4], noise_srcs->attributes+N_NOISE_ATTRIBUTES*4, &noise_srcs->dsig_E);
+	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->attributes+N_NOISE_ATTRIBUTES*5, &noise_srcs->dchirp);
+}
+
 /*
  * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)
  */
@@ -115,3 +125,4 @@ void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, 
 	} // End iteration over time-steps
 
 }
+

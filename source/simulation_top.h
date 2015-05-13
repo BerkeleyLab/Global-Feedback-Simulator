@@ -12,11 +12,13 @@
 
 #include "linac.h"
 #include "doublecompress.h"
-// #include "dynamic_noise.h"
+#include "noise.h"
 // #include "beam_based_feedback.h"
 
+
+
 /*
- * Data struture storing the parameters for a full Accelerator Simulation
+ * Data structure storing the parameters for a full Accelerator Simulation
  * comprised of a Gun and multiple Linacs.
  */
 typedef struct str_Simulation {
@@ -24,7 +26,7 @@ typedef struct str_Simulation {
 	// Simulation parameters
 	double Tstep;	// Simulation time-step size
 	int time_steps;	// Total number of Simulation steps
-	
+
 	// Electron Gun
 	Gun *gun;
 
@@ -35,8 +37,6 @@ typedef struct str_Simulation {
 	// Beam-based feedback parameters
 	// BBF *bbf;
 
-	// Noise parameters
-	Noise_Srcs *noise_src;
 
 } Simulation;
 
@@ -52,7 +52,7 @@ typedef struct str_Simulation_State {
 
 	// Array of Linac accelerating voltage errors (amplitude and phase)
 	// (amplitude normalized by Linac increase in Energy in eV)
-	double *amp_error_net, *phase_error_net; 
+	double *amp_error_net, *phase_error_net;
 
 } Simulation_State;
 
@@ -64,6 +64,8 @@ void Sim_Deallocate(Simulation *sim);
 
 void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim);
 void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim);
+
+void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs);
 
 /*
  * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)
