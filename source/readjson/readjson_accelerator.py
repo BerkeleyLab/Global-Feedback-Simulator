@@ -72,7 +72,7 @@ class Cavity:
             Inputs:
                 confDict: Global configuration dictionary,
                 cav_entry: Name of the cavity to be read (string).
-                cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
+                cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodules
 
             Attributes:
                 name: Cavity instance name,
@@ -131,7 +131,7 @@ class Cavity:
         self.design_voltage = {"value" : self.nom_grad["value"]*self.L["value"], "units" : "V", "description" : "Design operating Cavity voltage"}
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Cavity Object--\n"
         + "name: " + self.name + "\n"
@@ -224,7 +224,7 @@ class ElecMode:
         self.LO_w0 = {"value" : 0.0, "units" : "rad/s", "description" : "Linac's Nominal resonance angular frequency"}
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--ElecMode Object--\n"
         + "name: " + self.name + "\n"
@@ -321,7 +321,7 @@ class Piezo:
                     confDict: Global configuration dictionary,
                     piezo_entry: Name of the Piezo to be read (string).
                     cryomodule_entry: Cryomodule entry in global dictionary in order to access
-                        the proper cryomodule's mechanical mode list, wich is used as a consistency
+                        the proper cryomodule's mechanical mode list, which is used as a consistency
                         check to generate mechanical coupling vectors for each Piezo."""
 
         # Read name and component type
@@ -375,7 +375,7 @@ def readCouplings(confDict, mech_couplings, cryomodule_entry):
 
 
 def readList(confDict, list_in, constructor, cryomodule_entry=None):
-    """ readList: Generic function to read list of componentns.
+    """ readList: Generic function to read list of components.
     Takes the global configuration dictionary, cycles through the list of components
     (list of names, list_in), uses the names to identify the configuration entries in
     the global dictionary, calls the proper Constructor for each component (constructor),
@@ -418,7 +418,7 @@ class Controller:
         self.stable_gbw = readentry(confDict,confDict[controller_entry]["stable_gbw"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Controller Object--\n"
         + "name: " + self.name + "\n"
@@ -440,7 +440,7 @@ class ZFilter:
         self.poles = readentry(confDict,confDict[zfilter_entry]["poles"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--ZFilter Object--\n"
         + "name: " + self.name + "\n"
@@ -464,7 +464,7 @@ class ADC:
         self.noise_psd = readentry(confDict,confDict[adc_entry]["noise_psd"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--ADC Object--\n"
         + "name: " + self.name + "\n"
@@ -489,7 +489,7 @@ class Amplifier:
         self.top_drive = readentry(confDict,confDict[amplifier_entry]["top_drive"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Amplifier Object--\n"
         + "name: " + self.name + "\n"
@@ -576,7 +576,7 @@ class Station:
         self.max_voltage = {"value" : 0.0, "units" : "V", "description" : "Maximum accelerating voltage"}
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Station Object--\n"
         + "name: " + self.name + "\n"
@@ -660,7 +660,7 @@ class Cryomodule:
         self.lp_shift = readentry(confDict,confDict[cryomodule_entry]["lp_shift"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Cryomodule Object--\n"
         + "name: " + self.name + "\n"
@@ -786,7 +786,7 @@ class Linac:
                     mode.LO_w0["value"] = 2*pi*self.f0["value"]
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Linac Object--\n"
         + "name: " + self.name + "\n"
@@ -934,7 +934,7 @@ class Simulation:
         Tstep_global = self.Tstep['value']
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Simulation Object--\n"
         + "name: " + self.name + "\n"
@@ -1051,7 +1051,7 @@ class Noise:
         self.dchirp = readentry(confDict,confDict[noise_entry]["dchirp"])
 
     def __str__(self):
-        """str: Convinient concatenated string output for printout"""
+        """str: Convenient concatenated string output for printout"""
 
         return ("\n--Noise Object--\n"
         + "name: " + self.name + "\n"
