@@ -32,7 +32,7 @@ void Sim_Deallocate(Simulation *sim)
 	sim->n_linacs = 0;
 }
 
-void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim)
+void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim, Noise_Srcs* noise_srcs)
 {
 	// Allocate memory for the array of Linac states
 	sim_state->linac_state_net = calloc(sim->n_linacs, sizeof(Linac_State *));
@@ -47,7 +47,7 @@ void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim)
 	sim_state->phase_error_net = (double*)calloc(sim->n_linacs,sizeof(double));
 
 	// Allocate memory for Longitudinal beam dynamics noise sources
-	sim_state->noise_srcs = (Noise_Srcs*)calloc(1,sizeof(Noise_Srcs));
+	sim_state->noise_srcs = noise_srcs;
 
 	// Allocate Doublecompress State
 	sim_state->dc_state =(Doublecompress_State*)calloc(1,sizeof(Doublecompress_State));
@@ -69,12 +69,12 @@ void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim)
 
 void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 {
-	Noise_Step(t_now, Tstep, noise_srcs->type[0], noise_srcs->attributes+N_NOISE_ATTRIBUTES*0, &noise_srcs->dQ_Q);
-	Noise_Step(t_now, Tstep, noise_srcs->type[1], noise_srcs->attributes+N_NOISE_ATTRIBUTES*1, &noise_srcs->dtg);
-	Noise_Step(t_now, Tstep, noise_srcs->type[2], noise_srcs->attributes+N_NOISE_ATTRIBUTES*2, &noise_srcs->dE_ing);
-	Noise_Step(t_now, Tstep, noise_srcs->type[3], noise_srcs->attributes+N_NOISE_ATTRIBUTES*3, &noise_srcs->dsig_z);
-	Noise_Step(t_now, Tstep, noise_srcs->type[4], noise_srcs->attributes+N_NOISE_ATTRIBUTES*4, &noise_srcs->dsig_E);
-	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->attributes+N_NOISE_ATTRIBUTES*5, &noise_srcs->dchirp);
+	Noise_Step(t_now, Tstep, noise_srcs->type[0], noise_srcs->settings+N_NOISE_SETTINGS*0, &noise_srcs->dQ_Q);
+	Noise_Step(t_now, Tstep, noise_srcs->type[1], noise_srcs->settings+N_NOISE_SETTINGS*1, &noise_srcs->dtg);
+	Noise_Step(t_now, Tstep, noise_srcs->type[2], noise_srcs->settings+N_NOISE_SETTINGS*2, &noise_srcs->dE_ing);
+	Noise_Step(t_now, Tstep, noise_srcs->type[3], noise_srcs->settings+N_NOISE_SETTINGS*3, &noise_srcs->dsig_z);
+	Noise_Step(t_now, Tstep, noise_srcs->type[4], noise_srcs->settings+N_NOISE_SETTINGS*4, &noise_srcs->dsig_E);
+	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->settings+N_NOISE_SETTINGS*5, &noise_srcs->dchirp);
 }
 
 #define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); }
@@ -84,7 +84,7 @@ void Write_Sim_Step(FILE * fp, double time, Simulation *sim, Simulation_State *s
  	fprintf(fp, "%10.16e   ",time);					// Current simulation time [s]
  	fprintf(fp, "%10.16e %10.16e %10.16e %10.16e   ",
 		sim_state->noise_srcs->dQ_Q,				// Beam charge jitter [relative to nominal beam charge]
-		sim_state->noise_srcs->dtg,					// Arrival time jitter [s]
+		sim_state->noise_srcs->dtg,					// Timing error of gun wrt RF (<0 is an early bunch) [s]
 		sim_state->dc_state->dE_E[sim->n_linacs-1],	// Energy jitter [relative to nominal beam Energy]
 		sim_state->dc_state->dt[sim->n_linacs-1]);	// Timing jitter [s]
 
@@ -129,6 +129,8 @@ void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, 
 
 		// Calculate current simulation time
 		time = (t+1)*sim->Tstep;
+
+		Apply_Correlated_Noise(t, sim->Tstep,sim_state->noise_srcs);
 
 		// Iterate over Linacs
 		for(int l=0;l<sim->n_linacs;l++){

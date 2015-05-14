@@ -39,7 +39,7 @@ typedef struct str_doublecompress_state {
  */
 
 #define N_NOISE_SRCS 6
-#define N_NOISE_ATTRIBUTES 2
+#define N_NOISE_SETTINGS 2
 
 typedef struct str_noise_srcs {
 
@@ -51,7 +51,7 @@ typedef struct str_noise_srcs {
   double dchirp; //go into gun
 
   int type[N_NOISE_SRCS];
-  double  attributes[N_NOISE_SRCS*N_NOISE_ATTRIBUTES];
+  double settings[N_NOISE_SRCS*N_NOISE_SETTINGS];
 
 } Noise_Srcs;
 

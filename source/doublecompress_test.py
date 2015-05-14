@@ -21,12 +21,12 @@ def unit_doublecompress(Verbose=False):
             - double_compress_params_octave.sav has the parameter structure for the Octave routine.
         Random values are selected for the input fields testnum times and the outputs are compared.
         If the maximum error is greater than a threshold the test FAILS """
-    
+
     from get_configuration import Get_SWIG_Simulation
 
     # Get Simulation Object, including Pointers to C structures
-    C_Config_File = "source/configfiles/unit_tests/doublecompress_test.json"
-    sim = Get_SWIG_Simulation(C_Config_File, Verbose)
+    test_config_files = ["source/configfiles/unit_tests/doublecompress_test.json"]
+    sim = Get_SWIG_Simulation(test_config_files, Verbose)
 
     # Calculate the length of the Linac
     Nlinac = len(sim.linac_list)
@@ -38,7 +38,7 @@ def unit_doublecompress(Verbose=False):
 
     # Extract Octave data structure containing Linacs' configuration
     params = loadout.pdc
-    
+
     # Allocate C Arrays for doublecompress inputs
     dphivr = acc.double_Array(Nlinac)
     dV_Vvr = acc.double_Array(Nlinac)
@@ -47,7 +47,7 @@ def unit_doublecompress(Verbose=False):
     dc_noise_srcs = acc.Noise_Srcs()
     dcs = acc.Doublecompress_State()
     acc.Doublecompress_State_Allocate(dcs,Nlinac)
-    
+
     # Pointers to outputs
     Ipk = acc.double_Array_frompointer(dcs.Ipk)
     sz = acc.double_Array_frompointer(dcs.sz)
@@ -63,7 +63,7 @@ def unit_doublecompress(Verbose=False):
 
     # Number of Simulation runs
     testnum = 30
-    
+
     # Store Maximum error after each run (initialize at 0)
     maxerr = 0.0
 
@@ -83,12 +83,12 @@ def unit_doublecompress(Verbose=False):
             params.s0v[0][l]=3.0*rand()+.5
 
             # Copy and do unit conversion for C version
-            sim.linac_list[l].C_Pointer.lam = params.lamv[0][l] 
-            sim.linac_list[l].C_Pointer.L = params.Lv[0][l] 
-            sim.linac_list[l].C_Pointer.a = params.av[0][l]/1000.0 
-            sim.linac_list[l].C_Pointer.R56 = params.R56v[0][l] 
-            sim.linac_list[l].C_Pointer.T566 = params.T566v[0][l] 
-            sim.linac_list[l].C_Pointer.phi = params.phiv[0][l]*np.pi/180.0 
+            sim.linac_list[l].C_Pointer.lam = params.lamv[0][l]
+            sim.linac_list[l].C_Pointer.L = params.Lv[0][l]
+            sim.linac_list[l].C_Pointer.a = params.av[0][l]/1000.0
+            sim.linac_list[l].C_Pointer.R56 = params.R56v[0][l]
+            sim.linac_list[l].C_Pointer.T566 = params.T566v[0][l]
+            sim.linac_list[l].C_Pointer.phi = params.phiv[0][l]*np.pi/180.0
             sim.linac_list[l].C_Pointer.s0 = params.s0v[0][l]/1000.0
 
         # Introduce some pseudo-random numbers into noise source inputs
@@ -104,7 +104,7 @@ def unit_doublecompress(Verbose=False):
         for i in range(Nlinac):
             dphiv_oct[i]=180*(rand()-.5)*2 #[deg]
             dV_Vv_oct[i]=100*(rand()-.5)*2 #[%]
-        
+
         # Copy and do unit conversion for C version
         dc_noise_srcs.dQ_Q=dN_N/100
         dc_noise_srcs.dtg=dtg/1e12
@@ -183,7 +183,7 @@ def perform_tests():
     print "\n****\nTesting Doublecompress...\n"
     dc_pass = unit_doublecompress()
     if (dc_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
     print ">>> " + result

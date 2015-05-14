@@ -234,7 +234,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 1,
             "units": "N/A",
@@ -263,7 +263,7 @@
 
         "elec_modes" : ["d_ElecMode"]
     },
-    
+
     "d_ElecMode":{
         "type": "elec_mode",
         "name": "d_elecMode",
@@ -314,6 +314,47 @@
             "value": {},
             "units": "(rad/s)/V^2",
             "description": ""
+        }
+    },
+
+    "d_Noise": {
+        "name": "d_Noise",
+        "type": "Noise",
+        "dQ_Q": {
+            "Type":"Step",
+            "Settings": [0.06, 0.125],
+            "units": "fraction of nominal beam charge",
+            "description": "Beam charge jitter"
+        },
+        "dtg": {
+            "Type":"None",
+            "Settings": [5e-12],
+            "units": "s",
+            "description": "Timing error of gun wrt RF (<0 is an early bunch)"
+        },
+        "dE_ing": {
+            "Type":"None",
+            "Settings": [0.5],
+            "units": "eV",
+            "description": "Energy deviation at end of injector"
+        },
+        "dsig_z": {
+            "Type":"None",
+            "Settings": [0.5],
+            "units": "m",
+            "description": "Deviation of bunch length from nominal length"
+        },
+        "dsig_E": {
+            "Type":"None",
+            "Settings": [0.5],
+            "units": "fraction of nominal Energy",
+            "description": "Deviation of energy spread from nominal energy spread"
+        },
+        "dchirp": {
+            "Type":"None",
+            "Settings": [0.5],
+            "units": "m",
+            "description": "<Ez> correlation"
         }
     }
 

@@ -46,6 +46,8 @@
         "linac_connect": ["Linac0", "Linac1","Linach","Linac2","Linac3"]
     },
 
+    "Noise": "d_Noise",
+
     "Linac0": {
         "type": "linac",
         "name": "linac0",
@@ -125,7 +127,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 7,
             "units": "N/A",
@@ -232,7 +234,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 7,
             "units": "N/A",
@@ -341,7 +343,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 7,
             "units": "N/A",
@@ -451,7 +453,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 42,
             "units": "N/A",
@@ -543,7 +545,7 @@
         },
 
         "piezo_connect": [],
-        
+
         "N_Stations": {
             "value": 126,
             "units": "N/A",
@@ -554,5 +556,5 @@
         "rfl_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     }
- 
+
  }

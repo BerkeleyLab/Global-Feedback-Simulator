@@ -3,7 +3,7 @@
 #
 # Accelerator-specific configuration file:
 #    Defines all the Python classes involved in the simulation.
-#    Parses configuration information from a dictionary and instantiates 
+#    Parses configuration information from a dictionary and instantiates
 #    Python objects with the configuration values.
 #
 # Classes defined:
@@ -63,7 +63,7 @@ class Synthesis:
 class Cavity:
     """ Cavity class: contains parameters specific to a cavity,
             including a nested list of electrical modes"""
-    
+
     def __init__(self, confDict, cav_entry, cryomodule_entry):
         """ Cavity constructor: includes a recursive read of
             electrical modes in each cavity, where ElecMode objects are created for each electrical mode
@@ -73,7 +73,7 @@ class Cavity:
                 confDict: Global configuration dictionary,
                 cav_entry: Name of the cavity to be read (string).
                 cryomodule_entry: Cryomodule entry in global dictionary in order to access the proper cryomodule's
-            
+
             Attributes:
                 name: Cavity instance name,
                 comp_type: component type (Cavity),
@@ -85,32 +85,32 @@ class Cavity:
         # Read name and component type
         self.name = confDict[cav_entry]['name']
         self.type = confDict[cav_entry]['type']
-    
+
         # Read and store the rest of the parameters in a dictionary
         cav_param_dic = {}
-    
+
         self.L = readentry(confDict,confDict[cav_entry]["L"])
         self.nom_grad = readentry(confDict,confDict[cav_entry]["nom_grad"])
-    
+
         # Grab the list of electrical modes
         elec_mode_connect = confDict[cav_entry]["elec_mode_connect"]
         n_elec_modes = len(elec_mode_connect) # Number of electrical modes
-    
+
         elec_mode_list = []
-    
+
         ## Start of loop through electrical modes
         # Cycle through electrical modes, read parameters from global dictionary and append to list of modes.
         for m in range(n_elec_modes):
             # Take mth element of mode list
             elecMode_entry = elec_mode_connect[m]
-    
+
             # Instantiate ElecMode object
             elec_mode = ElecMode(confDict, elecMode_entry, cryomodule_entry)
-    
+
             # Append to list of electrical modes
             elec_mode_list.append(elec_mode)
         ## End of loop through electrical modes
-    
+
         # Make the List of Electrical Modes an attribute of the Cavity object
         self.elec_modes = elec_mode_list
 
@@ -127,7 +127,7 @@ class Cavity:
         # rf_phase corresponds to Linac's phi parameter
         self.rf_phase = {"value" : 0.0, "units" : "deg", "description" : "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"}
         # design_voltage is related to the Cavity set-point (Default at max)
-        
+
         self.design_voltage = {"value" : self.nom_grad["value"]*self.L["value"], "units" : "V", "description" : "Design operating Cavity voltage"}
 
     def __str__(self):
@@ -323,21 +323,21 @@ class Piezo:
                     cryomodule_entry: Cryomodule entry in global dictionary in order to access
                         the proper cryomodule's mechanical mode list, wich is used as a consistency
                         check to generate mechanical coupling vectors for each Piezo."""
-        
+
         # Read name and component type
         self.name = confDict[piezo_entry]['name']
         self.type = confDict[piezo_entry]['type']
-        
+
         # Read rest of parameters
         self.VPmax = readentry(confDict,confDict[piezo_entry]["VPmax"])
-        
+
         # Read dictionary of couplings from global configuration dictionary
         mech_couplings = readentry(confDict,confDict[piezo_entry]["mech_couplings"]["value"])
 
         # Check consistency of coupling entries with the list of mechanical modes,
         # and get a coupling dictionary of length M (number of mechanical modes)
         self.mech_couplings_list = readCouplings(confDict, mech_couplings, cryomodule_entry)
-     
+
     def __str__(self):
         """str: Convinient concatenated string output for printout"""
 
@@ -429,7 +429,7 @@ class ZFilter:
     """ ZFilter class: contains parameters specific to a Filter configuration"""
 
     def __init__(self, confDict, zfilter_entry):
-        
+
         # Read name and component type
         self.name = confDict[zfilter_entry]['name']
         self.type = confDict[zfilter_entry]['type']
@@ -453,7 +453,7 @@ class ADC:
     """ ADC class: contains parameters specific to a ADC configuration"""
 
     def __init__(self, confDict, adc_entry):
-        
+
         # Read name and component type
         self.name = confDict[adc_entry]['name']
         self.type = confDict[adc_entry]['type']
@@ -477,7 +477,7 @@ class Amplifier:
     """ Amplifier class: contains parameters specific to a Amplifier configuration"""
 
     def __init__(self, confDict, amplifier_entry):
-        
+
         # Read name and component type
         self.name = confDict[amplifier_entry]['name']
         self.type = confDict[amplifier_entry]['type']
@@ -532,7 +532,7 @@ class Station:
     """ Station class: contains parameters specific to a Station configuration"""
 
     def __init__(self, confDict, station_entry, cryomodule_entry):
-        
+
         # Read name and component type
         self.name = confDict[station_entry]['name']
         self.type = confDict[station_entry]['type']
@@ -707,14 +707,14 @@ class Cryomodule:
         # Get C pointer to Cryomodule_State C struct,
         # (if it has not been allocated yet)
         if(cryo_state==None):
-            cryo_state = acc.Cryomodule_State() 
+            cryo_state = acc.Cryomodule_State()
             # Allocate Memory for cryo_state
             acc.Cryomodule_State_Allocate(cryo_state, self.C_Pointer)
 
         # Get Pointers to RF States
         for idx, station in enumerate(self.station_list):
             station.State = acc.Get_RF_State(cryo_state, idx)
-        
+
         # Get Pointers to MechMode States
         for idx, mechMode in enumerate(self.mechanical_mode_list):
             mechMode.State = acc.Get_MechMode_State(cryo_state, idx)
@@ -744,7 +744,7 @@ class Linac:
         self.R56 = readentry(confDict,confDict[linac_entry]["R56"])
         self.dds_numerator = readentry(confDict,confDict[linac_entry]["dds_numerator"])
         self.dds_denominator = readentry(confDict,confDict[linac_entry]["dds_denominator"])
-        
+
         # Read the cryomodule connectivity
         cryomodule_connect = confDict[linac_entry]['cryomodule_connect']
 
@@ -781,7 +781,7 @@ class Linac:
                 self.N_Stations["value"] += N_Stations
                 self.L["value"] += L*N_Stations
 
-                # Indicate each Electrical Eigenmode the nominal LO frequency for the Linac 
+                # Indicate each Electrical Eigenmode the nominal LO frequency for the Linac
                 for mode in station.cavity.elec_modes:
                     mode.LO_w0["value"] = 2*pi*self.f0["value"]
 
@@ -843,7 +843,7 @@ class Linac:
         # (if it has not been allocated yet)
         if(linac_state==None):
             # Get C pointer to Linac_State C struct
-            linac_state = acc.Linac_State() 
+            linac_state = acc.Linac_State()
             # Allocate Memory for linac_state
             acc.Linac_State_Allocate(linac_state, self.C_Pointer)
 
@@ -856,8 +856,8 @@ class Linac:
         return linac_state
 
 class Simulation:
-    """ Simulation class: contains parameters specific to a Simulation run, 
-    as well as all parameters in the Accelerator configuration. This Class is 
+    """ Simulation class: contains parameters specific to a Simulation run,
+    as well as all parameters in the Accelerator configuration. This Class is
     to be instantiated from upper level programs in order to obtain all necessary instances
     to run a full simulation"""
 
@@ -885,12 +885,16 @@ class Simulation:
 
         # Accelerator parameters
         self.bunch_rate = readentry(confDict,confDict["Accelerator"]["bunch_rate"])
-        
+
+
+        # Read Noise Sources
+        self.noise_srcs = Noise(confDict)
+
         # Read Accelerator components (Gun + series of linacs)
         # # Read gun
         self.gun = Gun(confDict)
         Egun = self.gun.E['value'] # Gun exit Energy
-        
+
         # # Read connectivity of linacs
         linac_connect = confDict["Accelerator"]["linac_connect"]
         # # Read linacs recursively
@@ -924,7 +928,7 @@ class Simulation:
 
         # Add a parameter which was not parsed from configuration but deduced
         self.E = {"value" : Elast, "units" : "eV", "description" : "Final Accelerator Energy"}
-        
+
         # Assign Tstep to the global variable
         global Tstep_global
         Tstep_global = self.Tstep['value']
@@ -940,6 +944,7 @@ class Simulation:
         + "nyquist_sign: " + str(self.nyquist_sign) + "\n"
         + "synthesis: " + str(self.synthesis) + "\n"
         + "bunch_rate: " + str(self.bunch_rate) + "\n"
+        + "noise_srcs: " + str(self.noise_srcs) + "\n"
         + "E: " + str(self.E) + "\n"
         + "gun: " + str(self.gun) + "\n"
 
@@ -954,7 +959,7 @@ class Simulation:
 
         # Allocate memory for array of Linacs
         linac_net = acc.Linac_Allocate_Array(n_linacs)
-        
+
         # Allocate memory for Gun
         gun_C_Pointer = self.gun.Get_C_Pointer()
 
@@ -979,8 +984,11 @@ class Simulation:
     def Get_State_Pointer(self):
         import accelerator as acc
 
+        # Allocate memory for Noise State
+        noise_State_Pointer = self.noise_srcs.Get_State_Pointer()
+
         sim_state = acc.Simulation_State()
-        acc.Sim_State_Allocate(sim_state, self.C_Pointer)
+        acc.Sim_State_Allocate(sim_state, self.C_Pointer, noise_State_Pointer)
 
         self.State = sim_state
 
@@ -990,7 +998,7 @@ class Gun:
     """ Gun class: contains parameters specific to an Gun configuration"""
 
     def __init__(self, confDict):
-        
+
         # Read name and component type
         gun_entry = confDict["Accelerator"]['gun']
 
@@ -1023,3 +1031,71 @@ class Gun:
         self.C_Pointer = gun
 
         return gun
+
+class Noise:
+    """ Noise class: contains configuration regarding the correlated noise sources in the Accelerator."""
+
+    def __init__(self, confDict):
+
+        # Read name and component type
+        noise_entry = confDict['Noise']
+
+        self.name = confDict[noise_entry]['name']
+        self.type = confDict[noise_entry]['type']
+
+        self.dQ_Q = readentry(confDict,confDict[noise_entry]["dQ_Q"])
+        self.dtg = readentry(confDict,confDict[noise_entry]["dtg"])
+        self.dE_ing = readentry(confDict,confDict[noise_entry]["dE_ing"])
+        self.dsig_z = readentry(confDict,confDict[noise_entry]["dsig_z"])
+        self.dsig_E = readentry(confDict,confDict[noise_entry]["dsig_E"])
+        self.dchirp = readentry(confDict,confDict[noise_entry]["dchirp"])
+
+    def __str__(self):
+        """str: Convinient concatenated string output for printout"""
+
+        return ("\n--Noise Object--\n"
+        + "name: " + self.name + "\n"
+        + "type: " + self.type + "\n"
+        + "dQ_Q: " + str(self.dQ_Q) + "\n"
+        + "dtg: " + str(self.dtg) + "\n"
+        + "dE_ing: " + str(self.dE_ing) + "\n"
+        + "dsig_z: " + str(self.dsig_z) + "\n"
+        + "dsig_E: " + str(self.dsig_E) + "\n"
+        + "dchirp: " + str(self.dchirp) + "\n")
+
+    def Get_State_Pointer(self):
+
+        import accelerator as acc
+
+        noise_srcs = acc.Noise_Srcs()
+
+        type_net = acc.intArray_frompointer(noise_srcs.type)
+        setting_net = acc.double_Array_frompointer(noise_srcs.settings)
+
+        # Dictionaries for parameters and indices
+        field_dict = ['dQ_Q', 'dtg', 'dE_ing', 'dsig_z', 'dsig_E', 'dchirp']
+        type_dict = {'None':0, 'White':1, 'Sine':2, 'Chirp':3, 'Step':4}
+
+        # Loop over all sources of noise in the dictionary,
+        # and see if the user specified them
+        for i in xrange(len(field_dict)):
+            key = field_dict[i]
+            # Make sure the key corresponds to a field that the user specified
+            try:
+                entry = self.key
+                # Figure out its type
+                type_net[i] = type_dict[entry['Type']]
+                # Write the settings for the noise into the C structure
+                settings = entry['Settings']
+                if not isinstance(settings, list):
+                    setting_net[acc.N_NOISE_SETTINGS*i] = float(settings)
+                else:
+                    for k in xrange(len(settings)):
+                        setting_net[acc.N_NOISE_SETTINGS*i+k] = float(settings[k])
+            except:
+                # Default to no noise and whine to the user
+                type_net[i] = 0
+
+        # Return the C Pointer
+        return noise_srcs
+

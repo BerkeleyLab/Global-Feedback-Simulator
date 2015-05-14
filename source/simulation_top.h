@@ -63,7 +63,7 @@ Simulation *Sim_Allocate_New(double Tstep, double time_steps,
 	Gun *gun, Linac ** linac_net, int n_linacs);
 void Sim_Deallocate(Simulation *sim);
 
-void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim);
+void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim, Noise_Srcs* noise_srcs);
 void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim);
 
 void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs);
