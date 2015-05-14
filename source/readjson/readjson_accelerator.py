@@ -8,6 +8,7 @@
 #
 # Classes defined:
 #   Simulation
+#   Noise
 #   Gun
 #   Linac
 #   Cryomodule
