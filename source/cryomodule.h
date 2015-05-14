@@ -45,6 +45,7 @@ typedef struct str_Cryomodule_State {
 	RF_State **rf_state_net;
 	MechMode_State **mechMode_state_net;
 	double *F_nu;
+	double complex cryo_Kg;
 
 } Cryomodule_State;
 
@@ -70,8 +71,6 @@ Cryomodule * Cryomodule_Allocate_New(RF_Station **rf_station_net, int n_rf_stati
 void Cryomodule_Deallocate(Cryomodule* cryo);
 void Cryomodule_State_Allocate(Cryomodule_State *cryo_state, Cryomodule *cryo);
 void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo);
-void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
-	double delta_tz, double complex beam_charge, double complex probe_ns, double complex rev_ns,
-	int openloop);
+double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, double delta_tz, double beam_charge);
 
 #endif

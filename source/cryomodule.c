@@ -5,14 +5,14 @@
 MechMode_State_dp MechMode_State_Allocate_Array(int n)
 {
   MechMode_State_dp mechMode_State_net = calloc(n, sizeof(MechMode_State *));
-  
+
   return mechMode_State_net;
 }
 
 MechMode_dp MechMode_Allocate_Array(int n)
 {
   MechMode_dp mechMode_net = calloc(n, sizeof(MechMode *));
-  
+
   return mechMode_net;
 }
 
@@ -34,7 +34,7 @@ MechMode_State *Get_MechMode_State(Cryomodule_State *cryo_state, int index)
 	else return NULL;
 }
 
-void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k_nu, double Tstep) 
+void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k_nu, double Tstep)
 {
 	// Pre-calculate angular frequency
 	double omega_nu = 2.0*M_PI*f_nu;
@@ -44,7 +44,7 @@ void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k
 	mechMode->b_nu = omega_nu*sqrt(1-1/(4.0*pow(Q_nu,2.0)));
 	// c_nu is in the physics equations in order to normalize the filter gain at DC
 	// This normalization already takes place in the Filter routine (see filter.h),
-	// and therefore c_nu is included here to match the equations but is set to unity. 
+	// and therefore c_nu is included here to match the equations but is set to unity.
 	mechMode->c_nu = 1.0/k_nu;
 	mechMode->Tstep = Tstep;
 
@@ -166,7 +166,7 @@ void Cryomodule_State_Allocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
  		cryo_state->rf_state_net[i] = (RF_State*)calloc(1,sizeof(RF_State));
  		RF_State_Allocate(cryo_state->rf_state_net[i], cryo->rf_station_net[i]);
  	}
-	
+
 	// Allocate Mechanical Mode States
  	for(i=0;i<cryo->n_mechModes;i++) {
  		cryo_state->mechMode_state_net[i] = (MechMode_State*)calloc(1,sizeof(MechMode_State));
@@ -192,20 +192,23 @@ void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 	free(cryo_state->F_nu);
 }
 
-void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
-	double delta_tz, double complex beam_charge, double complex probe_ns, double complex rev_ns,
-	int openloop)
+double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, double delta_tz, double beam_charge)
 {
 	// Electrical state-space model
 	// ----------------------------------------------------
 
 	int i;
-	double complex RF_out;
+	// Total Cryomodule accelerating voltage
+	double complex cryo_V=0.0;
+	// Total Cryomodule drive signal
+	double complex cryo_Kg=0.0;
+
 	// Iterate over RF Stations in a Cryomodule
 	for(i=0;i<cryo->n_rf_stations;i++) {
-		 RF_out = RF_Station_Step(cryo->rf_station_net[i], delta_tz, beam_charge, probe_ns, rev_ns, openloop, cryo_state->rf_state_net[i]);
+		 cryo_V += RF_Station_Step(cryo->rf_station_net[i], delta_tz, beam_charge, cryo_state->rf_state_net[i]);
+		 cryo_Kg += cryo_state->rf_state_net[i]->cav_state.Kg;
 	} // End iterate over i
-	
+
 	// Electro-mechanical state-space model
 	// ----------------------------------------------------
 
@@ -224,7 +227,7 @@ void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
 		// Iterate over RF Stations in a Cryomodule
 		for(i=0;i<cryo->n_rf_stations;i++) {
 			// Iterate over Electrical Eigenmodes (mu index) in a RF Station's Cavity
-			n_Emodes = cryo->rf_station_net[i]->cav->n_modes; 
+			n_Emodes = cryo->rf_station_net[i]->cav->n_modes;
 			for(mu=0;mu<n_Emodes;mu++) {
 				// Grab square of accelerating voltage of Electrical Mode (mu)
 				V_2_mu = cryo_state->rf_state_net[i]->cav_state.elecMode_state_net[mu]->V_2;
@@ -248,7 +251,7 @@ void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
 	// Iterate over RF Stations in a Cryomodule
 	for(i=0;i<cryo->n_rf_stations;i++) {
 		// Iterate over Electrical Eigenmodes (mu index) in a RF Station's Cavity
-		n_Emodes = cryo->rf_station_net[i]->cav->n_modes; 
+		n_Emodes = cryo->rf_station_net[i]->cav->n_modes;
 		for(mu=0;mu<n_Emodes;mu++) {
 			// Iterate over nu
 			for(nu=0;nu<cryo->n_mechModes;nu++) {
@@ -262,5 +265,12 @@ void Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state,
 			cryo_state->rf_state_net[i]->cav_state.elecMode_state_net[mu]->delta_omega = delta_omega_now;
 		} // End iterate over mu
 	} // End iterate over i
+
+	// Store total Cryomodule drive signal (vector sum of all RF Station drive signals)
+	 cryo_state->cryo_Kg = cryo_Kg;
+
+	// Return vector sum of all cavity accelerating voltage errors
+	// (as seen by the beam)
+	return cryo_V;
 
 }

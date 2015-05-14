@@ -11,6 +11,7 @@ import cavity_test
 import rf_station_test
 import cryomodule_test
 import doublecompress_test
+import simulation_test
 
 # import unit_test_bbf
 
@@ -19,7 +20,7 @@ if __name__ == "__main__":
     print "===== Cavity tests: cavity_test.py ====="
     cavity_pass = cavity_test.perform_tests()
     if (cavity_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
     print "===== Cavity tests >>> " + result + " =====\n"
@@ -39,7 +40,7 @@ if __name__ == "__main__":
     else:
         result = 'FAIL'
     print "===== Cryomodule tests >>> " + result + " =====\n"
-    
+
     print "===== DoubleCompress test: doublecompress_test.py ====="
     doublecompress_pass = doublecompress_test.perform_tests()
     if (doublecompress_pass):
@@ -47,7 +48,15 @@ if __name__ == "__main__":
     else:
         result = 'FAIL'
     print "===== DoubleCompress tests >>> " + result + " =====\n"
-    
+
+    # print "===== Simulation Top Level test: simulation_test.py ====="
+    # sim_test_pass = simulation_test.perform_tests()
+    # if (sim_test_pass):
+    #     result = 'PASS'
+    # else:
+    #     result = 'FAIL'
+    # print "===== Simulation Top Level tests >>> " + result + " =====\n"
+
     # print "===== LLRF Components: unit_tests_components.py ====="
     # utc = unit_tests_components.perform_tests()
     # plt.figure()
@@ -56,7 +65,7 @@ if __name__ == "__main__":
 
 
     # if ut and utc and utb:
-    if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass:
+    if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass & sim_test_pass:
         print "ooooo ALL TESTS PASSED ooooo"
     else:
         print "xxxxx ALL TESTS FAILED xxxxx"

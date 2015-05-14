@@ -48,6 +48,8 @@
         "linac_connect": ["Linac0"]
     },
 
+    "Noise": "d_Noise",
+
     "Linac0": {
         "type": "linac",
         "name": "linac0",
@@ -128,7 +130,7 @@
         },
 
         "piezo_connect": ["Piezo0", "Piezo1"],
-        
+
         "N_Stations": {
             "value": 1,
             "units": "N/A",

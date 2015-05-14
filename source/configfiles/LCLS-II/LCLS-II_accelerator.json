@@ -48,6 +48,8 @@
         "linac_connect": ["Linac0"]
     },
 
+    "Noise": "d_Noise",
+
     "Linac0": {
         "type": "linac",
         "name": "linac0",
@@ -128,7 +130,7 @@
         },
 
         "piezo_connect": ["Piezo0", "Piezo1"],
-        
+
         "N_Stations": {
             "value": 1,
             "units": "N/A",
@@ -205,7 +207,7 @@
         },
 
         "mech_couplings" : {
-            "value": {"MechMode0": 130.0, "MechMode1": 0.0, "MechMode2": 0.0},
+            "value": {"MechMode0": 3.03e-8, "MechMode1": 0.0, "MechMode2": 0.0},
             "units": "(rad/s)/V^2",
             "description": ""
         }
@@ -326,7 +328,7 @@
             "description": "Frequency"
         },
         "Q": {
-            "value": 5,
+            "value": 5.0,
             "units": "Unitless",
             "description": "Quality factor"
         },

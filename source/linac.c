@@ -58,7 +58,6 @@ Cryomodule *Get_Cryomodule(Linac *linac, int index)
 {
 	if(linac->cryo_net[index]) return linac->cryo_net[index];
 	else return NULL;
-
 }
 
 Cryomodule_State *Get_Cryo_State(Linac_State *linac_state, int index)
@@ -79,6 +78,9 @@ void Linac_State_Allocate(Linac_State *linac_state, Linac *linac)
  		linac_state->cryo_state_net[i] = (Cryomodule_State*)calloc(1,sizeof(Cryomodule_State));
  		Cryomodule_State_Allocate(linac_state->cryo_state_net[i], linac->cryo_net[i]);
  	}
+
+ 	linac_state->linac_V = 0.0;
+ 	linac_state->linac_Kg = 0.0;
 }
 
 void Linac_State_Deallocate(Linac_State *linac_state, Linac *linac)
@@ -87,6 +89,43 @@ void Linac_State_Deallocate(Linac_State *linac_state, Linac *linac)
 		Cryomodule_State_Deallocate(linac_state->cryo_state_net[i], linac->cryo_net[i]);
 	}
 	free(linac_state->cryo_state_net);
+}
+
+double complex Linac_Step(Linac *linac, Linac_State *linac_state, double delta_tz, double beam_charge,
+	double *amp_error, double *phase_error)
+{
+	// Overall Linac accelerating voltage (and its projection on the beam)
+	double complex linac_V=0.0, linac_V_beam=0.0;
+	double complex linac_Kg=0.0;
+
+	// Run state-space simulation step
+	// Iterate over the Cryomodules
+	for(int i=0;i<linac->n_cryos;i++){
+		linac_V += Cryomodule_Step(linac->cryo_net[i], linac_state->cryo_state_net[i], delta_tz, beam_charge);
+		linac_Kg += linac_state->cryo_state_net[i]->cryo_Kg;
+	}
+
+	// Project the Linac voltage over the beam (phi radians relative RF phase to the beam),
+	linac_V_beam = linac_V*cos(linac->phi);
+	// Any deviations into the imaginary component of this vector is a phase error
+	*phase_error = carg(linac_V);
+
+	// Now calculate relative amplitude error
+	// - in relative units with respect to the Linac Energy increase,
+	// - eV considered equivalent to V here since we are dealing with Electrons.
+
+	if(linac->dE!=0.0){ // Avoid division by 0
+		*amp_error = (cabs(linac_V_beam)-linac->dE)/linac->dE;
+	} else{
+		*amp_error = cabs(linac_V_beam)-linac->dE;
+	}
+
+	// Store total Linac drive signal (vector sum of all RF Station drive signals)
+	linac_state->linac_Kg = linac_Kg;
+
+	// Total Linac Accelerating (store and return)
+	linac_state->linac_V = linac_V;
+	return linac_V;
 }
 
 void Gun_Allocate_In(Gun *gun, double E, double sz0, double sd0, double Q)

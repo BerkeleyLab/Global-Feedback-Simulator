@@ -5,7 +5,7 @@
 RF_State_dp RF_State_Allocate_Array(int n)
 {
   RF_State_dp rf_state_net = calloc(n, sizeof(RF_State *));
-  
+
   return rf_state_net;
 }
 
@@ -82,13 +82,13 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   double complex * p_TRF1, double complex * p_TRF2,
   // Properties of the RX Filter
   double complex * p_RXF,
-  
+
   // Cavity
   Cavity *cav,
   // FPGA controller
   double stable_gbw, // Gain-Bandwidth product
   double FPGA_out_sat,  // FPGA output saturation limit
-  
+
   // Loop Delay
   int loop_delay_size
   )
@@ -96,24 +96,24 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   rf_station->Clip = Clip;
   rf_station->PAscale = PAscale;
   rf_station->PAmax = PAmax;
-  
+
   /*
   * Configure the Filters using their poles
   */
-  
+
   Filter_Allocate_In(&rf_station->TRF1,2,2);
   for(int i=0;i<2;i++) {
     Filter_Append_Modes(&rf_station->TRF1, p_TRF1+i, 1,Tstep);
   }
-  
+
   Filter_Allocate_In(&rf_station->TRF2,1,1);
   Filter_Append_Modes(&rf_station->TRF2, p_TRF2, 1, Tstep);
-  
+
   Filter_Allocate_In(&rf_station->RXF,3,3);
   for(int i=0;i<3;i++) {
     Filter_Append_Modes(&rf_station->RXF,p_RXF+i,1,Tstep);
   }
-  
+
   /*
   * Assign previously configured Cavity
   */
@@ -124,13 +124,13 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   */
   // Grab cavity's open loop bandwidth and convert into Hz
   double cav_open_loop_bw = cav -> elecMode_net[cav->fund_index]->omega_f/(2.0*M_PI);
-  // Calculate proportional gain (kp) based on cavity's open-loop bandwith and controllers Gain-Bandwidth product
+  // Calculate proportional gain (kp) based on cavity's open-loop bandwidth and controllers Gain-Bandwidth product
   double kp =  -stable_gbw/cav_open_loop_bw;
 
   // Find fundamental mode couplings (could emulate some sort of calibration procedure here)
   double complex fund_k_probe = cav -> elecMode_net[cav->fund_index]-> k_probe;
   double complex fund_k_drive = cav -> elecMode_net[cav->fund_index]-> k_drive;
-  
+
   // Calculate the FPGA controller set-point
   // (scale using probe and drive couplings to the fundamental mode to convert to FPGA units)
   double complex set_point = cav->design_voltage*cexp(I*cav->rf_phase)*fund_k_probe;
@@ -144,7 +144,8 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
 }
 
 RF_Station * RF_Station_Allocate_New(
-  // General (nonphysical) simulation parameters
+
+  // General (non-physical) simulation parameters
   double Tstep,
   // Properties of the triode system
   double Clip,
@@ -154,20 +155,20 @@ RF_Station * RF_Station_Allocate_New(
   double complex * p_TRF1, double complex * p_TRF2,
   // Properties of the RX Filter
   double complex * p_RXF,
-  
+
   // Cavity
   Cavity *cav,
   // FPGA controller
   double stable_gbw, // Gain-Bandwidth product
   double FPGA_out_sat,  // FPGA output saturation limit
-  
+
   // Loop Delay
   int loop_delay_size) {
 
   RF_Station * rf_station;
   rf_station = calloc(1,sizeof(RF_Station));
 
-  RF_Station_Allocate_In(rf_station, Tstep, Clip, PAmax, PAscale, p_TRF1, p_TRF2, 
+  RF_Station_Allocate_In(rf_station, Tstep, Clip, PAmax, PAscale, p_TRF1, p_TRF2,
     p_RXF, cav, stable_gbw, FPGA_out_sat, loop_delay_size);
 
   return rf_station;
@@ -200,9 +201,10 @@ void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
 
   rf_state->cav_state.E_probe = (double complex) 0.0;
   rf_state->cav_state.E_reverse = (double complex) 0.0;
-  
+
   rf_state->fpga_state.drive = (double complex) 0.0;
   rf_state->fpga_state.state = (double complex) 0.0;
+  rf_state->fpga_state.openloop = (int) 0;
 
   Delay_State_Allocate(&rf_station->loop_delay, &rf_state->loop_delay_state);
 }
@@ -226,7 +228,7 @@ void FPGA_Allocate_In(FPGA * fpga,
   fpga->ki = ki;
 
   fpga->set_point = set_point;
-  
+
   // Saturation limits
   fpga->out_sat = out_sat;
   fpga->state_sat = out_sat;
@@ -249,19 +251,18 @@ void FPGA_Clear(FPGA_State * stnow)
   stnow-> drive = 0.0+0.0*_Complex_I;
   stnow-> state = 0.0+0.0*_Complex_I;
   stnow-> err = 0.0+0.0*_Complex_I;
+  stnow-> openloop = 0;
 }
 
-double complex FPGA_Step(FPGA *fpga,
-			    double complex cavity_vol,
-			    FPGA_State *stnow, int openloop)
+double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow)
 {
 
   double state, drive, scale;
-  
+
   // Calculate error signal
   double complex err = cavity_vol - fpga->set_point;
 
-  if(openloop == 1) { // Open loop
+  if(stnow->openloop == 1) { // Open loop
     stnow->drive = fpga->set_point;
     stnow->state = fpga->set_point;
   } else {  //Closed loop
@@ -271,7 +272,7 @@ double complex FPGA_Step(FPGA *fpga,
     scale = cabs(state)/fpga->state_sat;
     // Clip integrator state if above limit
     stnow->state = (scale > 1.0) ? state/scale : state;
-    
+
     // Drive signal
     drive = stnow->state + fpga->kp*err;
     // Compare output drive magnitude with saturation limit
@@ -293,7 +294,7 @@ double complex Saturate(double complex in, double harshness) {
 double complex SSA_Step(RF_Station *rf_station, double complex drive_in, RF_State *rf_state)
 {
   double complex trf1out, satout, trf2out;
-  
+
   // Scale input signal (sqrt(W) -> Normalized units)
   drive_in = drive_in/rf_station->PAscale;
   // Apply drive filter (TRF1)
@@ -320,16 +321,16 @@ double complex RF_Station_Step(
   RF_Station *rf_station,
   // Beam amplitude and phase noise (beam loading)
   double delta_tz, double complex beam_charge,
-  // LLRF noise (probe and reverse signals)
-  double complex probe_ns, double complex rev_ns,
-  // FPGA control boolean to open and close the feedback loop
-  int openloop,
   // State vectors
 	RF_State *rf_state)
 {
 
   // Intermediate signals
   double complex E_probe_delayed, E_probe_lp, sig_error, Kg, V_acc;
+
+  // LLRF noise (probe and reverse signals)
+  // (set noise to 0 for now)
+  double complex probe_ns=0.0, rev_ns=0.0;
 
   // // Apply LLRF Noise
   rf_state->cav_state.E_probe += probe_ns;
@@ -342,7 +343,7 @@ double complex RF_Station_Step(
   E_probe_lp = Filter_Step(&rf_station->RXF, E_probe_delayed, &rf_state->RXF);
 
   // // FPGA
-  sig_error = FPGA_Step(&rf_station->fpga,E_probe_lp, &rf_state->fpga_state, openloop);
+  sig_error = FPGA_Step(&rf_station->fpga, E_probe_lp, &rf_state->fpga_state);
 
   // // SSA (includes Tx filters and saturation)
   Kg = SSA_Step(rf_station, rf_state->fpga_state.drive, rf_state);
@@ -350,7 +351,7 @@ double complex RF_Station_Step(
   // Cavity
   V_acc = Cavity_Step(rf_station->cav, delta_tz, Kg, beam_charge, &rf_state->cav_state);
 
-  // Overall cavity accelerating voltage (as seen by the beam)
+  //  Overall cavity accelerating voltage (as seen by the beam)
   return V_acc;
 }
 
