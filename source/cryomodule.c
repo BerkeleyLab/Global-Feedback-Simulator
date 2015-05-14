@@ -199,10 +199,14 @@ double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, 
 
 	int i;
 	// Total Cryomodule accelerating voltage
-	double complex cav_V=0.0;
+	double complex cryo_V=0.0;
+	// Total Cryomodule drive signal
+	double complex cryo_Kg=0.0;
+
 	// Iterate over RF Stations in a Cryomodule
 	for(i=0;i<cryo->n_rf_stations;i++) {
-		 cav_V += RF_Station_Step(cryo->rf_station_net[i], delta_tz, beam_charge, cryo_state->rf_state_net[i]);
+		 cryo_V += RF_Station_Step(cryo->rf_station_net[i], delta_tz, beam_charge, cryo_state->rf_state_net[i]);
+		 cryo_Kg += cryo_state->rf_state_net[i]->cav_state.Kg;
 	} // End iterate over i
 
 	// Electro-mechanical state-space model
@@ -262,8 +266,11 @@ double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, 
 		} // End iterate over mu
 	} // End iterate over i
 
+	// Store total Cryomodule drive signal (vector sum of all RF Station drive signals)
+	 cryo_state->cryo_Kg = cryo_Kg;
+
 	// Return vector sum of all cavity accelerating voltage errors
 	// (as seen by the beam)
-	return cav_V;
+	return cryo_V;
 
 }

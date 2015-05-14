@@ -9,6 +9,7 @@
  */
 
 #include <complex.h>
+#include <stdio.h>
 
 #include "linac.h"
 #include "doublecompress.h"
@@ -66,6 +67,7 @@ void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim);
 void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim);
 
 void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs);
+void Write_Sim_Step( FILE * fp, double time, Simulation *sim, Simulation_State *sim_state);
 
 /*
  * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)

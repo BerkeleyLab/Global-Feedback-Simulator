@@ -30,7 +30,7 @@ $(d)/accelerator_wrap.o: CF_ALL := $(filter-out -Wcast-qual -Wshadow -Wmissing-p
 $(d)/_accelerator.so: $(d)/filter.o $(d)/cavity.o $(d)/rf_station.o $(d)/cryomodule.o $(d)/linac.o $(d)/doublecompress.o $(d)/noise.o $(d)/simulation_top.o $(d)/accelerator_wrap.o
 	$(CC) -shared $^ -o $@
 
-export UNIT_TEST_FILES := $(d)/unit_tests_all.py $(d)/cavity_test.py $(d)/rf_station_test.py $(d)/cryomodule_test.py $(d)/doublecompress_test.py
+export UNIT_TEST_FILES := $(d)/unit_tests_all.py $(d)/cavity_test.py $(d)/rf_station_test.py $(d)/cryomodule_test.py $(d)/doublecompress_test.py $(d)/simulation_test.py
 
 CLEAN           := $(CLEAN) $(TGT_$(d)) $(d)/accelerator.py $(d)/accelerator_wrap.c $(d)/_accelerator.so $(d)/*.o $(d)/*.o.d $(d)/*.pyc
 

@@ -1,0 +1,12 @@
+{
+    "Simulation":{
+        "Tstep": {
+            "value": 1e-6
+        },
+        "time_steps": {
+            "value": 500000,
+            "units": "steps",
+            "description" : "Total simulation time"
+        }
+    }
+}

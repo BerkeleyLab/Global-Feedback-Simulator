@@ -29,7 +29,8 @@ typedef struct str_Linac {
 
 typedef struct str_Linac_State {
 	Cryomodule_State **cryo_state_net;
-	double amp_error, phase_error;
+	double complex linac_V, linac_Kg;
+
 } Linac_State;
 
 // Rename pointer for SWIG work around

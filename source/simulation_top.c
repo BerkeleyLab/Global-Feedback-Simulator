@@ -1,8 +1,5 @@
 #include "simulation_top.h"
 
-#include <stdio.h>
-#include <stdlib.h>
-
 void Sim_Allocate_In(Simulation *sim, double Tstep, int time_steps,
 	Gun *gun, Linac ** linac_net, int n_linacs)
 {
@@ -80,6 +77,37 @@ void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->attributes+N_NOISE_ATTRIBUTES*5, &noise_srcs->dchirp);
 }
 
+#define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); }
+
+void Write_Sim_Step(FILE * fp, double time, Simulation *sim, Simulation_State *sim_state)
+{
+ 	fprintf(fp, "%10.16e   ",time);					// Current simulation time [s]
+ 	fprintf(fp, "%10.16e %10.16e %10.16e %10.16e   ",
+		sim_state->noise_srcs->dQ_Q,				// Beam charge jitter [relative to nominal beam charge]
+		sim_state->noise_srcs->dtg,					// Arrival time jitter [s]
+		sim_state->dc_state->dE_E[sim->n_linacs-1],	// Energy jitter [relative to nominal beam Energy]
+		sim_state->dc_state->dt[sim->n_linacs-1]);	// Timing jitter [s]
+
+	for(int l=0;l<sim->n_linacs;l++) {
+		fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e   ",
+			sim_state->amp_error_net[l],
+			sim_state->phase_error_net[l],
+			sim_state->dc_state->dE_E[l],
+			sim_state->dc_state->dt[l],
+			sim_state->dc_state->sz[l],
+			sim_state->dc_state->dE_Ei[l],
+			sim_state->dc_state->dE_Ei2[l]);
+
+		CPRINT(sim_state->linac_state_net[l]->linac_V);
+		CPRINT(sim_state->linac_state_net[l]->linac_Kg);
+
+	}
+	// End simulation step entry with a new line
+	fprintf(fp, "\n");
+}
+
+#undef CPRINT
+
 /*
  * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)
  */
@@ -87,12 +115,20 @@ void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, 
 {
 	// Total Linac accelerating voltage in Volts
 	double complex linac_V=0.0;
-
+	// Current simulation time [s]
+	double time=0.0;
 	// Temporary signals
 	double delta_tz=0.0, beam_charge=0.0;
 
+	// Open the file to store simulation results in
+	FILE * fp = NULL;
+	if(fname != NULL) fp = fopen(fname,"wb");
+
 	// Iterate over time steps
 	for(int t=0;t<sim->time_steps;t++){
+
+		// Calculate current simulation time
+		time = (t+1)*sim->Tstep;
 
 		// Iterate over Linacs
 		for(int l=0;l<sim->n_linacs;l++){
@@ -103,10 +139,10 @@ void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, 
 
 			// Run Linac simulation step
 			linac_V = Linac_Step(sim->linac_net[l], sim_state->linac_state_net[l],
-				// Input errors
-				delta_tz, beam_charge,
-				// Output errors
-				&sim_state->amp_error_net[l], &sim_state->phase_error_net[l]);
+			// Input errors
+			delta_tz, beam_charge,
+			// Output errors
+			&sim_state->amp_error_net[l], &sim_state->phase_error_net[l]);
 
 		} // End of iterate over Linacs
 
@@ -119,10 +155,17 @@ void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, 
 		// Doublecompress State
 		sim_state->dc_state);
 
+	if(t%OUTPUTFREQ == 0){
+		if(fp!=NULL) Write_Sim_Step(fp, time, sim, sim_state);
+    }
+
 	// Apply Beam-based feedback
 	// BBF_Step(sim->bbf, sim_state->dc_state, sim->linac_net, sim->n_linacs);
 
 	} // End iteration over time-steps
 
+
+	// Close the file to store simulation results in
+	if(fp!=NULL) fclose(fp);
 }
 

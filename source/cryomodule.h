@@ -45,6 +45,7 @@ typedef struct str_Cryomodule_State {
 	RF_State **rf_state_net;
 	MechMode_State **mechMode_state_net;
 	double *F_nu;
+	double complex cryo_Kg;
 
 } Cryomodule_State;
 
