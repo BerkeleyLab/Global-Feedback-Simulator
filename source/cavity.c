@@ -6,7 +6,7 @@
 ElecMode_dp ElecMode_Allocate_Array(int n)
 {
   ElecMode_dp elecMode_net = calloc(n, sizeof(ElecMode *));
-  
+
   return elecMode_net;
 }
 
@@ -35,8 +35,8 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   // Beam impedance/derivator (conversion factor between charge and beam induced voltage)
   // Includes shift to take beam phase relative to the RF into account
   elecMode -> k_beam = RoverQ*Q_L*cexp(-I*rf_phase)/Tstep*1e-12;
-  
-  // Drive port imperdance
+
+  // Drive port impedance
   elecMode -> k_drive = 2*sqrt(Q_drive*RoverQ);
 
   // Probe port impedance (includes phase shift between cavity cell and probe ADC)
@@ -50,12 +50,12 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
 
   // Mode's resonance frequency (RF frequency + offset)
   double omega_0_mode = LO_w0 + 2*M_PI*foffset;
-  // Mode's open-loop bandwidth 
+  // Mode's open-loop bandwidth
   elecMode -> omega_f = omega_0_mode/(2*Q_L);
 
   // Mode's baseline frequency offset
   elecMode -> omega_d_0 = 2*M_PI*foffset;
-  
+
   // Mode's single-pole, low-pass filter allocation
   // Calculate pole (mode's bandwidth)
   double complex mode_p = -elecMode -> omega_f;
@@ -72,7 +72,7 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   int i;
   for(i=0; i<n_mech;i++){
     // mech_couplings ((rad/s)/V^2) are always negative but sometimes referred to as positive quantities
-    // Take the absolute value to let user configuration the freedom of expressing it either way 
+    // Take the absolute value to let user configuration the freedom of expressing it either way
     elecMode -> A[i] = sqrt(fabs(mech_couplings[i])/RoverQ)/omega_0_mode;
     elecMode -> C[i] = -(omega_0_mode)*sqrt(fabs(mech_couplings[i]*RoverQ));
   }
@@ -190,7 +190,7 @@ double complex ElecMode_Step(ElecMode *elecMode,
   return v_out;
 }
 
-void Cavity_Allocate_In(Cavity *cav, 
+void Cavity_Allocate_In(Cavity *cav,
   ElecMode_dp elecMode_net, int n_modes,
   double L, double nom_grad,
   // XXX
@@ -210,7 +210,7 @@ void Cavity_Allocate_In(Cavity *cav,
   cav-> elecMode_net = elecMode_net;
 }
 
-Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes, 
+Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
   double L, double nom_grad,
    // XXX
   double rf_phase, double design_voltage,
@@ -221,7 +221,7 @@ Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
   cav = calloc(1,sizeof(Cavity));
 
   Cavity_Allocate_In(cav, elecMode_net, n_modes, L,
-    nom_grad, rf_phase, design_voltage, 
+    nom_grad, rf_phase, design_voltage,
     fund_index);
 
   return cav;
@@ -253,16 +253,16 @@ double complex Cavity_Step(Cavity *cav, double delta_tz,
   // Iterate over Electrical Modes and add up
   // mode contributions to probe and reflected signals
   for(i=0;i<cav->n_modes;i++){
-    
+
     // Sum of mode's accelerating voltages (Seen by the beam, no port couplings)
     v_out += ElecMode_Step(cav->elecMode_net[i], Kg_fwd, beam_charge, delta_tz, cav_state->elecMode_state_net[i], &v_probe_now, &v_em_now);
-    
+
     // Sum of cavity probe signals (including probe coupling and phase shift between cavity port and probe ADC)
     v_probe_sum += v_probe_now;
-    
+
     // Sum of emitted voltages (including emitted coupling and phase shift between cavity port and reverse ADC)
     v_em_sum += v_em_now;
-  
+
   } // End of Electrical mode iteration
 
   // Re-apply propagation through waveguide between cavity port and directional coupler on the reverse path
