@@ -65,7 +65,7 @@ if __name__ == "__main__":
 
 
     # if ut and utc and utb:
-    if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass & sim_test_pass:
+    if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass:
         print "ooooo ALL TESTS PASSED ooooo"
     else:
         print "xxxxx ALL TESTS FAILED xxxxx"

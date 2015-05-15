@@ -138,7 +138,7 @@
         },
 
         "cav_adc" : "cav_adc0",
-        "rfl_adc" : "rfl_adc0",
+        "rev_adc" : "rev_adc0",
         "fwd_adc" : "fwd_adc0"
     },
 
@@ -446,15 +446,15 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }
     },
 
-    "rfl_adc0": {
+    "rev_adc0": {
         "type":"adc",
-        "name":"rfl_adc0",
+        "name":"rev_adc0",
 
         "adc_max" : {
             "value": 180.0,
@@ -473,7 +473,7 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }
@@ -500,7 +500,7 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }

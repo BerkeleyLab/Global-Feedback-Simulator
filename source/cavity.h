@@ -43,18 +43,18 @@ typedef struct str_cavity{
 } Cavity;
 
 typedef struct str_cavity_state{
-	double complex E_probe, E_reverse, V;
+	double complex E_probe, E_reverse, E_fwd, V;
   double complex Kg;
 	ElecMode_State **elecMode_state_net;
 } Cavity_State;
 
-void Cavity_Allocate_In(Cavity *cav, 
+void Cavity_Allocate_In(Cavity *cav,
   ElecMode_dp elec_mode_net, int n_modes,
-  double L, double nom_grad, 
+  double L, double nom_grad,
   double rf_phase, double design_voltage,
   int fund_index);
 
-Cavity * Cavity_Allocate_New(ElecMode_dp elec_mode_net, int n_modes, 
+Cavity * Cavity_Allocate_New(ElecMode_dp elec_mode_net, int n_modes,
   double L, double nom_grad,
   double rf_phase, double design_voltage,
   int fund_index);
@@ -91,7 +91,7 @@ void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int index);
 void ElecMode_State_Allocate(ElecMode_State *elecMode_state, ElecMode *elecMode);
 void ElecMode_State_Deallocate(ElecMode_State *elecMode_state);
 
-double complex ElecMode_Step(ElecMode *elecMode, double complex Kg_fwd, 
+double complex ElecMode_Step(ElecMode *elecMode, double complex Kg_fwd,
 	double beam_charge, double delta_tz,
   ElecMode_State *elecMode_state,
   double complex *v_probe, double complex *v_em);

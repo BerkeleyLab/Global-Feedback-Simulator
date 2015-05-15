@@ -90,8 +90,12 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   double FPGA_out_sat,  // FPGA output saturation limit
 
   // Loop Delay
-  int loop_delay_size
-  )
+  int loop_delay_size,
+
+  // LLRF Noise Sources
+  double probe_ns_rms,
+  double rev_ns_rms,
+  double fwd_ns_rms)
 {
   rf_station->Clip = Clip;
   rf_station->PAscale = PAscale;
@@ -139,7 +143,11 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   FPGA_Allocate_In(&rf_station->fpga,kp,kp*0.1, set_point, FPGA_out_sat, Tstep);
 
   // Coarse Loop Delay
-  rf_station -> loop_delay.size = loop_delay_size;
+  rf_station->loop_delay.size = loop_delay_size;
+
+  rf_station->probe_ns_rms = probe_ns_rms;
+  rf_station->rev_ns_rms = rev_ns_rms;
+  rf_station->fwd_ns_rms = fwd_ns_rms;
 
 }
 
@@ -163,13 +171,20 @@ RF_Station * RF_Station_Allocate_New(
   double FPGA_out_sat,  // FPGA output saturation limit
 
   // Loop Delay
-  int loop_delay_size) {
+  int loop_delay_size,
+
+  // LLRF Noise Sources
+  double probe_ns_rms,
+  double rev_ns_rms,
+  double fwd_ns_rms)
+{
 
   RF_Station * rf_station;
   rf_station = calloc(1,sizeof(RF_Station));
 
   RF_Station_Allocate_In(rf_station, Tstep, Clip, PAmax, PAscale, p_TRF1, p_TRF2,
-    p_RXF, cav, stable_gbw, FPGA_out_sat, loop_delay_size);
+    p_RXF, cav, stable_gbw, FPGA_out_sat, loop_delay_size,
+    probe_ns_rms, rev_ns_rms, fwd_ns_rms);
 
   return rf_station;
 }
@@ -316,6 +331,13 @@ void SSA_Clear(RF_Station *rf_station, RF_State * rf_state)
   Filter_State_Clear(&rf_station->TRF2, &rf_state->TRF2);
 }
 
+void Apply_LLRF_Noise(RF_Station *rf_station, RF_State *rf_state)
+{
+  rf_state->probe_ns = randn(0.0, rf_station->probe_ns_rms) + _Complex_I*randn(0.0, rf_station->probe_ns_rms);
+  rf_state->rev_ns = randn(0.0, rf_station->rev_ns_rms) + _Complex_I*randn(0.0, rf_station->rev_ns_rms);
+  rf_state->fwd_ns = randn(0.0, rf_station->fwd_ns_rms) + _Complex_I*randn(0.0, rf_station->fwd_ns_rms);
+}
+
 double complex RF_Station_Step(
   // Configuration parameters
   RF_Station *rf_station,
@@ -328,13 +350,13 @@ double complex RF_Station_Step(
   // Intermediate signals
   double complex E_probe_delayed, E_probe_lp, sig_error, Kg, V_acc;
 
-  // LLRF noise (probe and reverse signals)
-  // (set noise to 0 for now)
-  double complex probe_ns=0.0, rev_ns=0.0;
+  // LLRF noise (probe, forward and reverse signals)
+  // Generate Gaussian Noise
+  Apply_LLRF_Noise(rf_station, rf_state);
 
   // // Apply LLRF Noise
-  rf_state->cav_state.E_probe += probe_ns;
-  rf_state->cav_state.E_reverse += rev_ns;
+  rf_state->cav_state.E_probe += rf_state->probe_ns;
+  rf_state->cav_state.E_reverse += rf_state->rev_ns;
 
   // // Apply (overall) loop delay to cavity probe signal
   E_probe_delayed = Delay_Step(rf_state->cav_state.E_probe, &rf_station->loop_delay, &rf_state->loop_delay_state);
@@ -350,6 +372,9 @@ double complex RF_Station_Step(
 
   // Cavity
   V_acc = Cavity_Step(rf_station->cav, delta_tz, Kg, beam_charge, &rf_state->cav_state);
+
+  // Store digitized forward signal
+  rf_state->cav_state.E_fwd = Kg + rf_state->fwd_ns;
 
   //  Overall cavity accelerating voltage (as seen by the beam)
   return V_acc;

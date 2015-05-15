@@ -11,6 +11,7 @@
 #include <complex.h>
 #include "filter.h"
 #include "cavity.h"
+#include "noise.h"
 
 /*
  * FPGA controller
@@ -39,7 +40,7 @@ double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stno
 /*
  * Delay
  */
- 
+
 typedef struct str_Delay {
 	int size;
 } Delay;
@@ -74,6 +75,9 @@ typedef struct str_RF_Station {
 
   Delay loop_delay; // Loop Delay
 
+  // RMS Noise setting for each ADC
+  double probe_ns_rms, rev_ns_rms, fwd_ns_rms;
+
 } RF_Station;
 
 typedef RF_Station* RF_Station_p;
@@ -88,6 +92,9 @@ typedef struct str_RF_Station_State {
   Cavity_State cav_state;
   FPGA_State fpga_state;
   Delay_State loop_delay_state;
+
+  // Noise signal for each sampled signal
+  double probe_ns, rev_ns, fwd_ns;
 
 } RF_State;
 
@@ -106,7 +113,10 @@ void RF_Station_Allocate_In(RF_Station * rf_station,
   Cavity *cav,
   double stable_gbw,
   double FPGA_out_sat,
-  int loop_delay_size);
+  int loop_delay_size,
+  double probe_ns_rms,
+  double rev_ns_rms,
+  double fwd_ns_rms);
 
 RF_Station * RF_Station_Allocate_New(
   double Tstep,
@@ -118,7 +128,10 @@ RF_Station * RF_Station_Allocate_New(
   Cavity *cav,
   double stable_gbw,
   double FPGA_out_sat,
-  int loop_delay_size);
+  int loop_delay_size,
+  double probe_ns_rms,
+  double rev_ns_rms,
+  double fwd_ns_rms);
 
 void RF_Station_Deallocate(RF_Station *rf_station);
 
@@ -141,11 +154,11 @@ void RF_Station_Clear(RF_Station *rf_station, RF_State *rf_state);
  * TODO: Can be optimized.
  */
 double complex Phase_Shift(double complex in, double theta);
-
 double complex Saturate(double complex in, double harshness);
+void Apply_LLRF_Noise(RF_Station *rf_station, RF_State *rf_state);
 
 /*
- * Step a linac's SSA configuration in time, 
+ * Step a linac's SSA configuration in time,
  * drive_in -> [[ TRF1 -> saturate_c -> TRF2 ]] -> TRF2_OUTPUT_D
  *                  `------.  triode ,------'
  */

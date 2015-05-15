@@ -258,10 +258,10 @@ class ElecMode:
         k_probe = np.exp(1j*self.phase_probe['value'])/np.sqrt(self.Q_probe['value']*RoverQ);
         k_em = np.exp(1j*self.phase_rev['value'])/np.sqrt(self.Q_drive['value']*RoverQ);
 
-        Q_L = 1/(1/self.Q_0['value'] + 1/self.Q_drive['value'] + 1/self.Q_probe['value'])
+        Q_L = 1.0/(1.0/self.Q_0['value'] + 1.0/self.Q_drive['value'] + 1.0/self.Q_probe['value'])
         bw = w0/(2.0*Q_L);
         k_beam = RoverQ*Q_L*np.exp(-1j*beam_phase)/Tstep;
-        k_drive = 2*np.sqrt(self.Q_drive['value']*RoverQ);
+        k_drive = 2.0*np.sqrt(self.Q_drive['value']*RoverQ);
         mode_dict = {"mode_name": mode_name,"w0": w0, "beam_phase": beam_phase, "RoverQ": RoverQ, "foffset": foffset, "Q_L": Q_L, "bw": bw, "k_beam": k_beam, "k_drive": k_drive, "k_probe": k_probe, "k_em": k_em}
 
         return mode_dict
@@ -562,8 +562,8 @@ class Station:
         cav_adc_entry = confDict[station_entry]['cav_adc']
         self.cav_adc = ADC(confDict, cav_adc_entry)
 
-        rfl_adc_entry = confDict[station_entry]['rfl_adc']
-        self.rfl_adc = ADC(confDict, rfl_adc_entry)
+        rev_adc_entry = confDict[station_entry]['rev_adc']
+        self.rev_adc = ADC(confDict, rev_adc_entry)
 
         fwd_adc_entry = confDict[station_entry]['fwd_adc']
         self.fwd_adc = ADC(confDict, fwd_adc_entry)
@@ -592,7 +592,7 @@ class Station:
         + "loop_delay_size: " + str(self.loop_delay_size) + "\n"
         + "cav_adc: " + str(self.cav_adc) + "\n"
         + "fwd_adc: " + str(self.fwd_adc) + "\n"
-        + "rfl_adc: " + str(self.rfl_adc) + "\n"
+        + "rev_adc: " + str(self.rev_adc) + "\n"
         + "N_Stations: " + str(self.N_Stations) + "\n"
         + "piezo_list: " + '\n'.join(str(x) for x in self.piezo_list))
 
@@ -624,8 +624,32 @@ class Station:
 
         cavity_pointer = self.cavity.Get_C_Pointer()
 
+        # Translate ADC noise Power Spectral Density (PSD),
+        # which is expressed in [dBc/Hz] (where the carrier is the full range of the ADC)
+        # into Volts RMS to scale the pseudo-random Gaussian noise
+        probe_psd = self.cav_adc.noise_psd['value'] # [dBc/Hz]
+        rev_psd = self.rev_adc.noise_psd['value']   # [dBc/Hz]
+        fwd_psd = self.fwd_adc.noise_psd['value']   # [dBc/Hz]
+
+        # Pre-calculate some common terms
+        cav_V_nominal = self.cavity.nom_grad['value']*self.cavity.L['value']    # Cavity nominal accelerating voltage [V]
+        bandwidth = 0.5/Tstep_global                                            # Bandwidth [Hz]
+
+        # Calculate port couplings
+        fund_index = self.cavity.fund_index['value']
+        fund_Emode = self.cavity.elec_modes[fund_index]
+        RoverQ = fund_Emode.RoverQ['value']
+        k_probe = 1.0/np.sqrt(fund_Emode.Q_probe['value']*RoverQ);
+        k_em = 1.0/np.sqrt(fund_Emode.Q_drive['value']*RoverQ);
+        k_drive = 2.0*np.sqrt(fund_Emode.Q_drive['value']*RoverQ);
+
+        # Now calculate ADC noise in Volts RMS (see Physics documentation for details)
+        probe_ns_rms = 1.5*np.sqrt(0.5*10.0**(probe_psd/10.0)*bandwidth)*cav_V_nominal*k_probe
+        rev_ns_rms = 1.5*np.sqrt(0.5*10.0**(rev_psd/10.0)*bandwidth)*cav_V_nominal*k_em
+        fwd_ns_rms = 1.5*np.sqrt(0.5*10.0**(fwd_psd/10.0)*bandwidth)*cav_V_nominal/k_drive
+
         rf_station = acc.RF_Station()
-        acc.RF_Station_Allocate_In(rf_station, Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size)
+        acc.RF_Station_Allocate_In(rf_station, Tstep_global, Clip, PAmax, PAscale, p_TRF1, p_TRF2, p_RXF, cavity_pointer, stable_gbw, FPGA_out_sat, loop_delay_size, probe_ns_rms, rev_ns_rms, fwd_ns_rms)
 
         self.C_Pointer = rf_station
 

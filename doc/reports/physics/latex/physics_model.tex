@@ -11,6 +11,7 @@
 \usepackage{tikz}
 \usetikzlibrary{shapes, arrows}
 \usepackage{appendix}
+\usepackage{amsmath}
 
 \usepackage{bm, amssymb, pifont, pgfplots, multirow, float, soul, color, verbatim, indentfirst}
 
@@ -35,7 +36,7 @@
 \date{\today}
 
 \begin{document}
-\numberwithin{equation}{section} 
+\numberwithin{equation}{section}
 \maketitle
 \setcounter{tocdepth}{2}
 \tableofcontents
@@ -51,11 +52,11 @@
 \label{fig:lclsII-feedback_layout}
 \end{figure}
 
-During the design, commissioning and operations of a Linac-driven FEL it is useful to have modeling capabilities to abstract and analyze some of the complex problems involved in LLRF and beam-based feedback in the comfortable environment of computer simulations. The simulation framework presented here is a dramatic improvement of a previous version written in Octave/Matlab~\cite{ref:model-paper}, where extensively tested LLRF models are integrated with a longitudinal phase space tracking simulator~\cite{ref:litrack} along with the interaction between the two via beam-based feedback using a computationally efficient simulation engine. 
+During the design, commissioning and operations of a Linac-driven FEL it is useful to have modeling capabilities to abstract and analyze some of the complex problems involved in LLRF and beam-based feedback in the comfortable environment of computer simulations. The simulation framework presented here is a dramatic improvement of a previous version written in Octave/Matlab~\cite{ref:model-paper}, where extensively tested LLRF models are integrated with a longitudinal phase space tracking simulator~\cite{ref:litrack} along with the interaction between the two via beam-based feedback using a computationally efficient simulation engine.
 
 The models include beam instrumentation, considerations on loop delays for in both the LLRF and beam-based feedback loops, as well as the ability to inject noise (both correlated and uncorrelated) at different points of the machine including a full characterization of the electron gun performance parameters. The Linac is divided into generic compounds composed of an accelerating section followed by a bunch compressor (where the bunch compressor can be enabled/disabled) and beam performance parameters are measured at any stage of the machine for characterization and/or for use to apply beam-based feedback. Time-series data is computed at a configurable simulation step size and results can be visualized in both time and frequency domain, including transfer functions between any noise source and beam performance parameters.
 
-Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the LCLS-II layout, as configured at the time of this writing. The model described here represents each component of the machine in a way that configuration parameters can be adapted as the machine layout and configuration evolves (during the design or in future upgrades), where the contribution of each noise source (correlated or uncorrelated) to the machine performance budget can be quantified, including the ability to represent the effectiveness of different feedback loops to reduce noise contributions under different configurations. 
+Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the LCLS-II layout, as configured at the time of this writing. The model described here represents each component of the machine in a way that configuration parameters can be adapted as the machine layout and configuration evolves (during the design or in future upgrades), where the contribution of each noise source (correlated or uncorrelated) to the machine performance budget can be quantified, including the ability to represent the effectiveness of different feedback loops to reduce noise contributions under different configurations.
 
 \section{Model hierarchy}
 
@@ -146,7 +147,7 @@ Differentiating both sides of equation~\ref{eq:currents} and substituting using 
 \end{equation}
 
 \noindent which can be expressed as a function of the mode's nominal resonance frequency $\omega_{0_{\mu}}$ ($1/L_{\mu}C_{\mu}=\omega_{0_{\mu}}^2$) and loaded Q ($1/R_{\rm L_{\mu}}C_{\mu}=\omega_{0_{\mu}}/Q_{\rm L_{\mu}}$):
- 
+
 \begin{equation}
   \frac{d^2\vec V_{\mu}}{dt^2} + \frac{\omega_{0_{\mu}}}{Q_{\rm L_{\mu}}}\frac{d\vec V_{\mu}}{dt} + \omega_{0_{\mu}}^2 \vec V_{\mu} = \frac{\omega_{0_{\mu}}^2 R_{\rm L_{\mu}}}{Q_{\rm L_{\mu}}}\frac{d\vec I_{\mu}}{dt}
   \label{eq:2nd_order}
@@ -170,7 +171,7 @@ Transposing the cavity drive term into a combination of the RF source incident w
 
 \noindent where $\vec K_{\rm g}$ is the incident wave amplitude in $\sqrt{\rm Watts}$, $R_{\rm g_{\mu}}=Q_{\rm g_{\mu}}(R/Q)_{\mu}$ is the coupling impedance of the drive port, $\vec I_{\rm beam}$ is the beam current, and $R_{\rm b_{\mu}}=Q_{\rm L_{\mu}}(R/Q)_{\mu}$ is the coupling impedance to the beam.
 
-The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{g_{\mu}}+1/Q_{p_{\mu}}$, where $1/Q_{0_{\mu}}$ represents losses to the cavity walls, $1/Q_{g_{\mu}}$ represents coupling to the input coupler, and $1/Q_{p_{\mu}}$ represents coupling to the field probe. $(R/Q)_{\mu}$ is the shunt impedance of the mode in Ohms, a pure geometry term computable for each particular eigenmode using E\&M codes like Superfish. Physically, shunt impedance relates a mode's stored energy $U_{\mu}$ to the accelerating voltage it produces, according to 
+The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{g_{\mu}}+1/Q_{p_{\mu}}$, where $1/Q_{0_{\mu}}$ represents losses to the cavity walls, $1/Q_{g_{\mu}}$ represents coupling to the input coupler, and $1/Q_{p_{\mu}}$ represents coupling to the field probe. $(R/Q)_{\mu}$ is the shunt impedance of the mode in Ohms, a pure geometry term computable for each particular eigenmode using E\&M codes like Superfish. Physically, shunt impedance relates a mode's stored energy $U_{\mu}$ to the accelerating voltage it produces, according to
 
 \begin{equation}
   U_{\mu} = \frac{V_{\mu}^2}{(R/Q)_{\mu}\omega_{0_{\mu}}}
@@ -201,7 +202,7 @@ The $\frac{\omega_{d_\mu}}{\omega_{f}}$ term in \ref{eq:1st_order2} (the imagina
 \noindent The governing equation for the mode's accelerating voltage can thus be written as a set of two first order differential equations (eqs.~\ref{eq: dS_dt} and~\ref{eq: d0_dt}):
 
 \begin{equation}
-  \frac{d\vec{S}_{\mu}}{dt} = -\omega_{f_{\mu}}\vec{S}_{\mu} + \omega_{f_{\mu}}e^{-j\theta_{\mu}}\left(2\vec{K}_g\sqrt{R_{g_{\mu}}} 
+  \frac{d\vec{S}_{\mu}}{dt} = -\omega_{f_{\mu}}\vec{S}_{\mu} + \omega_{f_{\mu}}e^{-j\theta_{\mu}}\left(2\vec{K}_g\sqrt{R_{g_{\mu}}}
     - R_{b_{\mu}}\vec{I}_{\rm beam} \right)
 \label{eq: dS_dt}
 \end{equation}
@@ -297,7 +298,7 @@ The frequency modulation can be better observed in Fig.~\ref{fig:cav_step5}, whe
 
 \subsection{FPGA Controller}
 
-Feedback is necessary in order to guarantee the stability of the cavity fields. Latency of the control loop limits the performance of the system and is typically implemented in an FPGA in the form of a Proportional-Integrator (PI) Controller. A flow chart of this controller is shown below, followed by the mathematical expressions. 
+Feedback is necessary in order to guarantee the stability of the cavity fields. Latency of the control loop limits the performance of the system and is typically implemented in an FPGA in the form of a Proportional-Integrator (PI) Controller. A flow chart of this controller is shown below, followed by the mathematical expressions.
 
 %Define block styles
 \tikzstyle{block} = [rectangle, draw, node distance = 2.5cm, text width =16em, text centered, rounded corners, minimum height=2em]
@@ -313,20 +314,20 @@ Feedback is necessary in order to guarantee the stability of the cavity fields. 
 	\node [block, text width = 1cm] (Kp) {$k_{p}$};
 	\node [block, below of=Kp, node distance= 1.5cm, text width = 2.2cm] (integrator) {$k_{i} 	 \int_{{0}}^{t} e(\tau)d\tau$};
 	\node [circ, left of= Kp, xshift = -1cm](sum){$\Sigma$};
-	\node [block, below of=Kp, node distance = 4cm, text width = 2cm](Cavity){Cavity}; 
-	\node [block, left of= sum, text width = 1cm] (set point){$\vec{E}_{\rm sp}$}; 
+	\node [block, below of=Kp, node distance = 4cm, text width = 2cm](Cavity){Cavity};
+	\node [block, left of= sum, text width = 1cm] (set point){$\vec{E}_{\rm sp}$};
 	\node [circ, right of= Kp] (sum1){$\Sigma$};
 
-	\path [line] (sum) -- (-3cm,0) |- (integrator); 
+	\path [line] (sum) -- (-3cm,0) |- (integrator);
 	\path [line] (sum) -- node[near start, anchor = south]{$e(t)$}(Kp);
 	\path [line] (integrator) -| (sum1);
-	\path [line] (sum1) -- (4cm,0) |- (Cavity); 
+	\path [line] (sum1) -- (4cm,0) |- (Cavity);
 	\path [line] (Cavity) -| node[near end]{$-\vec{E}_{\rm probe}$}(sum);
-	\path [line] (set point) -- (sum); 
+	\path [line] (set point) -- (sum);
 	\path [line] (Kp) -- (sum1);
 	\path [line] (sum1) -- node{$\vec{K}_{\rm drive}$}(6cm,0);
-	
-	
+
+
 \end{tikzpicture}
 \caption{Flow chart of the PI controller}
 \end{figure}
@@ -337,7 +338,7 @@ Based on different factors, a reference cavity field (set point, $\vec{E}_{\rm s
 e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 \ee
 
-\noindent This error is passed onto a proportional and integral controller, with (following text book notation) respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the FPGA drive signal $\vec{K}_{\rm drive}$ is altered according to: 
+\noindent This error is passed onto a proportional and integral controller, with (following text book notation) respective gain constants $k_{p}$ and $k_{i}$. Following the paths, we see that the FPGA drive signal $\vec{K}_{\rm drive}$ is altered according to:
 \be \label{eq: controller}
 \vec{K}_{\rm drive} = k_{p} e(t) + k_{i} \int_{\tau_{0}}^{t} e(t) d\tau
 \ee
@@ -353,7 +354,7 @@ e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 \label{fig:fpga_unit_test}
 \end{figure}
 
-In order to implement the PI controller in software, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below. 
+In order to implement the PI controller in software, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below.
 \be
 k_{i} \int_{\tau_{0}}^{t} e(\tau)d\tau
 \ee
@@ -365,15 +366,15 @@ There are many ways to evaluate this integral. Most commonly utilized are right-
 		      + f(\tau_{n-1}) + \frac{f(\tau_{n})}{2}\right]
 \ee
 
-\noindent where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following: 
+\noindent where the subscript $n$ indicates the time step. To transform to actual time, one merely uses the relationship $\tau_{n} = n\Delta t$. Applied to our problem, we have the following:
 
 \be
 k_{i} \int_{\tau_{0}}^{\tau_{n}} e(\tau)d\tau \approx k_{i}T
-	      \left[\frac{e^{0}}{2} + e^{1} + e^{2} + ... 
+	      \left[\frac{e^{0}}{2} + e^{1} + e^{2} + ...
 		+ e^{n-1} + \frac{e^{n}}{2} \right]
 \ee
 
-\noindent where again the superscript notation indicates the time step. 
+\noindent where again the superscript notation indicates the time step.
 
 The overall update for $\vec{K}_{\rm drive}$ can then be expressed as:
 \be \label{eq: controller_dis}
@@ -426,7 +427,6 @@ LLRF noise is dominated by ADC and preamplifier noise, which typically have broa
 RF systems include several components such as the RF cavity, filters, digitizers, mixers (up and down converters), digital controller, etc. Some of these components are shown the the block diagram in Fig.~\ref{fig:Station_block_diagram}. Since different configurations of the RF system will result in differences in its frequency response, we prefer to express each noise sources in terms of its Power Spectral Density (PSD).
 
 It is useful to express RF analog signal processing and ADC noise in dBc/Hz, where dBc is a logarithmic representation of the ratio between noise and carrier power. In the accelerator case, the carrier represents the nominal cavity signal, in turn something close to the full range of the \hbox{ADC}.  Normalization by the bandwidth gives a true performance number, independent of bandwidth (or equivalently, averaging). As mentioned earlier, we are only considering broad-band noise, so we will use a single noise value expressed in dBc/Hz, being constant over the entire frequency spectrum. This is a figure of merit for the RF measurement channel, which will vary depending on the amplifiers and ADCs used.
-%Integrating this noise using the closed-loop frequency response one obtain the noise contribution in dBc (or Volts, or $\rm{V^2}$).
 
 In our simulation models we use pseudo-random number generators to emulate noise sources, and typically express signals in normalized units, where the normalizing factor is the nominal cavity voltage. In the case of LLRF broadband noise, we choose normally distributed pseudo-random generated samples with zero mean and a variance calculated using the LLRF noise specs (in dBc/Hz), the full range of the ADC, and the operating bandwidth.
 
@@ -435,7 +435,7 @@ Let us use as an example the measured noise PSD of the LLRF4 system:
   \centering {\rm PSD}_{\rm LLRF} = -135\thinspace{\rm dBc/Hz} = 10^{-13.5} {\rm /Hz}
 \end{equation}
 The total normalized noise power in a bandwidth $B$ is then
-%First we convert from dBc/Hz to dBc integrating over the operating bandwidth (B):
+
 \begin{equation}
   \centering {\rm Noise}_{\rm LLRF} ={\rm PSD}_{\rm LLRF}\cdot B
   \label{eq:PSD_to_noise}
@@ -460,21 +460,25 @@ Once we know the bandwidth, we can obtain LLRF noise from the PSD using Eq.~\eqr
 \end{equation}
 where $P_{\rm Noise}$ and $P_{\rm ADC}$ can be given in any self-consistent power units, such as $V^2$,
 and $P_{\rm ADC}$ refers to the full-scale level of the \hbox{ADC}.
-As mentioned earlier, we are interested in expressing the LLRF noise in normalized units, using the nominal cavity voltage as normalizing factor. Considering we design the RF system to provide the ADC with a dynamic range of 1.5 times the nominal cavity voltage as an example, 
-%\begin{equation}
-%  \centering V_{\rm Noise} (norm.) = \frac{V_{\rm Noise}(V)}{V_{\rm nom}(V)} = \frac{V_{\rm Noise}(V)}{V_{\rm ADC}(V)} \times \frac{V_{\rm ADC}(V)}{V_{\rm nom}(V)}=1.5 \times \sqrt{\frac{P_{\rm Noise}(V^2)}{P_{\rm ADC}(V^2)}}
-%  \label{eq:v_noise_norm_def}
-%\end{equation}
-%where:\\
-%$V_{\rm Noise} (norm.) = \mbox{LLRF noise voltage in normalized units,}$
-%$V_{\rm nom}(V) = \mbox{Nominal cavity voltage in Volts} \quad \mbox{and} \quad $
-%$V_{\rm ADC}(V) = \mbox{Full range of the ADC in Volts}$\\
-%Combining Eqs.~\ref{eq:dBc_def} and~\ref{eq:PSD_to_noise}, we find:
-%\begin{equation}
-%  \centering \frac{P_{\rm Noise}(V^2)}{P_{\rm ADC}(V^2)} = 10^{\frac{Noise_{\rm LLRF}(dBc)}{10}} = 10^{\frac{PSD_{\rm LLRF}(dBc/Hz)}{10}} \times B
-%  \label{eq:power_fraction}
-%\end{equation}
-%and substituting Eq.~\ref{eq:power_fraction} into~\ref{eq:v_noise_norm_def}, we get:
+As mentioned earlier, we are interested in expressing the LLRF noise in normalized units, using the nominal cavity voltage as normalizing factor. Considering we design the RF system to provide the ADC with a dynamic range of 1.5 times the nominal cavity voltage as an example:
+\begin{equation}
+ \centering V_{\rm Noise, norm} = \frac{V_{\rm Noise}(V)}{V_{\rm nom}(V)} = \frac{V_{\rm Noise}(V)}{V_{\rm ADC}(V)} \times \frac{V_{\rm ADC}(V)}{V_{\rm nom}(V)}=1.5 \times \sqrt{\frac{P_{\rm Noise}(V^2)}{P_{\rm ADC}(V^2)}}
+ \label{eq:v_noise_norm_def}
+\end{equation}
+
+\noindent where:
+\begin{align*}
+V_{\rm Noise,norm} &= \mbox{LLRF noise voltage in normalized units,}\\
+V_{\rm nom}(V)        &= \mbox{Nominal cavity voltage in Volts} \quad \mbox{and}\\
+V_{\rm ADC}(V)       &= \mbox{Full range of the ADC in Volts}.
+\end{align*}
+
+Combining Eqs.~\ref{eq:dBc_def} and~\ref{eq:PSD_to_noise}, we find:
+\begin{equation}
+ \centering \frac{P_{\rm Noise}(V^2)}{P_{\rm ADC}(V^2)} = 10^{\frac{Noise_{\rm LLRF}(dBc)}{10}} = 10^{\frac{PSD_{\rm LLRF}(dBc/Hz)}{10}} \times B
+ \label{eq:power_fraction}
+\end{equation}
+and substituting Eq.~\ref{eq:power_fraction} into~\ref{eq:v_noise_norm_def}, we get:
 and defining $V_{\rm rms,norm}$ as the root-mean-square noise component added to
 normalized cavity voltage, we get:
 \begin{equation}
@@ -513,6 +517,12 @@ which can then be approximated to amplitude and phase errors using Eqs.~\eqref{e
 
 \subsection{Simulation results}
 
+\begin{figure}
+\centering
+\includegraphics[scale=0.25]{../figures/rf_station_test.png}
+\caption{RF Station test. Closed-loop RF system where cavity is filled and the field stabilizes at the set-point value as controlled by the FPGA controller.}
+\label{fig:rf_test_step}
+\end{figure}
 
 \newpage
 
@@ -529,7 +539,7 @@ The cryomodule model shown in Fig.~\ref{fig:Cryomodule_block_diagram} includes a
 
 \subsection{Electro-mechanical interactions}
 
-The presence of an EM field inside the cavity generates forces on the cavity walls, resulting in deformation of the cavity and subsequently in a shift of the cavity resonant frequency~\cite{ref:delayen}, designated in Section~\ref{sec:rf_station} as detune frequency $\omega_{d_\mu}$. Each mode's fields generate a force proportional to $V_\mu^2 = |\vec V_\mu|^2$, and mechanical displacements influence each mode's instantaneous detune frequency.  Construct $\omega_d$ in Section~\ref{sec:rf_station} as a baseline $\omega_{d0}$ from the electrical mode solution ({\it e.g.}, $-2\pi (800\thinspace {\rm kHz})$ for the TTF cavity's $8\pi/9$ mode), plus a perturbation $\omega_{\mu}$ contributed from the mechanical mode deflections. 
+The presence of an EM field inside the cavity generates forces on the cavity walls, resulting in deformation of the cavity and subsequently in a shift of the cavity resonant frequency~\cite{ref:delayen}, designated in Section~\ref{sec:rf_station} as detune frequency $\omega_{d_\mu}$. Each mode's fields generate a force proportional to $V_\mu^2 = |\vec V_\mu|^2$, and mechanical displacements influence each mode's instantaneous detune frequency.  Construct $\omega_d$ in Section~\ref{sec:rf_station} as a baseline $\omega_{d0}$ from the electrical mode solution ({\it e.g.}, $-2\pi (800\thinspace {\rm kHz})$ for the TTF cavity's $8\pi/9$ mode), plus a perturbation $\omega_{\mu}$ contributed from the mechanical mode deflections.
 
 Consider the electrical mode index $\mu$ to include not only electrical eigenmodes of one cavity, but modes of all cavities in the mechanical assembly ({\it e.g.}, cryomodule). Also include the dependence on piezoelectric actuator voltages $V_\kappa$. Then if the assembly's mechanical eigenmodes are indexed by $\nu$, mechanical forces $F_\nu$ and displacements $x_\nu$ of those eigenmodes are related to the electrical system by
 
@@ -591,7 +601,7 @@ k_\nu x_\nu = \frac{F_\nu}{ \displaystyle 1 + \frac{1}{Q_\nu}\frac{s}{\omega_\nu
     x_{\nu} \\
     y_{\nu}
   \end{pmatrix}
-  = 
+  =
   \begin{pmatrix}
     a_{\nu}-s& -b_{\nu} \\
     b_{\nu} & a_{\nu}-s \\
@@ -621,17 +631,17 @@ c_{\nu} = -\frac{1}{k_{\nu}}\cdot\frac{a_{\nu}^2+b_{\nu}^2 }{ b_{\nu}} = - \frac
 
 A deeper understanding of the forces and responses of a single electrical eigenmode $\mu$ of the cavity comes from Slater's perturbation theory.  For an eigenmode solution $\vec H_{\mu}(\vec r)\sin(\omega_{0_{\mu}} t)$, $\vec E_{\mu}(\vec r)\cos(\omega_{0_{\mu}} t)$ to Maxwell's equations in a closed conducting cavity (volume $V$), the stored energy $U_{\mu}$ is given by
 
-\begin{equation} 
+\begin{equation}
 U_{\mu} = \int_V \left[ \frac{\mu_0}{4}H_{\mu}^2(\vec r)
-                 +  \frac{\varepsilon_0}{4}E_{\mu}^2(\vec r) \right] dv~~~.
+        +  \frac{\varepsilon_0}{4}E_{\mu}^2(\vec r) \right] dv~~~.
 \end{equation}
 
 Suppose a mechanical eigenmode $\nu$ involves small deflections $x_{\nu}\cdot \vec\xi(\vec r)$, where $x_{\nu}$ gives the amount of deflection, and the dimensionless quantity $\xi(\vec r)$ represents the mode shape. Both the force on the mode and the response to a deflection $x_{\nu}$ are given in terms of the Slater integral
 
 \begin{equation}
- F_{\mu} = \int_S \left[ \frac{\mu_0    }{ 4}H^2(\vec r)
-                 -  \frac{\varepsilon_0}{ 4}E^2(\vec r) \right]
-   \vec n(\vec r) \cdot \vec\xi(\vec r) dS ~~~,
+ F_{\mu}  = \int_S \left[ \frac{\mu_0}{ 4}H^2(\vec r)
+          -  \frac{\varepsilon_0}{ 4}E^2(\vec r) \right]
+          \vec n(\vec r) \cdot \vec\xi(\vec r) dS ~~~,
 \end{equation}
 
 \noindent where $\vec n(\vec r)$ is the normal vector to the cavity surface $S$, and $F_{\mu}$ directly gives the force. Note in particular the subtraction of $E$ and $H$ terms, contrasted with the addition in the energy integral.  Also notice the dot product of the deflection shape with the surface normal.  Then
@@ -648,13 +658,13 @@ F_{\mu} = \left(\frac{F}{U}\right)_{\mu} \cdot \frac{1}{(R/Q)_{\mu}\omega_{0_{\m
 \label{eq:F_mu}
 \end{equation}
 
-\noindent where $\left(F/U\right)_{\mu}$ is a property of the electrical eigenmode, independent of amplitude, with units of~\hbox{m$^{-1}$}. Thus 
+\noindent where $\left(F/U\right)_{\mu}$ is a property of the electrical eigenmode, independent of amplitude, with units of~\hbox{m$^{-1}$}. Thus
 
 \begin{equation}
 A_{\nu\mu} = \left(\frac{F}{U}\right)_{\mu} \cdot \frac{1}{(R/Q)_{\mu}\omega_{0_{\mu}}}~~~,
 \end{equation}
 
-\noindent and 
+\noindent and
 
 \begin{equation}
 C_{\mu\nu} = -\omega_{0_{\mu}} \left(\frac{F}{U}\right)_{\mu}
@@ -696,13 +706,13 @@ The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every t
   \label{eq:dy/dt}
 \end{equation}
 
-\noindent where: 
+\noindent where:
 
 \be
-a_{\nu} =  \frac{-\omega_{\nu}}{2Q_{\nu}} 
+a_{\nu} =  \frac{-\omega_{\nu}}{2Q_{\nu}}
 \ee
 \be
-b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}} 
+b_{\nu} = \omega_{\nu} \sqrt{1 - \frac{1}{4Q_{\nu}^{2}}}
 \ee
 \be
 c_{\nu} = -\frac{\omega_{\nu}}{k_{\nu}b_{\nu}}
@@ -722,9 +732,9 @@ In order to discretize this equation, we will use the superscript $n$ to indicat
 \be
 \frac{dA}{dt} \approx \frac{A^{n+1} - A^{n}}{T}
 \ee
-where $T$ is the time step size (usually expressed as $\Delta t$). 
+where $T$ is the time step size (usually expressed as $\Delta t$).
 
-Discretizing Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt}, we find: 
+Discretizing Equations~\ref{eq:dx/dt} and~\ref{eq:dy/dt}, we find:
 \be
 \label{eq_x}
 x^{n+1}_{\nu} = x^{n}_{\nu} + T(ax^{n}_{\nu} - by^{n}_{\nu}) = x^{n}_{\nu}(1 + Ta_{\nu}) - Tb_{\nu}y^{n}_{\nu}
@@ -738,7 +748,7 @@ At this point we have covered the mechanical state-space model physics and softw
 
 \subsection{Simulation results}
 
-We showed in Section~\ref{sec:cav_sim_results} the proper behavior of the cavity model in the presence of a frequency perturbation. Here we propose a simple exercise where one electrical eignemode ($\pi$-mode) interacts with one mechanical eigenmode following the equations described above. 
+We showed in Section~\ref{sec:cav_sim_results} the proper behavior of the cavity model in the presence of a frequency perturbation. Here we propose a simple exercise where one electrical eignemode ($\pi$-mode) interacts with one mechanical eigenmode following the equations described above.
 
 \begin{figure}
 \centering
@@ -754,7 +764,7 @@ We showed in Section~\ref{sec:cav_sim_results} the proper behavior of the cavity
 \label{fig:cryo_test_freqs}
 \end{figure}
 
-In this exercise, the RF controller is configured in open-loop mode, where the cavity is driven by a constant signal of 30 $\sqrt{W}$. Fig.~\ref{fig:cryo_test_step} shows the cavity signals. As the cavity fills up, Lorentz forces start shifting the mode's frequency and as a result the $\pi$-mode accelerating field ($\vec V_{\mu}$) starts decreasing, where the opposite effect can be observed on the reverse field ($\vec E_{\rm reverse}$). 
+In this exercise, the RF controller is configured in open-loop mode, where the cavity is driven by a constant signal of 30 $\sqrt{W}$. Fig.~\ref{fig:cryo_test_step} shows the cavity signals. As the cavity fills up, Lorentz forces start shifting the mode's frequency and as a result the $\pi$-mode accelerating field ($\vec V_{\mu}$) starts decreasing, where the opposite effect can be observed on the reverse field ($\vec E_{\rm reverse}$).
 
 Fig.~\ref{fig:cryo_test_freqs} shows the detune frequency in more detail. The frequency shift is proportional to the square of the voltage and the two are related by the Lorentz coupling ($k_{\rm L}$ in the figure, which has units of $\rm Hz/V^2$). The green curve shows the actual frequency shift, where the dynamics of the mechanical eigenmode are taken into account (see the block diagram in fig.~\ref{fig:EM_couplings}). Note the negative sign, introduced in order to facilitate the two curves to be plotted side-by-side, and showing that the frequency shifts in the right direction according to equations~\ref{eq:delta_omega_mu} and~\ref{eq:F_mu} derived above.
 
@@ -850,7 +860,7 @@ In order to preserve scaling and have unity gain at DC, Eq.~\ref{eq:exp_diff} ne
 
 \noindent which is equivalent to scaling $\vec V_{\rm out}^n$ by a factor of $|p|$ in the software implementation.
 
-This process is coded in C, and tested using a two-pole ow pass Butterworth filter. Given the transfer function $1/((s+1)^2+1)$, which has poles at (-1+1j) and (-1-1j), 
+This process is coded in C, and tested using a two-pole ow pass Butterworth filter. Given the transfer function $1/((s+1)^2+1)$, which has poles at (-1+1j) and (-1-1j),
 the step response is $1 - e^{-t} (\sin x + \cos x)$, for $t > 0$. This analytically known response is plotted in Fig.~\ref{fig:filter_step_response} along with the response obtained using the numerical model.
 
 
@@ -864,7 +874,7 @@ the step response is $1 - e^{-t} (\sin x + \cos x)$, for $t > 0$. This analytica
 M. Mellado Munoz, L. Doolittle, P. Emma, G. Huang, A. Ratti, C. Serrano, J. M. Byrd, ``A Dynamic feedback model for high repetition rate LINAC-Driver FELs,''
 IPAC'12, New Orleans, LA, May 2012.
 
-\bibitem{ref:litrack} 
+\bibitem{ref:litrack}
 P. Emma, K. Bane, L. Freitag, ``LiTrack : A Fast longitudinal phase space tracking code with graphical user interface'', PAC'05,  Knoxville, TN, May 2005.
 
 \bibitem{ref:superfish}

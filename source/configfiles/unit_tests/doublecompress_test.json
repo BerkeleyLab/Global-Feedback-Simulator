@@ -135,7 +135,7 @@
         },
 
         "cav_adc" : "d_adc",
-        "rfl_adc" : "d_adc",
+        "rev_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     },
 
@@ -242,7 +242,7 @@
         },
 
         "cav_adc" : "d_adc",
-        "rfl_adc" : "d_adc",
+        "rev_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     },
 
@@ -351,7 +351,7 @@
         },
 
         "cav_adc" : "d_adc",
-        "rfl_adc" : "d_adc",
+        "rev_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     },
 
@@ -461,7 +461,7 @@
         },
 
         "cav_adc" : "d_adc",
-        "rfl_adc" : "d_adc",
+        "rev_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     },
 
@@ -553,7 +553,7 @@
         },
 
         "cav_adc" : "d_adc",
-        "rfl_adc" : "d_adc",
+        "rev_adc" : "d_adc",
         "fwd_adc" : "d_adc"
     }
 

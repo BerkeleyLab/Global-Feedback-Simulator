@@ -35,7 +35,7 @@ def unit_phase_shift():
 
     # Initialize PASS variable
     phase_shift_pass = True
-    
+
     for theta in thetas:
         for i in xrange(nt):
             out[i] = acc.Phase_Shift(signal_in[i],theta)
@@ -62,7 +62,7 @@ def unit_phase_shift():
         label_text = r'$\theta=$%.1f' % theta
 
         plt.plot(trang,out.real, label=label_text)
-    
+
     plt.title("Phase shift test", fontsize=40, y=1.01)
     plt.xlabel('Time [s]', fontsize=30)
     plt.ylabel('Real Part [Normalized]', fontsize=30)
@@ -77,7 +77,7 @@ def unit_phase_shift():
 #
 
 def unit_fpga(Tstep=0.01):
-    
+
     # Get a pointer to the FPGA C-structure
     fpga = acc.FPGA()
 
@@ -98,7 +98,7 @@ def unit_fpga(Tstep=0.01):
     fpga_state.drive = 0.0 + 0.0j
     fpga_state.state = 0.0 + 0.0j
     fpga_state.openloop = 0
-    
+
     # Total simulation time for test (seconds)
     Tmax = 2.0
 
@@ -117,7 +117,7 @@ def unit_fpga(Tstep=0.01):
 
     # Run time-series simulation
     for i in xrange(nt):
-        
+
         # Apply step on set-point at sp_step simulation time
         if i == sp_step: fpga.set_point = set_point_step
 
@@ -155,9 +155,9 @@ def unit_fpga(Tstep=0.01):
     kp_error = np.abs(kp_measured - kp)
     ki_error = np.abs(ki_measured - ki)
 
-    if (kp_error <1e-12) and (ki_error <1e-12): 
+    if (kp_error <1e-12) and (ki_error <1e-12):
         unit_fpga_pass = True
-    else:  
+    else:
         unit_fpga_pass = False
 
     # PASS == True
@@ -183,7 +183,7 @@ def unit_saturate():
         # Sweep input
         for i in xrange(len(inp)):
             oup[i] = acc.Saturate(inp[i],c)
-            if (found == False) and (oup[i].real >= 0.95): 
+            if (found == False) and (oup[i].real >= 0.95):
                 V_sat = inp[i]
                 found = True
 
@@ -203,7 +203,7 @@ def unit_saturate():
     # Adjust legend placement and vertical axis limits
     plt.legend(loc=7)
     plt.ylim([0,1.1])
-    
+
     # Show plot
     plt.show()
 
@@ -225,7 +225,7 @@ def unit_SSA(showplots=True,TOL=1.0e-14):
 
     # Simulation duration
     Tmax = 1e-6
-    
+
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
 
@@ -238,7 +238,7 @@ def unit_SSA(showplots=True,TOL=1.0e-14):
     # Set drive signal to 60% of full power
     drive = rf_station.C_Pointer.PAscale*0.6
 
-    # Run numerical simulation    
+    # Run numerical simulation
     for i in xrange(1,nt):
             sout[i] = acc.SSA_Step(rf_station.C_Pointer,drive,rf_station.State)
 
@@ -266,38 +266,41 @@ def run_RF_Station_test(Tmax, test_file):
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
     rf_station, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
-    
+
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
-    
+
     # Number of points
     nt = len(trang)
 
     # Initialize vectors for test
-    cav_v = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
-    fpga_drive_out = np.zeros(nt,dtype=np.complex)
+    E_probe = np.zeros(nt,dtype=np.complex)
+    E_reverse = np.zeros(nt,dtype=np.complex)
+    E_fwd = np.zeros(nt,dtype=np.complex)
     set_point = np.zeros(nt,dtype=np.complex)
-    error = np.zeros(nt,dtype=np.complex)
 
     # Run Numerical Simulation
     for i in xrange(1,nt):
-        cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, 0.0, rf_station.State)
+        cav_v = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, 0.0, rf_station.State)
         set_point[i] = rf_station.C_Pointer.fpga.set_point
-        fpga_drive_out[i] = rf_station.State.fpga_state.drive
-        error[i] = rf_station.State.fpga_state.err
+        E_probe[i] = rf_station.State.cav_state.E_probe
+        E_reverse[i] = rf_station.State.cav_state.E_reverse
+        E_fwd[i] = rf_station.State.cav_state.E_fwd
 
     fund_k_probe = fund_mode_dict['k_probe']
     fund_k_drive = fund_mode_dict['k_drive']
+    fund_k_em = fund_mode_dict['k_em']
 
-    plt.plot(trang,np.abs(cav_v), '-', label='Cavity voltage', linewidth=2)
-    plt.plot(trang,np.abs(fpga_drive_out*fund_k_drive), label='Drive', linewidth=2)
-    plt.plot(trang,np.abs(set_point/fund_k_probe), label='Set-point', linewidth=2)
-    plt.plot(trang,np.abs(error/fund_k_probe), label='Cavity field error', linewidth=2)
-    
+    plt.plot(trang*1e3,np.abs(E_reverse/fund_k_em), '-', label=r'Reverse $\left(\vec E_{\rm reverse}\right)$', linewidth=2)
+    plt.plot(trang*1e3,np.abs(E_fwd)*fund_k_drive, '-',  label=r'Forward $\left(\vec E_{\rm fwd}\right)$', linewidth=2)
+    plt.plot(trang*1e3,np.abs(set_point/fund_k_probe), label=r'Set-point $\left(\vec E_{\rm sp}\right)$', linewidth=2)
+    plt.plot(trang*1e3,np.abs(E_probe/fund_k_probe), '-', label=r'Probe $\left(\vec E_{\rm probe}\right)$', linewidth=2)
+
     plt.title('RF Station Test', fontsize=40, y=1.01)
-    plt.xlabel('Time [s]', fontsize=30)
+    plt.xlabel('Time [ms]', fontsize=30)
     plt.ylabel('Amplitude [V]', fontsize=30)
     plt.legend(loc='upper right')
+    plt.rc('font',**{'size':25})
 
     # Show plot
     plt.show()
@@ -323,40 +326,40 @@ def perform_tests():
     print "\n****\nTesting Phase_Shift..."
     phase_shift_pass = unit_phase_shift()
     if (phase_shift_pass):
-        result = 'PASS' 
-    else: 
+        result = 'PASS'
+    else:
         result = 'FAIL'
-    print ">>> " + result 
+    print ">>> " + result
 
     plt.figure()
-    
+
     print "\n****\nTesting FPGA PI controller..."
     fpga_pass = unit_fpga()
     if (fpga_pass):
-        result = 'PASS' 
-    else: 
+        result = 'PASS'
+    else:
         result = 'FAIL'
-    print ">>> " + result 
-    
+    print ">>> " + result
+
     # This is not a PASS/FAIL test
     print "\n****\nTesting Saturate..."
     unit_saturate()
-    print ">>> (Visual inspection only)\n" 
+    print ">>> (Visual inspection only)\n"
 
     # This is not a PASS/FAIL test
     print "\n****\nTesting SSA..."
     unit_SSA()
-    print ">>> (Visual inspection only)\n" 
-    
+    print ">>> (Visual inspection only)\n"
+
     plt.figure()
 
     # This is not a PASS/FAIL test
     print "\n****\nTesting RF Station..."
     unit_RF_Station()
-    print ">>> (Visual inspection only)\n" 
+    print ">>> (Visual inspection only)\n"
 
     plt.figure()
-    
+
     return fpga_pass & phase_shift_pass
 
 if __name__=="__main__":

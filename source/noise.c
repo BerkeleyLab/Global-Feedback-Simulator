@@ -8,7 +8,7 @@ void Noise_Step(int t_now, double Tstep, int type, double *settings, double *val
   switch(type) {
   case 1:
     /* White Noise */
-    *val = settings[0]*(0.5- rand() / (double)RAND_MAX);
+    *val = randn(0.0, settings[0]);
     break;
   case 2:
     /* Sine Wave */
@@ -27,4 +27,32 @@ void Noise_Step(int t_now, double Tstep, int type, double *settings, double *val
     /* Do Nothing */
     break;
   }
+}
+
+double randn(double mu, double sigma)
+{
+  double U1, U2, W, mult;
+  static double X1, X2;
+  static int call = 0;
+
+  if (call == 1){
+    call = !call;
+    return (mu + sigma * (double) X2);
+  }
+
+  do{
+    U1 = -1 + ((double) rand () / RAND_MAX) * 2;
+    U2 = -1 + ((double) rand () / RAND_MAX) * 2;
+    W = pow (U1, 2) + pow (U2, 2);
+  }
+
+  while (W >= 1 || W == 0);
+
+  mult = sqrt ((-2 * log (W)) / W);
+  X1 = U1 * mult;
+  X2 = U2 * mult;
+
+  call = !call;
+
+  return (mu + sigma * (double) X1);
 }
