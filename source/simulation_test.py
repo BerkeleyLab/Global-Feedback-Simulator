@@ -7,7 +7,6 @@
 import accelerator as acc
 
 import numpy as np
-import matplotlib.pylab as plt
 
 ####################################
 #
@@ -22,6 +21,7 @@ import matplotlib.pylab as plt
 def run_Simulation_test(Tmax, test_files):
 
     from get_configuration import Get_SWIG_Simulation
+    from plotting import plotdata as pd
 
     # Get Simulation Object, including Pointers to C structures
     sim = Get_SWIG_Simulation(test_files, Verbose=False)
@@ -29,7 +29,11 @@ def run_Simulation_test(Tmax, test_files):
     # Calculate the length of the Linac
     Nlinac = len(sim.linac_list)
 
-    acc.Simulation_Run(sim.C_Pointer, sim.State, "out.dat", 1)
+    out_filename = "out.dat"
+
+    acc.Simulation_Run(sim.C_Pointer, sim.State, out_filename, 1)
+
+    pd.PlotData('source/plotting/plotdata_test.json', 'source/plotting/columns.json', True)
 
 
 def unit_Simulation():
@@ -56,6 +60,7 @@ def perform_tests():
     unit_Simulation()
     print ">>> (Visual inspection only)\n"
 
+    import matplotlib.pylab as plt
     plt.figure()
 
     return True

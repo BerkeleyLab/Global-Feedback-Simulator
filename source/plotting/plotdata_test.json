@@ -1,0 +1,26 @@
+{
+	"Accelerator Config":[
+		"source/configfiles/unit_tests/doublecompress_test.json",
+        "source/configfiles/unit_tests/simulation_test.json"],
+    "Data": "out.dat",
+	"closewindow": "all",
+
+	"Plot4":{
+		"type": "versus",
+		"y":{
+			"quantity": "dE_E",
+			"linac": "Linac3",
+			"scale": 1.0
+		},
+		"x":{
+			"quantity": "t",
+			"scale": 1.0
+		},
+		"figure": 1,
+    	"display": "True",
+    	"filename": "fig.png",
+		"linewidth": 2,
+		"linetype": "+"
+	}
+
+}

@@ -82,24 +82,30 @@ void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 void Write_Sim_Step(FILE * fp, double time, Simulation *sim, Simulation_State *sim_state)
 {
  	fprintf(fp, "%10.16e   ",time);					// Current simulation time [s]
- 	fprintf(fp, "%10.16e %10.16e %10.16e %10.16e   ",
+ 	fprintf(fp, "%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e  ",
 		sim_state->noise_srcs->dQ_Q,				// Beam charge jitter [relative to nominal beam charge]
 		sim_state->noise_srcs->dtg,					// Timing error of gun wrt RF (<0 is an early bunch) [s]
-		sim_state->dc_state->dE_E[sim->n_linacs-1],	// Energy jitter [relative to nominal beam Energy]
-		sim_state->dc_state->dt[sim->n_linacs-1]);	// Timing jitter [s]
+		sim_state->noise_srcs->dE_ing,			// Energy deviation at end of injector [eV]
+		sim_state->noise_srcs->dsig_z,			// Deviation of bunch length from nominal length [m]
+		sim_state->noise_srcs->dsig_E,			// Deviation of energy spread from nominal energy spread [fraction of nominal energy]
+		sim_state->noise_srcs->dchirp);			// <Ez> correlation [m]
 
 	for(int l=0;l<sim->n_linacs;l++) {
-		fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e   ",
+		fprintf(fp,"%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e %10.16e  ",
 			sim_state->amp_error_net[l],
 			sim_state->phase_error_net[l],
 			sim_state->dc_state->dE_E[l],
 			sim_state->dc_state->dt[l],
 			sim_state->dc_state->sz[l],
 			sim_state->dc_state->dE_Ei[l],
-			sim_state->dc_state->dE_Ei2[l]);
+			sim_state->dc_state->dE_Ei2[l],
 
-		CPRINT(sim_state->linac_state_net[l]->linac_V);
-		CPRINT(sim_state->linac_state_net[l]->linac_Kg);
+			cabs(sim_state->linac_state_net[l]->linac_V),
+			carg(sim_state->linac_state_net[l]->linac_V)*180.0/M_PI,
+
+			cabs(sim_state->linac_state_net[l]->linac_Kg),
+			carg(sim_state->linac_state_net[l]->linac_Kg)*180.0/M_PI
+		);
 
 	}
 	// End simulation step entry with a new line

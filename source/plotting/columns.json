@@ -1,0 +1,109 @@
+{
+
+    "globals": 7,
+    "locals": 11,
+
+    "error_vol_a": {
+        "index": 0,
+        "name": "Cavity Error (Amp)",
+        "units": ""
+    },
+    "error_vol_p": {
+        "index": 1,
+        "name": "Cavity Error (Phase)",
+        "units": ""
+    },
+    "dE_E": {
+        "index": 2,
+        "name": "Total Energy Error (dE/E)",
+        "units": ""
+    },
+    "dtz": {
+        "index": 3,
+        "name": "Arrival Time Error (dtz)",
+        "units": ""
+    },
+    "sz": {
+        "index": 4,
+        "name": "RMS Bunch Length (sz)",
+        "units": ""
+    },
+    "dE_Ei": {
+        "index": 5,
+        "name": "Linac Contribution to Energy Error",
+        "units": ""
+    },
+    "dE_Ei2": {
+        "index": 6,
+        "name": "Linac Contribution to Energy Error",
+        "units": ""
+    },
+    "cav_voltage_a": {
+        "index": 7,
+        "name": "Cavity Voltage (Amp)",
+        "complex": true,
+        "units": "V"
+    },
+    "cav_voltage_p": {
+        "index": 8,
+        "name": "Cavity Voltage (Phase)",
+        "complex": true,
+        "units": "deg"
+    },
+    "fpga_drive_a": {
+        "index": 9,
+        "name": "FPGA Drive (Amplitude)",
+        "complex": true,
+        "units": "sqrt(W)"
+    },
+    "fpga_drive_p": {
+        "index": 10,
+        "name": "FPGA Drive (Phase)",
+        "complex": true,
+        "units": "deg"
+    },
+
+    "t": {
+        "index": 0,
+        "name": "Time",
+        "global": true,
+        "units": "s"
+    },
+    "dQ_Q": {
+        "index": 1,
+        "name": "Charge Error (dQ/Q)",
+        "global": true,
+        "units": "relative to nominal beam charge"
+    },
+    "dtg": {
+        "index": 2,
+        "name": "Gun Timing Error (dtg)",
+        "global": true,
+        "units": "s"
+    },
+    "dE_ing": {
+        "index": 3,
+        "name": "Energy deviation at end of injector (dE_ing)",
+        "global": true,
+        "units": "eV"
+    },
+    "dsig_z": {
+        "index": 4,
+        "name": "Deviation of bunch length from nominal length (dsig_z)",
+        "global": true,
+        "units": "m"
+    },
+    "dsig_E": {
+        "index": 5,
+        "name": "Deviation of energy spread from nominal energy spread (dsig_E)",
+        "global": true,
+        "units": "fraction of nominal energy"
+    },
+    "dchirp": {
+        "index": 6,
+        "name": "<Ez> correlation (dchirp)",
+        "global": true,
+        "units": "m"
+    }
+
+}

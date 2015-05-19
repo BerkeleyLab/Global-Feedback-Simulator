@@ -31,6 +31,11 @@
                 "units": "",
                 "description": "see cav4_freq.v"
             }
+        },
+        "OutputFreq": {
+            "value": 1,
+            "units": "Unitless",
+            "description": "Decimation factor of data plots."
         }
 
     },
@@ -446,7 +451,7 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }
@@ -473,7 +478,7 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }
@@ -500,7 +505,7 @@
             "description": "Phase shift for prompt coupling between Amplifier and ADC"
         },
         "noise_psd": {
-            "value": "10**(-13.5)",
+            "value": -155,
             "units": "dBc/Hz",
             "description": "Noise Power Spectral Density (PSD)"
         }

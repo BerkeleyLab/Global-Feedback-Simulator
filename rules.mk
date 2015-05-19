@@ -15,8 +15,6 @@ dir := $(DOC_DIR)
 include     $(dir)/rules.mk
 dir := $(OUTPUT_DIR)
 include     $(dir)/rules.mk
-dir := $(PLOTTING_DIR)
-include     $(dir)/rules.mk
 dir := $(SOURCE_DIR)
 include     $(dir)/rules.mk
 

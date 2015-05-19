@@ -30,6 +30,11 @@
                 "units": "",
                 "description": "see cav4_freq.v"
             }
+        },
+        "OutputFreq": {
+            "value": 1,
+            "units": "Unitless",
+            "description": "Decimation factor of data plots."
         }
     },
 
