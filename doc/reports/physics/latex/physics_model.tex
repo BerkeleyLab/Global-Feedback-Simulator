@@ -12,6 +12,7 @@
 \usetikzlibrary{shapes, arrows}
 \usepackage{appendix}
 \usepackage{amsmath}
+\usepackage{tablefootnote}
 
 \usepackage{bm, amssymb, pifont, pgfplots, multirow, float, soul, color, verbatim, indentfirst}
 
@@ -28,12 +29,12 @@
 
 \pagestyle{headings}
 
-\title{\textbf{LCLS-II System simulations:\\Back-end}}
-\author{LBNL LLRF Team}
+\begin{document}
+\title{\textbf{LCLS-II System simulations:\\Physics}}
+\author{LBNL LLRF Team \thanks{Carlos Serrano is the author of this document. The work of several people has been included here (sometimes literally) in order to establish a continuous mathematical flow, namely that of Larry Doolittle (LBNL) in the cavity and cryomodule models, and that of Paul Emma (SLAC) in the longitudinal beam dynamics model.}}
 
 \date{\today}
 
-\begin{document}
 \numberwithin{equation}{section}
 \maketitle
 \setcounter{tocdepth}{2}
@@ -67,7 +68,7 @@ Figure~\ref{fig:lclsII-feedback_layout} shows a high-level representation of the
 
 The accelerator model is intended to be modular in order to adapt to different configurations. The motivation behind this partitioning is to allow for different types of studies. For example, one can focus on some localized effects at the RF station level where only one station is simulated, or inspect how different cavities interact mechanically inside a cryomodule, or run studies at a machine level in order to analyze slow beam-based feedback performance. In studies where not much detail on the internals of the cryomodules or RF stations is needed, the models can be scaled in a way that computations of accelerating fields are performed for the vector sum of an accelerating section. This reduces the complexity of the models and reduces both computation time and memory usage.
 
-The different model configurations described above are put in practice using a model hierarchy shown in Figure~\ref{fig:model_hierarchy}. The first component is a simulation entity, which describes simulation parameters such as time step size, total simulation time, etc. The simulation is composed of one or more Linac sections, including a longitudinal beam dynamics simulation to represent beam propagating from one Linac section to the next. One Linac section is then represented as a series of cryomodules, optionally followed by a bunch compressor. This is the fundamental building block of the accelerator, where one can imagine to have the case of L1 in Fig.~\ref{fig:lclsII-feedback_layout} with two cryomodules and no bunch compressor, followed by HL (with a different frequency, beam phase relative to the RF, etc.) this time followed by a bunch compressor (BC1 in this case).
+The different model configurations described above are put in practice using a model hierarchy shown in Figure~\ref{fig:model_hierarchy}. The first component is a simulation entity, which describes simulation parameters such as time step size, total simulation time, etc. The simulation is composed of one or more Linac sections, including a longitudinal beam dynamics simulation to represent beam propagation from one Linac section to the next. One Linac section is then represented as a series of cryomodules, optionally followed by a bunch compressor. This is the fundamental building block of the accelerator, where one can imagine the case of L1 in Fig.~\ref{fig:lclsII-feedback_layout} with two cryomodules and no bunch compressor, followed by HL (with a different frequency, beam phase relative to the RF, etc.) this time followed by a bunch compressor (BC1 in this case).
 
 Each cryomodule is then represented by a collection of RF stations, including inter-station interactions through a model of the mechanical resonances inside the cryomodule. The couplings between the mechanical eigenmodes and individual electrical eigenmodes in the cavities are represented, as well as the effect of tuners and piezos on the mechanical resonances. Each RF station is composed of the typical RF system components, with an N-cell cavity (including a configurable number of normal modes), a high-power RF source, an FPGA controller, and the analog front-end (which represents anti-alias filtering, LLRF noise, etc). The last stage of the hierarchy is the cavity electrical eigenmodes, which each have their own resonance frequency, Q and couplings.
 
@@ -85,9 +86,9 @@ In the next few sections we describe the models used in each layer of the hierar
 \label{fig:Station_block_diagram}
 \end{figure}
 
-The RF station model includes a multi-cell cavity (including different normal modes, detuning and their different couplings), an FPGA controller, a saturation model for the RF source, filters, etc. The RF station is modeled at baseband, where up and down conversions in the real system are not considered and only the slowly varying amplitude and phase modulations (or In-phase and Quadrature, I\&Q) of a carrier at the RF reference frequency are represented. The FPGA controller in a real system typically works on I-Q sampled cavity fields. Representing the rest of the components in the RF station model at baseband allows for a more computationally efficient implementation of the simulation code, while not losing information of interest on the different complex signals. This approximation will be specifically illustrate dwhen describing the cavity model equations.
+The RF station model includes a multi-cell cavity (including different normal modes, detuning and their different couplings), an FPGA controller, a saturation model for the RF source, filters, etc. The RF station is modeled at baseband, where up and down conversions in the real system are not considered and only the slowly varying amplitude and phase modulations (or In-phase and Quadrature, I\&Q) of a carrier at the RF reference frequency are represented. The FPGA controller in a real system typically works on I-Q sampled cavity fields. Representing the rest of the components in the RF station model at baseband allows for a more computationally efficient implementation of the simulation code, while not losing information of interest on the different complex signals. This approximation will be specifically illustrated when describing the cavity model equations.
 
-The RF station model responds to the typical RF system topology, with an FPGA-based system controlling the EM field inside an accelerating cavity as shown in Fig.~\ref{fig:Station_block_diagram}. It also includes the cavity-beam interaction through beam loading, as well as different noise sources, which can be either correlated or non-correlated. The different components of the RF station model are described in the rest of this section.
+The RF station model responds to the typical RF system topology, with an FPGA-based system controlling the EM field inside an accelerating cavity as shown in Fig.~\ref{fig:Station_block_diagram}. It also includes the cavity-beam interaction through beam loading, as well as different noise sources, which can be either correlated or uncorrelated. The different components of the RF station model are described in the rest of this section.
 
 \subsection{Cavity model}
 
@@ -177,7 +178,7 @@ The overall $Q_{\rm L_{\mu}}$ is given as $1/Q_{\rm L_{\mu}}=1/Q_{0_{\mu}}+1/Q_{
 
 The only assumptions in the above formulation are that the cavity losses are purely resistive, and thus expressible with a fixed $Q_{0_{\mu}}$, and that no power is launched into the cavity from the field probe.  If other ports have incoming power, there would be additional terms of the same form as $2\vec K_g\sqrt{R_g}$.
 
-The $\frac{\omega_{d_\mu}}{\omega_{f}}$ term in \ref{eq:1st_order2} (the imaginary component of the cavity pole at baseband) represents detuning. In software or hardware implementations, we can alternatively modulate that term with Lorentz perturbations, or use a purely real pole ($\omega_f$) and modulate the frequency of the drive term. We prefer the latter, more convinient in computational terms. We then define a vector $\vec{S}_{\mu}$ such that:
+The $\frac{\omega_{d_\mu}}{\omega_{f}}$ term in \ref{eq:1st_order2} (the imaginary component of the cavity pole at baseband) represents detuning. In software or hardware implementations, we can alternatively modulate that term with Lorentz perturbations, or use a purely real pole ($\omega_f$) and modulate the frequency of the drive term. We prefer the latter, more convenient in computational terms. We then define a vector $\vec{S}_{\mu}$ such that:
 
 \begin{equation}
 \vec{V}_{\mu} = \vec{S}_{\mu}e^{j\theta_{\mu}}
@@ -235,7 +236,7 @@ The second aspect which has not been covered yet is the numerical discretization
  \vec V_{\rm out} = \vec S_{\mu} \mbox{ , } p = -\omega_f \mbox{ and, } \vec V_{\rm in} = e^{-j\theta_{\mu}} \left(2\vec{K}_g\sqrt{R_{g_{\mu}}} - R_{b_{\mu}}\vec{I}_{\rm beam}\right)
 \end{equation}
 
-\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. This block solves for $\vec S_{\mu}$, which is transalated to the mode's accelerating voltage using equations~\ref{eq:V_mu} and~\ref{eq: d0_dt}, as indicated in the block diagram.
+\noindent as it can be deduced from Fig.~\ref{fig:RF_cavity_block_diagram}. This block solves for $\vec S_{\mu}$, which is translated to the mode's accelerating voltage using equations~\ref{eq:V_mu} and~\ref{eq: d0_dt}, as indicated in the block diagram.
 
 In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diagram} (couplings, rotations, etc.) combined with the numerical discretization of the cavity filter described in Appendix~\ref{App:ODE_integration} applied every discrete simulation step, we can obtain time-series simulated data representing signal propagation through the multi-cell RF cavity, including the different eigenmodes and dispersion through cables and waveguides.
 
@@ -258,7 +259,7 @@ In summary, using the computations shown in Figure~\ref{fig:RF_cavity_block_diag
 
 A few unit tests have been designed in order to check the correspondence between the numerical simulation results and the theoretical equations. The unit under test here is the cavity model illustrated in Fig.~\ref{fig:RF_cavity_block_diagram}. Some of these tests have little physical meaning and are even unrealizable in practice, however this is the beauty of the simulation world, where one can isolate effects in the calculations for different purposes, in this case in order to verify its own proper operation.
 
-Figures~\ref{fig:cav_step1} and~\ref{fig:cav_step2} show the step response of three individual eigenmodes ($\pi$, $8\pi/9$ and $\pi/9$ modes in this case). In these tests, the cavity routine is configured to have one individual mode and the time-series simulation is run three times to obtain each one of the three curves on the plots. This allows us to fit the step response curves for each eigenmode individually, thus deducing mode bandwidths and couplings from the curve fit results. Both the numerical curves and the curve fits are shown for each simulation run, where (in the absence of noise as in this case) there is a very good correspondance between the two (in the order of $10^{-5}$ RMS errors).
+Figures~\ref{fig:cav_step1} and~\ref{fig:cav_step2} show the step response of three individual eigenmodes ($\pi$, $8\pi/9$ and $\pi/9$ modes in this case). In these tests, the cavity routine is configured to have one individual mode and the time-series simulation is run three times to obtain each one of the three curves on the plots. This allows us to fit the step response curves for each eigenmode individually, thus deducing mode bandwidths and couplings from the curve fit results. Both the numerical curves and the curve fits are shown for each simulation run, where (in the absence of noise as in this case) there is a very good correspondence between the two (in the order of $10^{-5}$ RMS errors).
 
 In Fig.~\ref{fig:cav_step1} we introduce a unit amplitude step signal on the RF drive port at the mode's resonance frequency ($\omega_{0_{\mu}}$), which is equivalent to driving the input drive signal with a vector of unity length rotating at the mode's detune frequency ($\omega_{f_{\mu}}$). The input signals are then: $\vec K_{\rm g}=e^{j\theta_{\mu}}$ ($d\theta_{\mu}/dt = \omega_{d_\mu}$) and $\vec I_{\rm beam}=0$. As a result no ringing is observed. The model is designed to have unity gain at the mode's center frequency and one can therefore deduce couplings to the drive input by measuring the steady-state values. The step response is then fit to a 1st-order differential equation and the bandwidth of each mode is deduced, matching the configuration settings. This test provides a verification for the incident wave coupling impedance ($R_{\rm g_{\mu}}$ in Eq.~\ref{eq: dS_dt}) as well as the mode's bandwidth ($\omega_{f_{\mu}}$ in the same equation).
 
@@ -354,7 +355,7 @@ e(t) = \vec{E}_{\rm sp} - \vec{E}_{\rm probe}(t)
 \label{fig:fpga_unit_test}
 \end{figure}
 
-In order to implement the PI controller in software, we need to discretize integral term of Equation ~\ref{eq: controller}. This term is shown below.
+In order to implement the PI controller in software, we need to discretize the integral term of Eq.~\ref{eq: controller}. This term is shown below.
 \be
 k_{i} \int_{\tau_{0}}^{t} e(\tau)d\tau
 \ee
@@ -381,7 +382,7 @@ The overall update for $\vec{K}_{\rm drive}$ can then be expressed as:
 \vec{K}_{\rm drive}^{n+1} = k_{p} e^{n+1} + k_{i}T \sum_{k=0}^{n}\frac{e^{k+1}+e^k}{2}
 \ee
 
-Fig.~\ref{fig:fpga_unit_test} shows the result of a unit tests performed using the software implementation of Eq.~\ref{eq: controller_dis}. The input signal and set-point are initially set to 0 and the FPGA routine is exercised individually, in the absence of a plant or feedback loop. The PI controller is then configured to have certain values of proportional and integral gains ($k_{\rm p}$ and $k_{\rm i}$, as indicated in Fig.~\ref{fig:fpga_unit_test}) and a time-series simulation is run. After 0.1 seconds of simulation, a step is introduced in the set-point (going from 0 to 1) and the drive signal is analyzed. Before any error signal is present in the integrator state, the drive signal is modulated by the set-point by a factor of $k_{\rm p}$. From that point the integrator behavior can be observed, where the slope of the drive signal is given by the integral gain constant $k_{\rm i}$. The measured values of the controller constants (indicated in Fig.~\ref{fig:fpga_unit_test}) are compared with the configuration settings in order to verify the proper behavior of the model.
+Fig.~\ref{fig:fpga_unit_test} shows the result of a unit tests performed using the software implementation of Eq.~\ref{eq: controller_dis}. The input signal and set-point are initially set to 0 and the FPGA routine is exercised individually, in the absence of a plant or feedback loop. The PI controller is then configured to have certain values of proportional and integral gains ($k_{\rm p}$ and $k_{\rm i}$, as indicated in Fig.~\ref{fig:fpga_unit_test}) and a time-series simulation is run. After 0.2 seconds of simulation, a step is introduced in the set-point (going from 0 to 1) and the drive signal is analyzed. Before any error signal is present in the integrator state, the drive signal is modulated by the set-point by a factor of $k_{\rm p}$. From that point the integrator behavior can be observed, where the slope of the drive signal is given by the integral gain constant $k_{\rm i}$. The measured values of the controller constants (indicated in Fig.~\ref{fig:fpga_unit_test}) are compared with the configuration settings in order to verify the proper behavior of the model.
 
 The control signal generated by the PI controller is used to drive the RF amplifier, which is described next.
 
@@ -390,7 +391,7 @@ The control signal generated by the PI controller is used to drive the RF amplif
 \begin{figure}
 \centering
 \includegraphics[scale=0.35]{../figures/saturation_test.png}
-\caption{RF Amplifier saturation test, where the output is plotted as a function of the input for different values of the harshness parameter c in Equation~\ref{eq:clip}.}
+\caption{RF Amplifier saturation test, where the output is plotted as a function of the input for different values of the harshness parameter c in Eq.~\ref{eq:clip}.}
 \label{fig:saturation_test}
 \end{figure}
 
@@ -407,7 +408,7 @@ The saturated output amplitude from this equation is 1. While some phase shift w
 
 \subsection{Phase Shifter}
 
-Phase shifts are encountered at several stages of the model. A phase shifter module (not necessarily explicitly represented in block diagrams) is present in the software implementation and performs a phase shift of an input signal by an angle $\theta$ according to:
+Phase shifts are encountered in several stages of the model. A phase shifter module (not necessarily explicitly represented in block diagrams) is present in the software implementation and performs a phase shift of an input signal by an angle $\theta$ according to:
 
 \begin{equation}
   \vec V_{\rm out} = \vec V_{\rm in} \cdot e^{j\theta}
@@ -529,7 +530,7 @@ which can then be approximated to amplitude and phase errors using Eq.~\eqref{eq
 \label{fig:rf_test_step}
 \end{figure}
 
-The combination of the RF station components (see Fig.~\ref{fig:Station_block_diagram}) is integrated in a software module and simulated. The result is shown in Fig.~\ref{fig:rf_test_step}, where the signals typically available in LLRF systems (forward, cavity and reverse) are shown, along with the cavity set-point for reference. The cavity starts with no stored energy at the beginning of the simulation and the cavity field builds up following its time constant. During the cavity fill-up time, the RF drive signal is saturated and the system effectively behaves as open-loop. Once the cavity field reaches a certain value, the RF controller reacts and reduces the drive signal to estabilize the cavity field around the set-point. Note the presence of noise in the different digitized signals, scaled as described in Section~\ref{sec:llrf_noise}.
+The combination of the RF station components (see Fig.~\ref{fig:Station_block_diagram}) is integrated in a software module and simulated. The result is shown in Fig.~\ref{fig:rf_test_step}, where the signals typically available in LLRF systems (forward, cavity and reverse) are shown, along with the cavity set-point for reference. The cavity starts with no stored energy at the beginning of the simulation and the cavity field builds up following its time constant. During the cavity fill-up time, the RF drive signal is saturated and the system effectively behaves as open-loop. Once the cavity field reaches a certain value, the RF controller reacts and reduces the drive signal to stabilize the cavity field around the set-point. Note the presence of noise in the different digitized signals, scaled as described in Section~\ref{sec:llrf_noise}.
 
 \clearpage
 \newpage
@@ -537,7 +538,7 @@ The combination of the RF station components (see Fig.~\ref{fig:Station_block_di
 \section{Cryomodule}
 \label{sec:cryomodule}
 
-The cryomodule model shown in Fig.~\ref{fig:Cryomodule_block_diagram} includes a configurable number of RF Station instances (described in detail in Section~\ref{sec:rf_station}), as well as cavity-to-cavity interactions through mechanical couplings. Here we describe the state-space model representing the dynamics of the mechanical resonances (also, as in the case of the electrical modes in a cavity, decomposed into eigenmodes) as well as the interactions between these mechanical eigenmodes and the cavity electrical eigenmodes (through Lorentz forces), piezos and tuners.
+The cryomodule model shown in Fig.~\ref{fig:Cryomodule_block_diagram} includes a configurable number of RF station instances (described in detail in Section~\ref{sec:rf_station}), as well as cavity-to-cavity interactions through mechanical couplings. Here we describe the state-space model representing the dynamics of the mechanical resonances (also, as in the case of the electrical modes in a cavity, decomposed into eigenmodes) as well as the interactions between these mechanical eigenmodes and the cavity electrical eigenmodes (through Lorentz forces), piezos and tuners.
 
 \begin{figure}
 \centering
@@ -701,7 +702,8 @@ It is perhaps an unexpected result that the cross-coupling between cavity modes 
 
 \subsubsection{Software implementation}
 
-The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every time step following equations~\ref{eq:F_nu} and~\ref{eq:omega_mu}. The box labeled ``Mechanical Mode Dynamics, 2nd-order LPF'' takes Lorentz forces for each mechanical eigenmode as an input ($F_{\nu}$) and produces a mechanical displacement ($x_{\nu}$). This corresponds to Eq.~\ref{eq: state_space}, the the state-space formulation of the 2nd-order low-pass filter. Expanding that equation in matrix form, two expressions appear:
+
+The matrix calculations shown in Fig.~\ref{fig:EM_couplings} are applied every time step following equations~\ref{eq:F_nu} and~\ref{eq:omega_mu}. The box labeled ``Mechanical Mode Dynamics, 2nd-order LPF'' takes Lorentz forces for each mechanical eigenmode as an input ($F_{\nu}$) and produces a mechanical displacement ($x_{\nu}$). This corresponds to Eq.~\ref{eq: state_space}, the state-space formulation of the 2nd-order low-pass filter. Expanding that equation in matrix form, two expressions appear:
 
 \begin{equation}
   \frac{dx_{\nu}}{dt} = a_{\nu}x_{\nu} - b_{\nu}y_{\nu}~~~.
@@ -807,18 +809,147 @@ Combining the Linac state-space models along with a model representing the longi
 \subsection{Longitudinal beam dynamics model}
 \label{sec:doublecompress}
 
+The longitudinal beam dynamics model used here is called \emph{doublecompress} and is a simplification of the more complete Linear Tracking simulator (LiTrack~\cite{ref:litrack}). The simplified version used here serves well the purposes of an integrated simulation with the state-space models, and emulates a macro-particle including up to second order effects \footnote{The equations depicted here have been extracted literally from a presentation by Paul Emma in 2000 titled \emph{LCLS Linac Design Auto-Optimization with S\&X-Band RF.}}.
 
+The accelerator is composed of a series of Linac and bunch compressor sections, where the phase-space model tracks the macro-particle as it propagates from one section to the next. For each Linac section, \emph{doublecompress} calculates the following quantities, where the subscript $n$ refers to the Linac position in the Accelerator\footnote{Note the difference in notation with respect to Sections~\ref{sec:rf_station} and~\ref{sec:cryomodule}, where $n$ denoted simulation time step.}. First convert the bunch length error RMS to Full width at half maximum (FWHM) units:
 
+\begin{equation}
+  \Delta z_n \equiv \sqrt{12}\sigma_{z_n}
+\end{equation}
 
+Then we establish some definitions. The linear correlation factor for the n-th Linac in the accelerator $k_n$ (in units of $\rm m^{-1}$) is composed of a wakefield $(k_w)_n$ and an RF phase induced term $(k_r)_n$:
 
+\begin{equation}
+  (k_w)_n \equiv -\frac{2Ne^2cZ_0{s_0}_n L_n}{\pi a^2_n \Delta z^2_n E_n}
+    \left[ 1-(1+\sqrt{\Delta z_n/{s_0}_n})e^{-\sqrt{\Delta z_n/{s_0}_n}} \right]
+\end{equation}
 
-\subsection{Noise sources}
+\begin{equation}
+  (k_r)_n = \frac{2\pi}{\lambda_n}\left(\frac{E_{n-1}}{E_n}-1\right)\frac{\sin(\varphi_n+\Delta \varphi_n+2\pi c \Delta t_{n-1}/\lambda_n)}{\cos \varphi_n}
+\end{equation}
+
+\begin{equation}
+  k_n = (k_r)_n + (k_w)_n\left(1+\Delta N/N\right)
+\end{equation}
+
+\noindent where the different variables are defined in Table~\ref{tbl:dc_params}.
+
+\begin{table}
+  \begin{center}
+    \begin{tabular}{|c| c |c|}
+      \hline
+      \textbf{Variable} & \textbf{Description} & \textbf{Units} \\ [0.5ex]
+      \hline\hline
+      $N$ & bunch population & electrons \\
+      \hline
+      $e$ & charge of the electron & C \\
+      \hline
+      $c$ & speed of light & m/s \\
+      \hline
+      $Z_0$ & impedance of free space & $\Omega$ \\
+      \hline
+      $s_0$ &  wakefield characteristic length (S-band = 1.322 mm) & m \\
+      \hline
+      $\Delta N/N$ & bunch population relative error & unitless \\
+      \hline
+      $a$ & Mean iris radius (S-band = 11.654 mm) & m \\
+      \hline
+      $\Delta z$ & bunch length & m \\
+      \hline
+      $L$ & Linac length (scales wakefield) & m \\ % [1ex]
+      \hline
+    \end{tabular}
+    \caption{\emph{doublecompress} configuration parameters.}
+    \label{tbl:dc_params}
+  \end{center}
+\end{table}
+
+We define a wakefield loading term as:
+
+\begin{equation}
+  \Delta E_{load_n} \approx \frac{1}{2}E_n \Delta z_n (k_w)_n
+\end{equation}
+
+\noindent And the mean energy deviation is expressed as:
+
+\begin{align}
+  \left(\frac{\Delta E}{E}\right)_n &= \frac{E_{n-1}}{E_n} \left(\frac{\Delta E}{E}\right)_{n-1} -
+    \frac{\Delta N}{N}\frac{\Delta E_{load_n}}{E_n}\nonumber \\
+    &+ \left(1-\frac{E_{n-1}}{E_n}\right)\left[\frac{\cos(\varphi_n+\Delta \varphi_n+2\pi c \Delta t_{n-1}/\lambda_n)}{\cos \varphi_n} -1\right]
+\end{align}
+
+\noindent where $\varphi_n$ is the nominal Linac RF phase for the n-th Linac (e.g -30 deg accelerates and puts head energy lower than tail), $\Delta \varphi_n$ is the RF phase error (deduced from the RF system state-space models), $\Delta t_{n}$ is the timing error in seconds, $\lambda_n$ is the RF wavelength in meters and $c$ is the speed of light in m/s.
+
+If in the n-th Linac there is a dispersive section ($R_{56_n}\neq 0$), the perturbed $R_{56}$ ($R'_{56}$) is:
+
+\begin{equation}
+  R'_{56_n} = R_{56_n} + T_{566_n}\left( \frac{\Delta E}{E}\right)_n
+\end{equation}
+
+where $T_{566_n}=-1.5 \times R_{56_n}$. The RMS bunch length is then:
+
+\begin{align}
+  \sigma^2_{z_n} &=
+    \left( 1+k_n R'_{56_n} \right)^2 \sigma^2_{z_{n-1}} + \left( R'_{56_n} \sigma_{\delta_{n-1}} \frac{E_{n-1}}{E_n}\right)^2 \nonumber \\
+    &+ 2\left(1+k_n R'_{56_n}\right) R'_{56_n} \frac{E_{n-1}}{E_n}\langle z_{n-1}\delta_{n-1} \rangle
+\end{align}
+
+The RMS energy spread is:
+
+\begin{equation}
+  \sigma^2_{\delta_{n}} = k^2_n \sigma^2_{z_{n-1}} + \left( \sigma_{\delta_{n-1}} \frac{E_{n-1}}{E_n} \right)^2 + 2 k_n  \frac{E_{n-1}}{E_n} \langle z_{n-1}\delta_{n-1} \rangle
+\end{equation}
+
+The $z-\delta$ correlation is:
+
+\begin{align}
+  \langle z_{n}\delta_{n} \rangle &=
+    \left( 1+k_n R'_{56_n} \right) k_n \sigma^2_{z_{n-1}} + R'_{56_n} \left( \sigma_{\delta_{n-1}} \frac{E_{n-1}}{E_n} \right)^2 \nonumber \\
+    &+ \left(1+2k_n R'_{56_n}\right) \frac{E_{n-1}}{E_n}\langle z_{n-1}\delta_{n-1} \rangle
+\end{align}
+
+And the timing error is:
+
+\begin{equation}
+  \Delta t_n = \Delta t_{n-1} + \frac{1}{c}\left(\frac{\Delta E}{E}\right)_n R'_{56_n}
+\end{equation}
+
+All of these quantities are calculated every time step including time varying noise sources and the effects of errors on the RF amplitude and phase. These quantities then have the potential to be injected in a beam-based feedback system where amplitude and phase set-points in the RF stations can be modulated in order to minimize for longitudinal errors. The different correlated noise sources included in the model are described next.
+
+\subsection{Correlated Noise sources}
 \label{sec:beam_noise_sources}
-\subsection{Beam-based feedback model}
-\subsection{State-Space \& Phase-Space Integration}
 
+ \begin{table}
+  \begin{center}
+    \begin{tabular}{|c| c |c|}
+      \hline
+      \textbf{Noise Source} & \textbf{Description} & \textbf{Units} \\ [0.5ex]
+      \hline\hline
+      $\Delta \sigma_z$ & RMS bunch length error & m \\
+      \hline
+      $\Delta \sigma_{\delta}$ & Deviation of energy spread from nominal energy spread & Unitless \tablefootnote{Fraction relative to the Energy at the end of the Injector.} \\
+      \hline
+      $\Delta N/N$ & Relative bunch population error & Unitless \tablefootnote{Fraction relative to the nominal bunch population.} \\
+      \hline
+      $\Delta t_{g}$ & Gun timing error & s \\
+      \hline
+      $\Delta E_{inj}$ & Energy deviation at end of the injector & eV \\
+      \hline
+      $\langle z\delta \rangle$ & Initial $z-\delta$ correlation & m \\ % [1ex]
+      \hline
+      $\left(\Delta V/V\right)_n$ & Relative RF Amplitude error & Unitless \tablefootnote{Fraction relative to the nominal RF amplitude in Volts.} \\
+      \hline
+      $\Delta \varphi_n$ & RF phase error & degrees\\
+      \hline
+    \end{tabular}
+    \caption{\emph{doublecompress} noise sources.}
+    \label{tbl:corr_noise}
+  \end{center}
+\end{table}
 
-\section{Conclusions}
+The calculation of the different accelerator figures of merit, shown in the equations above, are performed in a per-Linac section basis and the value of each quantity is dependent of the same quantity in the preceding Linac section. The initial conditions for these errors (i.e. the previous value of each quantity for the first Linac section) corresponds to a characterization of the injector. In practical terms, these noise sources can either be deduced from a list of requirements for the injector, non-relativistic simulations, or from measurements if available. The noise inputs to the \emph{doublecompress} model are summarized in Table~\ref{tbl:corr_noise}. They all correspond to a noise characterization of the injector except for the last two entries in the table ($\left(\Delta V/V\right)_n$ and $\Delta \varphi_n$) which correspond to the RF amplitude and phase errors in each Linac individually (note the subscript $n$).
+
+The interaction with the state-space models of the RF system and the longitudinal beam dynamics is then performed in two ways. Firstly by injecting the RF amplitude and phase errors into the equations shown above, and secondly by means of beam-based feedback, where RF amplitude and phase set-points can be modulated in order to minimize for the errors described above.
 
 \newpage
 
@@ -880,7 +1011,6 @@ In order to preserve scaling and have unity gain at DC, Eq.~\ref{eq:exp_diff} ne
 
 This process is coded in C, and tested using a two-pole ow pass Butterworth filter. Given the transfer function $1/((s+1)^2+1)$, which has poles at (-1+1j) and (-1-1j),
 the step response is $1 - e^{-t} (\sin x + \cos x)$, for $t > 0$. This analytically known response is plotted in Fig.~\ref{fig:filter_step_response} along with the response obtained using the numerical model.
-
 
 \end{appendix}
 
