@@ -1,3 +1,8 @@
+/**
+ * @file cavity.c
+ * @brief Cavity Model: Allocation, configuration and stepping functions for the cavity model, which iterates over an arbitrary number of electrical eigenmodes.
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
 
 #include "cavity.h"
 #include <stdio.h>
@@ -16,13 +21,22 @@ void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int idx)
   elecMode_arr[idx] = elecMode;
 }
 
-
-void ElecMode_Allocate_In(ElecMode *elecMode,
-  double RoverQ, double foffset, double LO_w0,
-  double Q_0, double Q_drive, double Q_probe,
-  double rf_phase,  double phase_rev, double phase_probe,
-  double Tstep,
-  double *mech_couplings, int n_mech
+/** Takes a pointer to a ElecMode struct (representing an electrical eigenmode)
+  * which has been previously allocated and fills it in with the values passed as arguments. */
+void ElecMode_Allocate_In(
+  ElecMode *elecMode,     ///< Pointer to ElecMode struct
+  double RoverQ,          ///< Mode's (R/Q) in Ohms
+  double foffset,         ///< Mode's frequency offset (with respect to the RF reference frequency) in Hz
+  double LO_w0,           ///< Local Oscillator frequency in rad/s
+  double Q_0,             ///< Represents losses in the cavity walls
+  double Q_drive,         ///< Represents coupling to the input coupler
+  double Q_probe,         ///< Represents coupling to the field probe
+  double rf_phase,        ///< Beam phase relative to the RF in radians
+  double phase_rev,       ///< Phase shift between Cavity cells and reverse ADC
+  double phase_probe,     ///< Phase shift between Cavity cells and probe ADC
+  double Tstep,           ///< Simulation time-step in seconds
+  double *mech_couplings, ///< Pointer to array of mechanical couplings in (rad/s)/V^2
+  int n_mech              ///< Number of mechanical eigenmodes
   )
 {
 
@@ -78,12 +92,21 @@ void ElecMode_Allocate_In(ElecMode *elecMode,
   }
 }
 
+/** Allocates memory for a ElecMode struct (representing an electrical eigenmode)
+  * and fills it in with the values passed as arguments. Returns a pointer to the newly allocated struct. */
 ElecMode * ElecMode_Allocate_New(
-  double RoverQ, double foffset, double LO_w0,
-  double Q_0, double Q_drive, double Q_probe,
-  double rf_phase,  double phase_rev, double phase_probe,
-  double Tstep,
-  double *mech_couplings, int n_mech
+  double RoverQ,          ///< Mode's (R/Q) in Ohms
+  double foffset,         ///< Mode's frequency offset (with respect to the RF reference frequency) in Hz
+  double LO_w0,           ///< Local Oscillator frequency in rad/s
+  double Q_0,             ///< Represents losses in the cavity walls
+  double Q_drive,         ///< Represents coupling to the input coupler
+  double Q_probe,         ///< Represents coupling to the field probe
+  double rf_phase,        ///< Beam phase relative to the RF in radians
+  double phase_rev,       ///< Phase shift between Cavity cells and reverse ADC
+  double phase_probe,     ///< Phase shift between Cavity cells and probe ADC
+  double Tstep,           ///< Simulation time-step in seconds
+  double *mech_couplings, ///< Pointer to array of mechanical couplings in (rad/s)/V^2
+  int n_mech              ///< Number of mechanical eigenmodes
   )
 {
   ElecMode * elecMode = calloc(1,sizeof(ElecMode));
@@ -94,7 +117,7 @@ ElecMode * ElecMode_Allocate_New(
 
   return elecMode;
 }
-
+/** Frees memory of a Electrical mode struct (representing an electrical eigenmode).*/
 void ElecMode_Deallocate(ElecMode * elecMode)
 {
   free(elecMode->A);
@@ -103,25 +126,28 @@ void ElecMode_Deallocate(ElecMode * elecMode)
   free(elecMode);
 }
 
-
+/** Takes a previously configured Electrical mode and allocates its State struct accordingly. */
 void ElecMode_State_Allocate(ElecMode_State *elecMode_state, ElecMode *elecMode)
 {
   elecMode_state -> delta_omega = 0.0;
   Filter_State_Allocate(&elecMode_state->fil_state, &elecMode->fil);
 }
 
+/** Frees memory of Electrical Eigenmode state struct. */
 void ElecMode_State_Deallocate(ElecMode_State *elecMode_state)
 {
   Filter_State_Deallocate(&elecMode_state->fil_state);
   free(elecMode_state);
 }
 
+/** Helper routine to get a reference to a given Electrical mode given the Cavity struct. */
 ElecMode_State *ElecMode_State_Get(Cavity_State *cav_state, int idx)
 {
   return cav_state->elecMode_state_net[idx];
 }
 
-
+/** Takes a previously configured Cavity and allocates its State struct accordingly.
+  * It allocates states for the Cavity's Electrical modes recursively. */
 void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav)
 {
 
@@ -137,6 +163,7 @@ void Cavity_State_Allocate(Cavity_State *cav_state, Cavity *cav)
   }
 }
 
+/** Frees memory of Cavity state struct. */
 void Cavity_State_Deallocate(Cavity_State *cav_state, Cavity *cav)
 {
   for(int i=0;i<cav->n_modes;i++) {
@@ -146,14 +173,24 @@ void Cavity_State_Deallocate(Cavity_State *cav_state, Cavity *cav)
   free(cav_state);
 }
 
+/** Step function for Electrical Eigenmode:
+  * Calculates the state for the next simulation step.
+  * Returns mode's accelerating voltage and stores current state in State struct. */
+double complex ElecMode_Step(
+  ElecMode *elecMode,             ///< Pointer to ElecMode struct
 
-double complex ElecMode_Step(ElecMode *elecMode,
   // Inputs
-  double complex Kg_fwd, double beam_charge, double delta_tz,
+  double complex Kg_fwd,          ///< Drive input in sqrt(W)
+  double beam_charge,             ///< Beam charge in Coulombs
+  double delta_tz,                ///< Timing jitter in seconds (RF reference noise)
+
   // States
-  ElecMode_State *elecMode_state,
+  ElecMode_State *elecMode_state, ///< Pointer to ElecMode State
+
   // Outputs (V^2 stored in elecMode_state)
-  double complex *v_probe, double complex *v_em)
+  double complex *v_probe,        ///< Field probe signal in Volts (including LLRF noise on that port)
+  double complex *v_em            ///< Emitted signal in Volts (including LLRF noise on that port)
+  )
 {
   // Intermediate signals
   double complex v_beam=0.0, v_drive=0.0, v_in=0.0, v_out=0.0;
@@ -190,32 +227,38 @@ double complex ElecMode_Step(ElecMode *elecMode,
   return v_out;
 }
 
-void Cavity_Allocate_In(Cavity *cav,
-  ElecMode_dp elecMode_net, int n_modes,
-  double L, double nom_grad,
-  // XXX
-  double rf_phase, double design_voltage,
-  int fund_index)
-  // XXX
+/** Takes a pointer to a Cavity struct which has been previously allocated
+  * and fills it in with the values passed as arguments. */
+void Cavity_Allocate_In(
+  Cavity *cav,                ///< Pointer to ElecMode struct
+  ElecMode_dp elecMode_net,   ///< Pointer to an array of Electrical modes (already allocated)
+  int n_modes,                ///< Number of electrical eigenmodes
+  double L,                   ///< Cavity electrical length in meters
+  double nom_grad,            ///< Cavity nominal gradient in V/m
+  double rf_phase,            ///< Cavity nominal phase with respect to the beam
+  double design_voltage,      ///< Nominal voltage operating point in Volts
+  int fund_index              ///< Index of the fundamental mode in the array of Electrical modes
+  )
 {
-  // XXX Check if used in the future: Inherited properties
   cav -> rf_phase = rf_phase;
   cav -> design_voltage = design_voltage;
   cav -> fund_index = fund_index;
-  /// XXX
-
   cav -> L = L;
   cav -> nom_grad = nom_grad;
   cav -> n_modes = n_modes;
   cav-> elecMode_net = elecMode_net;
 }
-
-Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
-  double L, double nom_grad,
-   // XXX
-  double rf_phase, double design_voltage,
-  int fund_index)
-  // XXX
+/** Allocates memory for a Cavity struct and fills it in with the values passed as arguments.
+  * Returns a pointer to the newly allocated struct. It assumes that the Electrical Eigenmodes have been previously allocated. */
+Cavity * Cavity_Allocate_New(
+  ElecMode_dp elecMode_net,   ///< Pointer to an array of Electrical modes (already allocated)
+  int n_modes,                ///< Number of electrical eigenmodes
+  double L,                   ///< Cavity electrical length in meters
+  double nom_grad,            ///< Cavity nominal gradient in V/m
+  double rf_phase,            ///< Cavity nominal phase with respect to the beam
+  double design_voltage,      ///< Nominal voltage operating point in Volts
+  int fund_index              ///< Index of the fundamental mode in the array of Electrical modes
+  )
 {
   Cavity *cav;
   cav = calloc(1,sizeof(Cavity));
@@ -227,6 +270,7 @@ Cavity * Cavity_Allocate_New(ElecMode_dp elecMode_net, int n_modes,
   return cav;
 }
 
+/** Frees memory of a Cavity struct and recursively frees its Electrical Eigenmodes.*/
 void Cavity_Deallocate(Cavity *cav)
 {
   for(int i=0;i<cav->n_modes;i++) {
@@ -235,9 +279,16 @@ void Cavity_Deallocate(Cavity *cav)
   free(cav);
 }
 
-double complex Cavity_Step(Cavity *cav, double delta_tz,
-     double complex Kg, double complex beam_charge,
-     Cavity_State *cav_state)
+/** Step function for Cavity model:
+  * Calculates the state for the next simulation step.
+  * Returns the overall cavity accelerating voltage (as seen by the beam) and stores current state in State struct. */
+double complex Cavity_Step(
+  Cavity *cav,                ///< Pointer to Cavity struct
+  double delta_tz,            ///< Timing jitter in seconds (RF reference noise)
+  double complex Kg,          ///< Drive input in sqrt(W)
+  double complex beam_charge, ///< Beam charge in Coulombs (complex since it includes RF phase information)
+  Cavity_State *cav_state     ///< Pointer to the Cavity State
+  )
 {
 
   // Intermediate signals
@@ -276,6 +327,8 @@ double complex Cavity_Step(Cavity *cav, double delta_tz,
   // Return overall accelerating voltage (as seen by the beam)
   return v_out;
 }
+
+/** Helper routine to zero out Cavity state. Useful to restore initial state in tests. */
 
 void Cavity_Clear(Cavity *cav, Cavity_State *cav_state)
 {
