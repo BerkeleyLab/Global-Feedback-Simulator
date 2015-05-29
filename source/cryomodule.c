@@ -180,6 +180,7 @@ Cryomodule * Cryomodule_Allocate_New(
 	int n_rf_stations,														///< Number of RF Stations
 	MechMode_dp mechMode_net,											///< Array of Mechanical modes in a Cryomodule
 	int n_mechModes																///< Number of Mechanical modesRF_Station **rf_station_net, int n_rf_stations, MechMode **mechMode_net, int n_mechModes)
+	)
 {
 	Cryomodule * cryo = calloc(1,sizeof(Cryomodule));
 	Cryomodule_Allocate_In(cryo, rf_station_net, n_rf_stations, mechMode_net, n_mechModes);

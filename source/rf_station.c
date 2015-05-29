@@ -338,8 +338,9 @@ double complex FPGA_Step(
 /** Implement Saturation of input signal for SSA. */
 double complex Saturate(
   double complex in,    ///< Input (complex) signal
-  double Harshness      ///< Saturation harshness parameter
-  ) {
+  double harshness      ///< Saturation harshness parameter
+  )
+{
   return in*cpow(1.0+cpow(cabs(in),harshness), -1.0/harshness);
 }
 

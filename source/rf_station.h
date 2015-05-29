@@ -101,8 +101,6 @@ typedef struct str_RF_Station_State {
 typedef RF_State* RF_State_p;
 typedef RF_State** RF_State_dp;
 
-RF_State_dp RF_State_Allocate_Array(int n);
-
 void RF_Station_Allocate_In(RF_Station * rf_station,
   double Tstep,
   double Clip,
