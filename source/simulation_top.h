@@ -60,7 +60,6 @@ typedef struct str_Simulation_State {
 void Sim_Allocate_In(Simulation *sim, double Tstep, int time_steps,
 	Gun *gun, Linac ** linac_net, int n_linacs);
 Simulation *Sim_Allocate_New(double Tstep, int time_steps, Gun *gun, Linac ** linac_net, int n_linacs);
-Simulation *Sim_Allocate_New(double Tstep,	int time_steps,	Gun *gun,	Linac ** linac_net,	int n_linacs);
 void Sim_Deallocate(Simulation *sim);
 
 void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim, Noise_Srcs* noise_srcs);
