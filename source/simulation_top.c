@@ -105,8 +105,7 @@ void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->settings+N_NOISE_SETTINGS*5, &noise_srcs->dchirp);
 }
 
-/** fprintf for a double complex signal*/
-#define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); }
+#define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); } ///< fprintf for a double complex signal
 
 /** Take a snapshot of the current Simulation State and print it to a FILE*/
 void Write_Sim_Step(
