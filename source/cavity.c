@@ -8,14 +8,23 @@
 #include <stdio.h>
 #include <string.h>
 
-ElecMode_dp ElecMode_Allocate_Array(int n)
+/** Allocates memory for an array of Electrical Eigenmodes.
+  * Electrical modes themselves need to be allocated and filled individually,
+  * and appended to this array using ElecMode_Append.*/
+ElecMode_dp ElecMode_Allocate_Array(int n   ///< Size of the array of Electrical Eigenmodes
+  )
 {
   ElecMode_dp elecMode_net = calloc(n, sizeof(ElecMode *));
 
   return elecMode_net;
 }
 
-void ElecMode_Append(ElecMode** elecMode_arr, ElecMode* elecMode, int idx)
+/** Append an Electrical Eigenmode previously allocated and filled to the array given as an argument. */
+void ElecMode_Append(
+  ElecMode** elecMode_arr,  ///< Pointer to array of Electrical Eigenmodes
+  ElecMode* elecMode,       ///< Pointer to Electrical Eigenmode to be appended
+  int idx                   ///< Position of Electrical Eigenmode in the array
+  )
 {
   // XXX Add some check!!
   elecMode_arr[idx] = elecMode;

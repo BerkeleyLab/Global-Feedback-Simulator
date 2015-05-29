@@ -1,40 +1,62 @@
+/**
+ * @file cryomodule.c
+ * @brief Cryomodule Model: Allocation, configuration and stepping functions for the cryomodule model,
+ * which iterates over an arbitrary number of cavities, mechanical modes and electro-mechanical interactions.
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
+
 #include "cryomodule.h"
 
 #include <math.h>
 
-MechMode_State_dp MechMode_State_Allocate_Array(int n)
-{
-  MechMode_State_dp mechMode_State_net = calloc(n, sizeof(MechMode_State *));
-
-  return mechMode_State_net;
-}
-
-MechMode_dp MechMode_Allocate_Array(int n)
+/** Allocates memory for an array of Mechanical Eigenmodes.
+  * Mechanical modes themselves need to be allocated and filled individually,
+  * and appended to this array using MechMode_Append.*/
+MechMode_dp MechMode_Allocate_Array(int n 	///< Size of the array of Mechanical Eigenmodes
+	)
 {
   MechMode_dp mechMode_net = calloc(n, sizeof(MechMode *));
 
   return mechMode_net;
 }
 
-void MechMode_Append(MechMode** mechMode_arr, MechMode* mechMode, int index)
+/** Append a Mechanical Eigenmode previously allocated and filled to the array given as an argument. */
+void MechMode_Append(MechMode** mechMode_arr,	///< Pointer to array of Mechanical Eigenmodes
+	MechMode* mechMode,													///< Pointer to Mechanical Eigenmode to be appended
+	int index 																	///< Position of Mechanical Eigenmode in the array
+	)
 {
   // XXX Add some check!!
   mechMode_arr[index] = mechMode;
 }
 
-RF_State *Get_RF_State(Cryomodule_State *cryo_state, int index)
+/** Helper routine to get a reference to a given RF Station State given the Cryomodule State struct. */
+RF_State *Get_RF_State(Cryomodule_State *cryo_state,	///< Pointer to Cryomodule State
+	int index 																					///< Position of RF Station in the Cryomodule
+	)
 {
 	if(cryo_state->rf_state_net[index]) return cryo_state->rf_state_net[index];
 	else return NULL;
 }
 
-MechMode_State *Get_MechMode_State(Cryomodule_State *cryo_state, int index)
+/** Helper routine to get a reference to a given Mechanical mode State given the Cryomodule State struct. */
+MechMode_State *Get_MechMode_State(Cryomodule_State *cryo_state,	///< Pointer to Cryomodule State
+	int index 																											///< Position of Mechanical mode in the Cryomodule
+	)
 {
 	if(cryo_state->mechMode_state_net[index]) return cryo_state->mechMode_state_net[index];
 	else return NULL;
 }
 
-void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k_nu, double Tstep)
+/** Takes a pointer to a MechMode struct (representing a mechanical eigenmode)
+  * which has been previously allocated and fills it in with the values passed as arguments. */
+void MechMode_Allocate_In(
+	MechMode *mechMode,		///< Pointer to MechMode struct
+	double f_nu,					///< Mechanical mode's resonant frequency in Hz
+	double Q_nu,					///< Mechanical mode's Quality factor (unitless)
+	double k_nu,					///< Mechanical mode's spring constant in N/m
+	double Tstep					///< Simulation time-step in seconds
+	)
 {
 	// Pre-calculate angular frequency
 	double omega_nu = 2.0*M_PI*f_nu;
@@ -57,7 +79,14 @@ void MechMode_Allocate_In(MechMode *mechMode, double f_nu, double Q_nu, double k
 	Filter_Append_Modes(&mechMode->fil, &mode_p2, 1, Tstep);
 }
 
-MechMode *MechMode_Allocate_New(double f_nu, double Q_nu, double k_nu, double Tstep)
+/** Allocates memory for a MechMode struct (representing a mechanical eigenmode)
+  * and fills it in with the values passed as arguments. Returns a pointer to the newly allocated struct. */
+MechMode *MechMode_Allocate_New(
+	double f_nu,					///< Mechanical mode's resonant frequency in Hz
+	double Q_nu,					///< Mechanical mode's Quality factor (unitless)
+	double k_nu,					///< Mechanical mode's spring constant in N/m
+	double Tstep					///< Simulation time-step in seconds
+	)
 {
 	// Allocate MechMode
 	MechMode * mechMode = calloc(1,sizeof(MechMode));
@@ -71,6 +100,7 @@ MechMode *MechMode_Allocate_New(double f_nu, double Q_nu, double k_nu, double Ts
 	return mechMode;
 }
 
+/** Frees memory of a MechMode mode struct (representing an mechanical eigenmode).*/
 void MechMode_Deallocate(MechMode *mechMode)
 {
 	Filter_Deallocate(&mechMode->fil);
@@ -82,6 +112,7 @@ void MechMode_Deallocate(MechMode *mechMode)
 	mechMode->Tstep = 0.0;
 }
 
+/** Takes a previously configured Mechanical mode and allocates its State struct accordingly. */
 void MechMode_State_Allocate(MechMode_State *mechMode_State, MechMode *mechMode)
 {
 	// Initialize attributes
@@ -92,31 +123,49 @@ void MechMode_State_Allocate(MechMode_State *mechMode_State, MechMode *mechMode)
 
 }
 
+/** Frees memory of Mechanical Eigenmode State struct. */
 void MechMode_State_Deallocate(MechMode_State *mechMode_State)
 {
 	Filter_State_Deallocate(&mechMode_State->fil_state);
 	mechMode_State->x_nu = 0.0;
 }
 
-void MechMode_Step(MechMode *mechMode, MechMode_State *mechMode_State, double complex F_nu)
+/** Step function for Mechanical Eigenmode:
+  * Calculates the state for the next simulation step, which comes down to stepping the 2nd-order LPF
+  * It stores the current state in State struct (displacement x_nu and filter state). */
+void MechMode_Step(MechMode *mechMode,	///< Pointer to MechMode struct
+	MechMode_State *mechMode_State,				///< Pointer to MechMode State
+	double complex F_nu 									///< Lorentz force in Newtons
+	)
 {
 	// Run the 2nd-order low-pass filter and store the result in x_nu (displacement)
  	mechMode_State->x_nu = Filter_Step(&(mechMode->fil), mechMode->c_nu*F_nu, &(mechMode_State->fil_state));
 }
 
-Cryomodule_dp Cryomodule_Allocate_Array(int n)
+/** Allocates memory for an array of Cryomodules.
+  * Cryomodules themselves need to be allocated and filled individually,
+  * and appended to this array using Cryomodule_Append.*/
+Cryomodule_dp Cryomodule_Allocate_Array(int n 	///< Size of the array of Cryomodules
+	)
 {
   Cryomodule_dp cryomodule_net = calloc(n, sizeof(Cryomodule *));
   return cryomodule_net;
 }
 
+/** Append a Cryomodule previously allocated and filled to the array given as an argument. */
 void Cryomodule_Append(Cryomodule** cryo_arr, Cryomodule* cryo, int index)
 {
   // XXX Add some check!!
   cryo_arr[index] = cryo;
 }
 
-void Cryomodule_Allocate_In(Cryomodule *cryo, RF_Station_dp rf_station_net, int n_rf_stations, MechMode_dp mechMode_net, int n_mechModes)
+/** Takes a pointer to a Cryomodule struct which has been previously allocated and fills it in with the values passed as arguments. */
+void Cryomodule_Allocate_In(Cryomodule *cryo,		///< Pointer to Cryomodule struct
+	RF_Station_dp rf_station_net,									///< Array of RF Stations in a Cryomodule
+	int n_rf_stations,														///< Number of RF Stations
+	MechMode_dp mechMode_net,											///< Array of Mechanical modes in a Cryomodule
+	int n_mechModes																///< Number of Mechanical modes
+	)
 {
 	cryo -> rf_station_net = rf_station_net;
 	cryo -> mechMode_net = mechMode_net;
@@ -124,12 +173,20 @@ void Cryomodule_Allocate_In(Cryomodule *cryo, RF_Station_dp rf_station_net, int 
 	cryo -> n_mechModes = n_mechModes;
 }
 
-Cryomodule * Cryomodule_Allocate_New(RF_Station **rf_station_net, int n_rf_stations, MechMode **mechMode_net, int n_mechModes)
+/** Allocates memory for a Cryomodule struct and fills it in with the values passed as arguments.
+	* Returns a pointer to the newly allocated struct. */
+Cryomodule * Cryomodule_Allocate_New(
+	RF_Station_dp rf_station_net,									///< Array of RF Stations in a Cryomodule
+	int n_rf_stations,														///< Number of RF Stations
+	MechMode_dp mechMode_net,											///< Array of Mechanical modes in a Cryomodule
+	int n_mechModes																///< Number of Mechanical modesRF_Station **rf_station_net, int n_rf_stations, MechMode **mechMode_net, int n_mechModes)
 {
 	Cryomodule * cryo = calloc(1,sizeof(Cryomodule));
 	Cryomodule_Allocate_In(cryo, rf_station_net, n_rf_stations, mechMode_net, n_mechModes);
 	return cryo;
 }
+
+/** Frees memory of a Cryomodule struct.*/
 void Cryomodule_Deallocate(Cryomodule* cryo)
 {
 	for(int i=0;i<cryo->n_rf_stations;i++){
@@ -146,12 +203,15 @@ void Cryomodule_Deallocate(Cryomodule* cryo)
 	cryo->n_mechModes = 0.0;
 }
 
+/** Helper routine to get a reference to a given RF Station given the Cryomodule struct. */
 RF_Station *Get_RF_Station(Cryomodule *cryo, int index)
 {
 	if(cryo->rf_station_net[index]) return cryo->rf_station_net[index];
 	else return NULL;
 }
 
+/** Takes a previously configured Cryomodule and allocates its State struct accordingly.
+  * It allocates states for the Cryomodule's RF Stations and Mechanical modes recursively. */
 void Cryomodule_State_Allocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 {
 
@@ -178,6 +238,7 @@ void Cryomodule_State_Allocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 
 }
 
+/** Frees memory of Cryomodule State struct. */
 void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 {
 	for(int i=0;i<cryo->n_rf_stations;i++){
@@ -192,6 +253,10 @@ void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 	free(cryo_state->F_nu);
 }
 
+/** Step function for Cryomodule:
+  * Calculates the state for the next simulation step.
+  * Returns vector sum of all cavity accelerating voltage errors
+  * (as seen by the beam) and stores current state in State struct. */
 double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, double delta_tz, double beam_charge)
 {
 	// Electrical state-space model
