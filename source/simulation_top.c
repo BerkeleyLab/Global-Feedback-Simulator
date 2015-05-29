@@ -1,7 +1,22 @@
+/**
+ * @file simulation_top.c
+ * @brief Simulation Top Level: Allocation, configuration and stepping functions for the entire simulation,
+ * including an arbitrary number of Linac Sections.
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
+
 #include "simulation_top.h"
 
-void Sim_Allocate_In(Simulation *sim, double Tstep, int time_steps,
-	Gun *gun, Linac ** linac_net, int n_linacs)
+/** Takes a pointer to a Simulation which has been previously allocated and fills it in with the values passed as arguments.
+	* It assumes that the Linac Sections have been previously allocated and an array is being provided (same is the case with the Gun). */
+void Sim_Allocate_In(
+	Simulation *sim,			///< Pointer to Simulation
+	double Tstep,					///< Simulation time step in seconds
+	int time_steps,				///< Total Simulation time duration in time steps
+	Gun *gun,							///< Pointer to Gun
+	Linac ** linac_net,		///< Array of Linac Sections
+	int n_linacs					///< Number of Linac Sections
+	)
 {
 	sim->Tstep = Tstep;
 	sim->time_steps = time_steps;
@@ -10,14 +25,22 @@ void Sim_Allocate_In(Simulation *sim, double Tstep, int time_steps,
 	sim->n_linacs = n_linacs;
 }
 
-Simulation *Sim_Allocate_New(double Tstep, double time_steps,
-	Gun *gun, Linac ** linac_net, int n_linacs)
+/** Allocates memory for a Simulation struct and fills it in with the values passed as arguments. Returns a pointer to the newly allocated struct. */
+Simulation *Sim_Allocate_New(
+	double Tstep,					///< Simulation time step in seconds
+	int time_steps,				///< Total Simulation time duration in time steps
+	Gun *gun,							///< Pointer to Gun
+	Linac ** linac_net,		///< Array of Linac Sections
+	int n_linacs					///< Number of Linac Sections
+	)
 {
 	Simulation *sim = calloc(1,sizeof(Simulation));
 	Sim_Allocate_In(sim, Tstep, time_steps, gun, linac_net, n_linacs);
 
 	return sim;
 }
+
+/** Frees memory of a Simulation struct. */
 void Sim_Deallocate(Simulation *sim)
 {
 	for(int i=0;i<sim->n_linacs;i++){
@@ -32,6 +55,7 @@ void Sim_Deallocate(Simulation *sim)
 	sim->n_linacs = 0;
 }
 
+/** Takes a previously configured Simulation and allocates its State struct accordingly. */
 void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim, Noise_Srcs* noise_srcs)
 {
 	// Allocate memory for the array of Linac states
@@ -54,6 +78,7 @@ void Sim_State_Allocate(Simulation_State *sim_state, Simulation *sim, Noise_Srcs
 	Doublecompress_State_Allocate(sim_state->dc_state, sim->n_linacs);
 }
 
+/** Frees memory of Simulation State struct. */
 void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim)
 {
  	for(int i=0;i<sim->n_linacs;i++) {
@@ -67,6 +92,9 @@ void Sim_State_Deallocate(Simulation_State *sim_state, Simulation *sim)
 	free(sim_state->dc_state);
 }
 
+/** Updates all correlated noise sources in the system,
+	* which can be independently configured to be turned ON or OFF,
+	and if ON, to generate different types of noise (see noise.c). */
 void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 {
 	Noise_Step(t_now, Tstep, noise_srcs->type[0], noise_srcs->settings+N_NOISE_SETTINGS*0, &noise_srcs->dQ_Q);
@@ -77,9 +105,16 @@ void Apply_Correlated_Noise(int t_now, double Tstep, Noise_Srcs * noise_srcs)
 	Noise_Step(t_now, Tstep, noise_srcs->type[5], noise_srcs->settings+N_NOISE_SETTINGS*5, &noise_srcs->dchirp);
 }
 
+/** fprintf for a double complex signal*/
 #define CPRINT(c) {if(cimag(c)<0) fprintf(fp,"%10.16e%10.16ej ",creal(c),cimag(c)); else fprintf(fp,"%10.16e+%10.16ej ",creal(c),cimag(c)); }
 
-void Write_Sim_Step(FILE * fp, double time, Simulation *sim, Simulation_State *sim_state)
+/** Take a snapshot of the current Simulation State and print it to a FILE*/
+void Write_Sim_Step(
+	FILE * fp,										///< Pointer to output FILE
+	double time,									///< Current simulation time in seconds
+	Simulation *sim,							///< Pointer to Simulation (need to know about machine layout)
+	Simulation_State *sim_state 	///< Pointer to Simulation State
+	)
 {
  	fprintf(fp, "%10.16e   ",time);					// Current simulation time [s]
  	fprintf(fp, "%10.16e %10.16e %10.16e %10.16e %10.16e %10.16e  ",
@@ -114,10 +149,16 @@ void Write_Sim_Step(FILE * fp, double time, Simulation *sim, Simulation_State *s
 
 #undef CPRINT
 
-/*
- * Performs sim.time_steps simulation time-steps (top-level of the entire Simulation Engine)
+/** Run the entire simulation: Step entire model for the total simulation time specified in the Simulation struct,
+	* and write results of time-series simulation into output FILE every OUTPUTFREQ simulation steps
+	* This is the Top Level function for the entire Simulation Engine.
  */
-void Simulation_Run(Simulation *sim, Simulation_State *sim_state, char * fname, int OUTPUTFREQ)
+void Simulation_Run(
+	Simulation *sim,							///< Pointer to Simulation
+	Simulation_State *sim_state,	///< Pointer to Simulation State
+	char * fname,									///< Output file name (string)
+	int OUTPUTFREQ								///< Decimation factor of output data (print to file very OUTPUTFREQ simulation steps)
+	)
 {
 	// Total Linac accelerating voltage in Volts
 	double complex linac_V=0.0;

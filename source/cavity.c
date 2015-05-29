@@ -337,8 +337,7 @@ double complex Cavity_Step(
   return v_out;
 }
 
-/** Helper routine to zero out Cavity state. Useful to restore initial state in tests. */
-
+/** Helper routine to zero out Cavity state. Useful to restore initial state in unit tests. */
 void Cavity_Clear(Cavity *cav, Cavity_State *cav_state)
 {
   // Zero out signals

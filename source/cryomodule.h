@@ -49,7 +49,6 @@ typedef struct str_Cryomodule_State {
 
 } Cryomodule_State;
 
-MechMode_State_dp MechMode_State_Allocate_Array(int n);
 MechMode_dp MechMode_Allocate_Array(int n);
 void MechMode_Append(MechMode** mechMode_arr, MechMode* mechMode, int index);
 

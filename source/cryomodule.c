@@ -100,7 +100,7 @@ MechMode *MechMode_Allocate_New(
 	return mechMode;
 }
 
-/** Frees memory of a MechMode mode struct (representing an mechanical eigenmode).*/
+/** Frees memory of a MechMode mode struct (representing an mechanical eigenmode). */
 void MechMode_Deallocate(MechMode *mechMode)
 {
 	Filter_Deallocate(&mechMode->fil);
@@ -255,9 +255,14 @@ void Cryomodule_State_Deallocate(Cryomodule_State *cryo_state, Cryomodule *cryo)
 
 /** Step function for Cryomodule:
   * Calculates the state for the next simulation step.
-  * Returns vector sum of all cavity accelerating voltage errors
+  * Returns vector sum of all cavity accelerating voltages
   * (as seen by the beam) and stores current state in State struct. */
-double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, double delta_tz, double beam_charge)
+double complex Cryomodule_Step(
+	Cryomodule *cryo,								///< Pointer to Cryomodule
+	Cryomodule_State * cryo_state,	///< Pointer to Cryomodule State
+	double delta_tz,								///< Timing jitter in seconds (RF reference noise)
+	double beam_charge							///< Beam charge in Coulombs
+	)
 {
 	// Electrical state-space model
 	// ----------------------------------------------------
@@ -334,7 +339,7 @@ double complex Cryomodule_Step(Cryomodule *cryo, Cryomodule_State * cryo_state, 
 	// Store total Cryomodule drive signal (vector sum of all RF Station drive signals)
 	 cryo_state->cryo_Kg = cryo_Kg;
 
-	// Return vector sum of all cavity accelerating voltage errors
+	// Return vector sum of all cavity accelerating voltages
 	// (as seen by the beam)
 	return cryo_V;
 

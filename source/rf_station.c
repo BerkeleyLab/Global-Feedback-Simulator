@@ -1,29 +1,32 @@
+/**
+ * @file rf_station.c
+ * @brief RF Station Model: Allocation, configuration and stepping functions for the RF Station model,
+ * including a cavity (with an arbitrary number of Eigenmodes), FPGA controller,
+ * Solid-State Amplifier, loop delay and LLRF noise.
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
+
 #include "rf_station.h"
 
 #include <math.h>
 
-RF_State_dp RF_State_Allocate_Array(int n)
-{
-  RF_State_dp rf_state_net = calloc(n, sizeof(RF_State *));
-
-  return rf_state_net;
-}
-
+/** Allocates memory for an array of RF Stations.
+  * RF Stations themselves need to be allocated and filled individually,
+  * and appended to this array using RF_Station_Append.*/
 RF_Station_dp RF_Station_Allocate_Array(int n)
 {
   RF_Station_dp RF_Station_net = calloc(n, sizeof(RF_Station *));
   return RF_Station_net;
 }
 
+/** Append an RF Station previously allocated and filled to the array given as an argument. */
 void RF_Station_Append(RF_Station** rf_station_arr, RF_Station* rf_station, int index)
 {
   // XXX Add some check!!
   rf_station_arr[index] = rf_station;
 }
 
-/*
- * Delay
- */
+/** Takes a previously configured Delay and allocates its State struct accordingly. */
 void Delay_State_Allocate(Delay *delay, Delay_State *delay_state)
 {
   // Allocate memory buffer
@@ -36,17 +39,24 @@ void Delay_State_Allocate(Delay *delay, Delay_State *delay_state)
   delay_state -> index = 0;
 }
 
+/** Frees memory of Delay State struct. */
 void Delay_State_Deallocate(Delay_State *delay_state)
 {
   free(delay_state->buffer);
 }
 
+/** Frees memory of Delay struct. */
 void Delay_Deallocate(Delay *delay)
 {
   delay->size = 0;
 }
 
-double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_state)
+/** Step function for Delay: Takes a complex signal in, iterates a circular buffer and returns delayed value. */
+double complex Delay_Step(
+  double complex in,        ///< Input (complex) vector
+  Delay *delay,             ///< Pointer to Delay struct
+  Delay_State *delay_state  ///< Pointer to Delay State
+  )
 {
   double complex out;
 
@@ -61,6 +71,7 @@ double complex Delay_Step(double complex in, Delay *delay, Delay_State *delay_st
   return out;
 }
 
+/** Helper routine to zero out Delay buffer. Useful to restore initial state in unit tests. */
 void Delay_Clear(Delay *delay, Delay_State *delay_state){
   for(int i=0 ; i<delay->size; i++){
     delay_state -> buffer[delay_state->index] = (double complex) 0.0;
@@ -68,34 +79,35 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   delay_state->index = 0;
 }
 
-/*
- * RF Station
- */
- void RF_Station_Allocate_In(RF_Station * rf_station,
+/** Takes a pointer to a RF Station struct which has been previously allocated and fills it in with the values passed as arguments. */
+ void RF_Station_Allocate_In(
+  RF_Station * rf_station,    ///< Pointer to RF Station
   // General (nonphysical) simulation parameters
-  double Tstep,
-  // Properties of the triode system
-  double Clip,
-  double PAmax,
-  double PAscale, // Amplifier scaling (from unitless to sqrt(W))
+  double Tstep,               ///< Simulation time-step in seconds
+  // Properties of the SSA
+  double Clip,                ///< Harshness parameter of SSA clipping function
+  double PAmax,               ///< Maximum SSA output power sqrt(W)
+  double PAscale,             ///< SSA scaling (from unitless to sqrt(W))
 
-  double complex * p_TRF1, double complex * p_TRF2,
+  double complex * p_TRF1,    ///< SSA Filters: Conjugate pair to limit bandwidth
+  double complex * p_TRF2,    ///< SSA Filters: Conjugate pair to limit bandwidth
   // Properties of the RX Filter
-  double complex * p_RXF,
+  double complex * p_RXF,     ///< Anti-alias filter
 
   // Cavity
-  Cavity *cav,
+  Cavity *cav,                ///< RF cavity
   // FPGA controller
-  double stable_gbw, // Gain-Bandwidth product
-  double FPGA_out_sat,  // FPGA output saturation limit
+  double stable_gbw,          ///< FPGA controller Gain-Bandwidth product
+  double FPGA_out_sat,        ///< FPGA output saturation limit
 
   // Loop Delay
-  int loop_delay_size,
+  int loop_delay_size,        ///< RF feedback loop delay in simulation time steps (multiply by Tstep to get seconds)
 
   // LLRF Noise Sources
-  double probe_ns_rms,
-  double rev_ns_rms,
-  double fwd_ns_rms)
+  double probe_ns_rms,      ///< LLRF noise: Cavity field probe port
+  double rev_ns_rms,        ///< LLRF noise: Reverse port
+  double fwd_ns_rms         ///< LLRF noise: Forward port
+  )
 {
   rf_station->Clip = Clip;
   rf_station->PAscale = PAscale;
@@ -151,32 +163,34 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
 
 }
 
+/** Allocates memory for an RF Station and fills it in with the values passed as arguments. Returns a pointer to the newly allocated struct. */
 RF_Station * RF_Station_Allocate_New(
+  // General (nonphysical) simulation parameters
+  double Tstep,               ///< Simulation time-step in seconds
+  // Properties of the SSA
+  double Clip,                ///< Harshness parameter of SSA clipping function
+  double PAmax,               ///< Maximum SSA output power sqrt(W)
+  double PAscale,             ///< SSA scaling (from unitless to sqrt(W))
 
-  // General (non-physical) simulation parameters
-  double Tstep,
-  // Properties of the triode system
-  double Clip,
-  double PAmax,
-  double PAscale, // Amplifier scaling (from unitless to sqrt(W))
-
-  double complex * p_TRF1, double complex * p_TRF2,
+  double complex * p_TRF1,    ///< SSA Filters: Conjugate pair to limit bandwidth
+  double complex * p_TRF2,    ///< SSA Filters: Conjugate pair to limit bandwidth
   // Properties of the RX Filter
-  double complex * p_RXF,
+  double complex * p_RXF,     ///< Anti-alias filter
 
   // Cavity
-  Cavity *cav,
+  Cavity *cav,                ///< RF cavity
   // FPGA controller
-  double stable_gbw, // Gain-Bandwidth product
-  double FPGA_out_sat,  // FPGA output saturation limit
+  double stable_gbw,          ///< FPGA controller Gain-Bandwidth product
+  double FPGA_out_sat,        ///< FPGA output saturation limit
 
   // Loop Delay
-  int loop_delay_size,
+  int loop_delay_size,        ///< RF feedback loop delay in simulation time steps (multiply by Tstep to get seconds)
 
   // LLRF Noise Sources
-  double probe_ns_rms,
-  double rev_ns_rms,
-  double fwd_ns_rms)
+  double probe_ns_rms,      ///< LLRF noise: Cavity field probe port
+  double rev_ns_rms,        ///< LLRF noise: Reverse port
+  double fwd_ns_rms         ///< LLRF noise: Forward port
+  )
 {
 
   RF_Station * rf_station;
@@ -189,6 +203,7 @@ RF_Station * RF_Station_Allocate_New(
   return rf_station;
 }
 
+/** Frees memory of an RF Station struct. */
 void RF_Station_Deallocate(RF_Station *rf_station)
 {
 
@@ -207,6 +222,7 @@ void RF_Station_Deallocate(RF_Station *rf_station)
 
 }
 
+/** Takes a previously configured RF Station and allocates its State struct accordingly. */
 void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
 
   Filter_State_Allocate(&rf_state->RXF,    &rf_station->RXF);
@@ -224,6 +240,7 @@ void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
   Delay_State_Allocate(&rf_station->loop_delay, &rf_state->loop_delay_state);
 }
 
+/** Frees memory of RF Station State struct. */
 void RF_State_Deallocate(RF_State *rf_state, RF_Station *rf_station) {
   Filter_State_Deallocate(&rf_state->RXF);
   Filter_State_Deallocate(&rf_state->TRF1);
@@ -231,12 +248,20 @@ void RF_State_Deallocate(RF_State *rf_state, RF_Station *rf_station) {
   Cavity_State_Deallocate(&rf_state->cav_state, rf_station->cav);
 }
 
+/** Apply a phase shift of theta radians to complex signal in*/
 double complex Phase_Shift(double complex in, double theta) {
   return in*cexp(I*theta);
 }
 
-void FPGA_Allocate_In(FPGA * fpga,
-     double kp, double ki, double complex set_point, double out_sat, double Tstep)
+/** Takes a pointer to an FPGA struct which has been previously allocated and fills it in with the values passed as arguments. */
+void FPGA_Allocate_In(
+  FPGA * fpga,                ///< Pointer to FPGA
+  double kp,                  ///< Proportional Gain
+  double ki,                  ///< Integral Gain
+  double complex set_point,   ///< Set-point
+  double out_sat,             ///< Output saturation limit
+  double Tstep                ///< Simulation time-step in seconds
+  )
 {
 
   fpga->kp = kp;
@@ -251,6 +276,7 @@ void FPGA_Allocate_In(FPGA * fpga,
   fpga->Tstep = Tstep;
 }
 
+/** Frees memory of an FPGA struct. */
 void FPGA_Deallocate(FPGA *fpga)
 {
   fpga->kp = 0.0;
@@ -261,6 +287,7 @@ void FPGA_Deallocate(FPGA *fpga)
   fpga->Tstep = 0.0;
 }
 
+/** Helper routine to zero out FPGA State. Useful to restore initial state in unit tests. */
 void FPGA_Clear(FPGA_State * stnow)
 {
   stnow-> drive = 0.0+0.0*_Complex_I;
@@ -269,9 +296,15 @@ void FPGA_Clear(FPGA_State * stnow)
   stnow-> openloop = 0;
 }
 
-double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow)
+/** Step function for FPGA:
+  * Calculates the state for the next simulation step.
+  * Returns the error signal and stores current state in State struct. */
+double complex FPGA_Step(
+  FPGA *fpga,                 ///< Pointer to FPGA
+  double complex cavity_vol,  ///< Measured cavity field
+  FPGA_State *stnow           ///< Pointer to FPGA State
+  )
 {
-
   double state, drive, scale;
 
   // Calculate error signal
@@ -298,15 +331,26 @@ double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stno
     // Store error state
     stnow->err = err;
   }
-
+  // Return FPGA error signal
   return err;
 }
 
-double complex Saturate(double complex in, double harshness) {
+/** Implement Saturation of input signal for SSA. */
+double complex Saturate(
+  double complex in,    ///< Input (complex) signal
+  double Harshness      ///< Saturation harshness parameter
+  ) {
   return in*cpow(1.0+cpow(cabs(in),harshness), -1.0/harshness);
 }
 
-double complex SSA_Step(RF_Station *rf_station, double complex drive_in, RF_State *rf_state)
+/** Step function for Solid-State Amplifier: Saturation and band limit.
+  * Calculates the state for the next simulation step.
+  * Returns the error signal and stores current state in State struct. */
+double complex SSA_Step(
+  RF_Station *rf_station,   ///< Pointer to RF Station (contains SSA struct)
+  double complex drive_in,  ///< Input (complex) signal
+  RF_State *rf_state        ///< Pointer to RF Station State (contains SSA State)
+  )
 {
   double complex trf1out, satout, trf2out;
 
@@ -325,12 +369,15 @@ double complex SSA_Step(RF_Station *rf_station, double complex drive_in, RF_Stat
   return trf2out;
 }
 
+/** Helper routine to zero out SSA State. Useful to restore initial state in unit tests. */
 void SSA_Clear(RF_Station *rf_station, RF_State * rf_state)
 {
   Filter_State_Clear(&rf_station->TRF1, &rf_state->TRF1);
   Filter_State_Clear(&rf_station->TRF2, &rf_state->TRF2);
 }
 
+/** Update Noise signals for each LLRF port. LLRF noise is defined by its Power Spectral Density
+  * and considered Gaussian, where 1/f noise is ignored (see Physics documentation) */
 void Apply_LLRF_Noise(RF_Station *rf_station, RF_State *rf_state)
 {
   rf_state->probe_ns = randn(0.0, rf_station->probe_ns_rms) + _Complex_I*randn(0.0, rf_station->probe_ns_rms);
@@ -338,13 +385,19 @@ void Apply_LLRF_Noise(RF_Station *rf_station, RF_State *rf_state)
   rf_state->fwd_ns = randn(0.0, rf_station->fwd_ns_rms) + _Complex_I*randn(0.0, rf_station->fwd_ns_rms);
 }
 
+/** Step function for RF Station:
+  * Calculates the state for the next simulation step.
+  * Returns the cavity accelerating voltage (as seen by the beam)
+  * and stores current state in State struct. */
 double complex RF_Station_Step(
   // Configuration parameters
-  RF_Station *rf_station,
+  RF_Station *rf_station,       ///< Pointer to RF Station
   // Beam amplitude and phase noise (beam loading)
-  double delta_tz, double complex beam_charge,
+  double delta_tz,              ///< Timing jitter in seconds (RF reference noise)
+  double complex beam_charge,   ///< Beam charge in Coulombs
   // State vectors
-	RF_State *rf_state)
+	RF_State *rf_state            ///< Pointer to RF State
+  )
 {
 
   // Intermediate signals
@@ -380,6 +433,7 @@ double complex RF_Station_Step(
   return V_acc;
 }
 
+/** Helper routine to zero out RF Station State. Useful to restore initial state in unit tests. */
 void RF_Station_Clear(RF_Station *rf_station, RF_State * rf_state)
 {
   FPGA_Clear(&rf_state->fpga_state);

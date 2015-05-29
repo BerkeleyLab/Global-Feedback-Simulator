@@ -1,19 +1,27 @@
-
+/**
+ * @file filter.c
+ * @brief Filter Model: Allocation, configuration and stepping functions for the filter model, which iterates over an arbitrary number of modes.
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
 
 #include "filter.h"
 #include "stdlib.h"
 
-Filter * Filter_Allocate_New(int alloc_order, int alloc_coeffs)
+
+Filter * Filter_Allocate_New(
+  int alloc_order,  ///< Number of modes
+  int alloc_coeffs  ///< Number of coefficients per mode
+  )
 {
   Filter * fil;
   fil = calloc(1,sizeof(Filter));
-  
+
   fil->alloc_order = alloc_order;
   fil->alloc_coeffs = alloc_coeffs;
-  
+
   fil->n_coeffs=0;
   fil->order = 0;
-  
+
   fil->modes = (int*)calloc(alloc_order,sizeof(int));
   fil->coeff_start = (int*)calloc(alloc_order,sizeof(int));
   fil->coeffs = (double complex *)calloc(3*alloc_coeffs,sizeof(double complex));
@@ -21,21 +29,28 @@ Filter * Filter_Allocate_New(int alloc_order, int alloc_coeffs)
   return fil;
 }
 
-void Filter_Allocate_In(Filter * fil, int alloc_order, int alloc_coeffs)
+/** Takes a pointer to a Filter struct and fills allocates a filter of the depth indicated by the argument list. */
+void Filter_Allocate_In(
+  Filter * fil,     ///< Pointer to Filter struct
+  int alloc_order,  ///< Number of modes
+  int alloc_coeffs  ///< Number of coefficients per mode
+  )
 {
-  
+
   fil->alloc_order = alloc_order;
   fil->alloc_coeffs = alloc_coeffs;
-  
+
   fil->n_coeffs=0;
   fil->order = 0;
-  
+
   fil->modes = (int*)calloc(alloc_order,sizeof(int));
   fil->coeff_start = (int*)calloc(alloc_order,sizeof(int));
-  
+
   fil->coeffs = (double complex *)calloc(3*alloc_coeffs,sizeof(double complex));
   fil->poles = (double complex *)calloc(alloc_coeffs,sizeof(double complex));
 }
+
+/** Frees memory of a Filter struct */
 void Filter_Deallocate(Filter * fil)
 {
   free(fil->poles);
@@ -48,7 +63,14 @@ void Filter_Deallocate(Filter * fil)
   fil->alloc_coeffs = 0;
 }
 
-void Filter_Append_Modes(Filter * fil, double complex * poles, int mod, double dt)
+/** Append one or more Filter modes to a Filter previously allocated.
+ * given a list of complex poles in the argument list. */
+void Filter_Append_Modes(
+  Filter * fil,             ///< Pointer to Filter struct
+  double complex * poles,   ///< Array of complex poles
+  int mod,                  ///< Number of modes to be appended to Filter
+  double dt                 ///< Simulation time step in seconds
+  )
 {
   int i;
   /*
@@ -64,7 +86,7 @@ void Filter_Append_Modes(Filter * fil, double complex * poles, int mod, double d
   // Update the indexing arrays for the new entry
   fil->modes[fil->order-1] = mod;
   if(fil->order>1) {
-    fil->coeff_start[fil->order-1] = 
+    fil->coeff_start[fil->order-1] =
       fil->coeff_start[fil->order-2]+fil->modes[fil->order-2];
   }
   // Allocate more coefficients
@@ -88,17 +110,22 @@ void Filter_Append_Modes(Filter * fil, double complex * poles, int mod, double d
                         /(1.0-0.5*dt*poles[i]);
     fil->coeffs[3*cs+2] = cabs(poles[i]);
   }
-  
+
 }
+
+/** Takes a previously configured Filter and allocates its State struct accordingly. */
 void Filter_State_Allocate(Filter_State * sf, Filter * fil) {
   sf->state = calloc(fil->n_coeffs,sizeof(double complex));
   sf->input = calloc(fil->order,sizeof(double complex));
 }
+
+/** Frees memory of Filter State struct. */
 void Filter_State_Deallocate(Filter_State * sf) {
   free(sf->state);
   free(sf->input);
 }
 
+/** Helper routine to zero out Filter state. Useful to restore initial state in unit tests. */
 void Filter_State_Clear(Filter * fil, Filter_State * sf)
 {
   int o, m, cs;
@@ -112,10 +139,16 @@ void Filter_State_Clear(Filter * fil, Filter_State * sf)
   }
 }
 
-double complex Filter_Step(Filter * fil, double complex innow,
-			   Filter_State * fil_state)
+/** Step function for Filter model:
+  * Calculates the state for the next simulation step.
+  * Returns the output of the last cascaded pole. */
+double complex Filter_Step(
+  Filter * fil,               ///< Pointer to Filter struct
+  double complex innow,       ///< Complex input
+  Filter_State * fil_state    ///< Pointer to Filter State
+  )
 {
-  // Indeces 
+  // Indeces
   int o,m,cs;
   // Intermediate input signals
   double complex voltage_in, prev_in;
@@ -146,7 +179,7 @@ double complex Filter_Step(Filter * fil, double complex innow,
 
       // Store output for current mode
       fil_state->state[cs] = a*fil_state->state[cs]+b*voltage_in;
-      
+
       // Add mode's output to form pole's output
       // (and scale to keep unity gain at DC)
       output += fil_state->state[cs]*scale;
