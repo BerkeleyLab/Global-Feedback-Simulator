@@ -1,11 +1,22 @@
+/**
+ * @file doublecompress.c
+ * @brief Longitudinal Phase-Space Beam Dynamics Model (doublecompress).
+ * Allocation, configuration and beam dynamics calculcation functions, which iterates over an arbitrary number of Linac Sections.
+ * Logic initially wrote by Paul Emma (SLAC) in Matlab, and translated into C by Daniel Driver (UC Berkeley).
+ * @author Carlos Serrano (Cserrano@lbl.gov)
+ */
+
 #include "doublecompress.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
 
-
-void Doublecompress_State_Allocate(Doublecompress_State * dcs, int Nlinac)
+/** Allocates Doublecompress State struct accordingly for Linac of length Nlinac. */
+void Doublecompress_State_Allocate(
+  Doublecompress_State * dcs,  ///< Pointer to State struct
+  int Nlinac                   ///< Number of Linac Sections
+  )
 {
   dcs->Ipk =    (double*)calloc(Nlinac,sizeof(double));
   dcs->sz =     (double*)calloc(Nlinac,sizeof(double));
@@ -20,6 +31,7 @@ void Doublecompress_State_Allocate(Doublecompress_State * dcs, int Nlinac)
   dcs->cor =    (double*)calloc(Nlinac,sizeof(double));
 }
 
+/** Frees memory of Doublecompress State struct. */
 void Doublecompress_State_Deallocate(Doublecompress_State * dcs)
 {
   free(dcs->Ipk);
@@ -51,101 +63,85 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
   // Payload better have been of size 10*Nlinac!
 }
 
-/*
-
-  Function to calculate bunch length and energy spread after a
-  compressor system (just like LCLS) where the E-z correlations are generated
-  by Linacs at off crest RF phases (not zero crossing).  The wakefield is
-  included in linear form assuming rectangular z-distributions.  The RMS
-  bunch lengths and energy spreads calculated here are linear in that they
-  do not directly include the T566, or RF curvature non-linearities along the
-  bunch.  The calculation does, however, include the E-z correlation dependence
-  on incoming timing jitter (due to RF curvature) and charge jitter, and the
-  T566 effect on R56 for mean-off-energy beams.  The bunch head is at z<0
-  (same as LiTrack), so a chicane compressor has both R56 < 0 and phi < 0.
-  Written by P. Emma
-
-  Modifications to Octave:
-  A reference for most equations used below is 'doc/presentations/PE_slides/COMP_OPT1.pdf'
-  Note that there are a few known differences from the above mentioned reference. These
-  differences are alright and have been marked as 'changed by author'.
-  Deviations of the mean energy, bunch length, energy spread and chirp of the injected bunch
-  were added to the input parameters and are taken into account in the computations.
-  The sign of the charge is ignored.
-  Nov. 2012, S. Paret
-
-  Translated:
-  Converted to C. New data structures added to encapsulate data. Units switched
-  to SI units(exception: electron volts)
-  NOTE: {} is the length of the array eg. {Nlinacs} indicates input array should have length Nlinacs
-  July 2013, Daniel Driver
-
-  Inputs: gun.sz0:	Nominal initial RMS bunch length [m]
-          gun.sd0:	Nominal initial incoh. energy spread at Eg [fraction]
-          gun.E:	Nominal gun exit energy [eV]
-          gun.N:        Bunch population [e.g. 6.25E9]
-
-	  linp_array[j].dE:	Energy difference of bunch from start to finish of Linac j [eV]
-	  linp_array[j].R56:	Nominal R56 values for Linac j (chicane-R56 < 0) [m]
-	  linp_array[j].T566:	Nominal T566 values for Linac j (always > 0) [m]
-	  linp_array[j].phi:	Nominal Linac RF phase for Linac j (-30 deg accelerates
-	  and puts head energy lower than tail) [radians]
-	  linp_array[j].L:	Linac length (scales wake) [m]
-	  linp_array[j].lam:	RF wavelength for each Linac
-	                        (Sband=0.105m, Xband=0.02625m) [m]
-	  linp_array[j].s0:	Wakefield characteristic length (Sband=1.322mm), Xband=0.77mm) [m]
-	  linp_array[j].a:	Mean iris radius (Sband=11.654mm,Xband=4.72mm) [m]
-
-	  dN_Nf:  Relative bunch population error [fraction]
-	          (e.g. -2 => 2-low in bunch charge)
-	  dtg:    Timing error of gun wrt RF (<0 is an early bunch) [sec]
-	  dEg:    Energy deviation at end of injector [eV]
-	  dsig_z: Deviation of bunch length from nominal length [m]
-	  dsig_E: Deviation of energy spread from nominal energy
-	  spread [fraction of nominal energy]
-	  chirp:  <Ez> correlation [m]
-	  dphivr: Vector of 5 Linac RF phase errors (<0 is early bunch arrival) [rad] {Nlinacs}
-	  dV_Vvr: Vector of 5 Linac RF relative voltage errors [fraction] {Nlinacs}
-
-  Outputs:
-
-    Ipk:	Peak current at end of j-th Linac [A] {Nlinacs}
-	  sz:	rms bunch length after j-th Linac [m] {Nlinacs}
-	  dE_E:	Relative energy offset after j-th Linac [fraction] {Nlinacs}
-	  sd:	rms rel. energy spread after j-th Linac [fraction] {Nlinacs}
-	  dt:	Timing error at end of j-th Linac [sec] {Nlinacs}
-	  sdsgn:	Signed, correlated E-sprd per Linac (dE_E-z slope * sigz) [fraction] {Nlinacs}
-	  k:	<Ez> correlation const. of j-th Linac [1/m] {Nlinacs}
-	  Eloss:	Energy loss per Linac due to wake [eV] {Nlinacs}
-	  dE_Ei:	Relative energy offset of JUST j-th Linac [fraction] {Nlinacs}
-	  dE_Ei2:Energy offset error relative to final energy of JUST
-	  j-th Linac [fraction] {Nlinacs}
-	  cor:  Signed-correlated energy spread (slope*sigz) [fraction] {Nlinacs+1}
-
- */
-
 #ifndef c
-#define c 299792458.0
+#define c 299792458.0       ///< Speed of light in m/s
 #endif
 #ifndef mu0
-#define mu0 4*M_PI*1e-7
+#define mu0 4*M_PI*1e-7     ///< Vacuum permeability in N/A^2
 #endif
 #ifndef Z0
-#define Z0 120.0*M_PI
+#define Z0 120.0*M_PI       ///< Impedance of free space in Ohms
 #endif
 #ifndef e
-#define e 1.60217656535E-19
+#define e 1.60217656535E-19 ///< Charge of the electron in Coulombs
 #endif
- //mu0*c
-//1.60217656535E-19
+/** Square of x. */
 #define SQ(x) ((x)*(x))
 
-void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
-			// Inputs which change with time potentially
-			Noise_Srcs * noise_srcs, double * dphivr, double * dV_Vvr,
-			// double_compress Outputs
-			Doublecompress_State * dcs
-			)
+/** Function to calculate bunch length and energy spread after a
+  * compressor system (just like LCLS) where the E-z correlations are generated
+  * by Linacs at off crest RF phases (not zero crossing).  The wakefield is
+  * included in linear form assuming rectangular z-distributions.  The RMS
+  * bunch lengths and energy spreads calculated here are linear in that they
+  * do not directly include the T566, or RF curvature non-linearities along the
+  * bunch.  The calculation does, however, include the E-z correlation dependence
+  * on incoming timing jitter (due to RF curvature) and charge jitter, and the
+  * T566 effect on R56 for mean-off-energy beams.  The bunch head is at z<0
+  * (same as LiTrack), so a chicane compressor has both R56 < 0 and phi < 0.
+  * A reference for most equations used in this functions can be found in the
+  * Longitudinal beam dynamics section of the Physics document, in the doc/ directory.
+  * All units are in SI units except for Energy, which is expressed in eV.
+  -# Inputs:
+    -# gun.sz0: Nominal initial RMS bunch length [m]
+    -# gun.sd0:  Nominal initial incoh. energy spread at Eg [fraction]
+    -# gun.E:  Nominal gun exit energy [eV]
+    -# gun.N:        Bunch population [e.g. 6.25E9]
+
+    -# linac_array[j].dE: Energy difference of bunch from start to finish of Linac j [eV]
+    -# linac_array[j].R56:  Nominal R56 values for Linac j (chicane-R56 < 0) [m]
+    -# linac_array[j].T566: Nominal T566 values for Linac j (always > 0) [m]
+    -# linac_array[j].phi:  Nominal Linac RF phase for Linac j (-30 deg accelerates and puts head energy lower than tail) [radians]
+    -# linac_array[j].L:  Linac length (scales wake) [m]
+    -# linac_array[j].lam:  RF wavelength for each Linac (Sband=0.105m, Xband=0.02625m) [m]
+    -# linac_array[j].s0: Wakefield characteristic length (Sband=1.322mm), Xband=0.77mm) [m]
+    -# linac_array[j].a:  Mean iris radius (Sband=11.654mm,Xband=4.72mm) [m]
+
+    -# dN_Nf:  Relative bunch population error (fraction) (e.g. -2 => 2-low in bunch charge)
+    -# dtg:    Timing error of gun wrt RF (<0 is an early bunch) [sec]
+    -# dEg:    Energy deviation at end of injector [eV]
+    -# dsig_z: Deviation of bunch length from nominal length [m]
+    -# dsig_E: Deviation of energy spread from nominal energy
+    -# spread [fraction of nominal energy]
+    -# chirp:  <Ez> correlation [m]
+    -# dphivr: Vector of 5 Linac RF phase errors (<0 is early bunch arrival) [rad] {Nlinacs}
+    -# dV_Vvr: Vector of 5 Linac RF relative voltage errors [fraction] {Nlinacs}
+
+  -# Outputs:
+
+    -# Ipk:  Peak current at end of j-th Linac [A] {Nlinacs}
+    -# sz: rms bunch length after j-th Linac [m] {Nlinacs}
+    -# dE_E: Relative energy offset after j-th Linac [fraction] {Nlinacs}
+    -# sd: rms rel. energy spread after j-th Linac [fraction] {Nlinacs}
+    -# dt: Timing error at end of j-th Linac [sec] {Nlinacs}
+    -# sdsgn:  Signed, correlated E-sprd per Linac (dE_E-z slope * sigz) [fraction] {Nlinacs}
+    -# k:  <Ez> correlation const. of j-th Linac [1/m] {Nlinacs}
+    -# Eloss:  Energy loss per Linac due to wake [eV] {Nlinacs}
+    -# dE_Ei:  Relative energy offset of JUST j-th Linac [fraction] {Nlinacs}
+    -# dE_Ei2:Energy offset error relative to final energy of JUST j-th Linac [fraction] {Nlinacs}
+    -# cor:  Signed-correlated energy spread (slope*sigz) [fraction] {Nlinacs+1}
+  *
+*/
+void Doublecompress(
+  Gun * gun,                   ///< Electron Gun
+  Linac ** linac_array,        ///< Array of Linac Sections
+  int Nlinac,                  ///< Number of Linac Sections
+	// Inputs which change with time potentially
+	Noise_Srcs * noise_srcs,     ///< Noise Sources
+  double * dphivr,             ///< Array of RF Amplitude errors (fraction relative to Linac nominal voltage)
+  double * dV_Vvr,             ///< Array of RF phase errors in radians
+	// double_compress Outputs
+	Doublecompress_State * dcs   ///< Pointer to Doublecompress State struct
+  )
 {
 
   // Rename for some consistency with the original double compress
@@ -267,7 +263,6 @@ void Doublecompress(Gun * gun, Linac ** linac_array, int Nlinac,
   }
 
 }
-
 
 void Doublecompress_Octave_Benchmark(Gun * gun, Linac ** linac_array, int Nlinac,
 			// Time-varying inputs
