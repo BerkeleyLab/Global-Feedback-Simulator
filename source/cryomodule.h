@@ -1,12 +1,11 @@
+/**
+  * @file cryomodule.h
+  * @brief Header file for cryomodule.c
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef CRYOMODULE_H
 #define CRYOMODULE_H
-
-/*
- *  cryomudule.h
- *
- * Routines for time-stepping Cryomodule model
- *
- */
 
 #include <complex.h>
 #include "rf_station.h"

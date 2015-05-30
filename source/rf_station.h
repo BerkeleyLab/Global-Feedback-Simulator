@@ -1,12 +1,11 @@
+/**
+  * @file rf_station.h
+  * @brief Header file for rf_station.c
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef RF_STATION_H
 #define RF_STATION_H
-
-/*
- *  rf_station.h
- *
- * Routines for timestepping RF Station model
- *
- */
 
 #include <complex.h>
 #include "filter.h"
@@ -14,7 +13,7 @@
 #include "noise.h"
 
 /*
- * FPGA controller
+ * FPGA
  */
 
 typedef struct str_FPGA {
@@ -28,8 +27,7 @@ typedef struct str_FPGA {
 
 typedef struct str_fpga_state {
   double complex drive, state, err;
-  // FPGA control boolean to open and close the feedback loop
-  int openloop;
+  int openloop; ///< FPGA control boolean to open and close the feedback loop
 } FPGA_State;
 
 void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double out_sat, double Tstep);
@@ -63,17 +61,17 @@ void Delay_Deallocate(Delay *delay);
 
 typedef struct str_RF_Station {
 
-  double nom_grad;	// Nominal Cavity gradient
-  double Clip;  // Saturation parameter
-  double PAscale;	// Amplifier scaling (from unitless to sqrt(W))
+  double nom_grad;	///< Nominal Cavity gradient
+  double Clip;  ///< Saturation parameter
+  double PAscale;	///< Amplifier scaling (from unitless to sqrt(W))
   double PAmax;
 
-  Filter RXF;	// Anti-alias filter
-  Filter TRF1, TRF2;	// SSA Filters
-  FPGA fpga;	// FPGA Controller
-  Cavity *cav;	// Cavity
+  Filter RXF;	///< Anti-alias filter
+  Filter TRF1, TRF2;	///< SSA Filters
+  FPGA fpga;	///< FPGA Controller
+  Cavity *cav;	///< Cavity
 
-  Delay loop_delay; // Loop Delay
+  Delay loop_delay; ///< Loop Delay
 
   // RMS Noise setting for each ADC
   double probe_ns_rms, rev_ns_rms, fwd_ns_rms;
@@ -147,15 +145,14 @@ void RF_Station_Clear(RF_Station *rf_station, RF_State *rf_state);
  * Helper routines
  */
 
-/*
+/**
  * Exactly what it sounds like, apply a phase shift to a complex signal.
- * TODO: Can be optimized.
  */
 double complex Phase_Shift(double complex in, double theta);
 double complex Saturate(double complex in, double harshness);
 void Apply_LLRF_Noise(RF_Station *rf_station, RF_State *rf_state);
 
-/*
+/**
  * Step a linac's SSA configuration in time,
  * drive_in -> [[ TRF1 -> saturate_c -> TRF2 ]] -> TRF2_OUTPUT_D
  *                  `------.  triode ,------'

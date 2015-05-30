@@ -1,15 +1,15 @@
+/**
+  * @file filter.h
+  * @brief Header file for filter.c. Generic filter.
+  * Can handle a multi-order filter, with an arbitrary number
+  * of modes in parallel. Stored in a simulator format to
+  * Compressed-Row-Sparse.
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef FILTER_H
 #define FILTER_H
 #include "complex.h"
-
-/*
- * Generic Filter Data structure
- *
- * Can handle a multi-order filter, with an arbitrary number 
- * of modes in parallel. Stored in a similator format to 
- * Compressed-Row-Sparse. 
- *
- */
 
 typedef struct str_filter {
   int alloc_order;

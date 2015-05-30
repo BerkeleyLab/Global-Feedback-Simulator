@@ -1,18 +1,16 @@
+/**
+  * @file linac.h
+  * @brief Header file for linac.c
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef LINAC_H
 #define LINAC_H
-
-
-/*
- *  linac.h
- *
- * Definitions for a Linac section model
- *
- */
 
 #include <complex.h>
 #include "cryomodule.h"
 
-/*
+/**
  * Data structure storing the parameters for a single Linac
  * section comprised of multiple Cryomodules.
  */
@@ -52,11 +50,10 @@ void Linac_State_Deallocate(Linac_State * linac_state, Linac *linac);
 double complex Linac_Step(Linac *linac, Linac_State *linac_state, double delta_tz, double beam_charge,\
 	double *amp_error, double *phase_error);
 
-/*
+/**
  * Data structure storing the beam parameters on
  * exit from gun for Double Compress
  */
-
 typedef struct str_Gun {
  	// Parameters used by double compress
 	// (and for calculating dE_E)

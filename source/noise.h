@@ -1,3 +1,9 @@
+/**
+  * @file noise.h
+  * @brief Header file for noise.c
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef NOISE_H
 #define NOISE_H
 

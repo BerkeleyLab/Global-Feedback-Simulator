@@ -1,3 +1,9 @@
+/**
+  * @file cavity.h
+  * @brief Header file for cavity.c
+  * @author Carlos Serrano (CSerrano@lbl.gov)
+*/
+
 #ifndef CAVITY_H
 #define CAVITY_H
 
@@ -7,17 +13,14 @@
 
 #include "filter.h"
 
-
 typedef struct str_elecmode{
   double LO_w0;
   double omega_f, omega_d_0;
 	double complex k_drive, k_beam, k_probe, k_em;
 	double Tstep;
 	Filter fil;
-  // Matrix coefficients: Convert square of accelerating voltage to Force
-  double *A;
-  // Matrix coefficients: Convert displacement to frequency shift
-	double *C;
+  double *A;  ///< Matrix coefficients: Convert square of accelerating voltage to Force
+	double *C;  ///< Matrix coefficients: Convert displacement to frequency shift
 } ElecMode;
 
 typedef ElecMode * ElecMode_p;
@@ -31,11 +34,8 @@ typedef struct str_elecmode_state{
 } ElecMode_State;
 
 typedef struct str_cavity{
-	// XXX Check if used in the future: Inherited properties
 	double rf_phase, design_voltage;
 	int fund_index;
-	// XXX
-
 	double L;
 	double nom_grad;
 	int n_modes;

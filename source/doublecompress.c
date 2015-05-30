@@ -112,7 +112,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
     -# dsig_z: Deviation of bunch length from nominal length [m]
     -# dsig_E: Deviation of energy spread from nominal energy
     -# spread [fraction of nominal energy]
-    -# chirp:  <Ez> correlation [m]
+    -# chirp:  Ez correlation [m]
     -# dphivr: Vector of 5 Linac RF phase errors (<0 is early bunch arrival) [rad] {Nlinacs}
     -# dV_Vvr: Vector of 5 Linac RF relative voltage errors [fraction] {Nlinacs}
 
@@ -124,7 +124,7 @@ void Doublecompress_State_Attach(Doublecompress_State * dcs, int Nlinac, double 
     -# sd: rms rel. energy spread after j-th Linac [fraction] {Nlinacs}
     -# dt: Timing error at end of j-th Linac [sec] {Nlinacs}
     -# sdsgn:  Signed, correlated E-sprd per Linac (dE_E-z slope * sigz) [fraction] {Nlinacs}
-    -# k:  <Ez> correlation const. of j-th Linac [1/m] {Nlinacs}
+    -# k: Ez correlation const. of j-th Linac [1/m] {Nlinacs}
     -# Eloss:  Energy loss per Linac due to wake [eV] {Nlinacs}
     -# dE_Ei:  Relative energy offset of JUST j-th Linac [fraction] {Nlinacs}
     -# dE_Ei2:Energy offset error relative to final energy of JUST j-th Linac [fraction] {Nlinacs}
