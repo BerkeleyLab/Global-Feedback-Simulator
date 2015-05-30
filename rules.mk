@@ -53,7 +53,8 @@ include     $(dir)/rules.mk
 %.pdf:	%.tex
 		$(TEX2PDF)
 
-CLEAN := $(CLEAN) *.log physics_model.pdf cavity_model.pdf
+CLEAN := $(CLEAN) *.log physics_model.pdf cavity_model.pdf code_map.pdf
+CLEAN_DIRS := _doxygen
 
 # The variables TGT_*, CLEAN and CMD_INST* may be added to by the Makefile
 # fragments in the various subdirectories
@@ -71,7 +72,7 @@ check_all:      $(CHK_ALL_$(SOURCE_DIR)) $(CHK_ALL_$(UNIT_TESTS_DIR))
 .PHONY:     clean
 clean:
 		rm -f $(CLEAN)
-#		rm -rf $(CLEAN_DIRS)
+		rm -rf $(CLEAN_DIRS)
 #		! find . -path ./.git -prune -o -name ".*" -and -not -name "." -and -not -name ".gitignore" -print | grep .
 #		! find . -path ./.git -prune -o -print | grep " "
 #		! find . -path ./.git -prune -o -type f -and -not -name "*.eps" -and -not -name "*.ps" -and -not -name "*.gold" -print | LC_ALL=C xargs grep -n -E "`printf \"\t$$| $$| \t|[^[:alnum:][:punct:] \t]\"`"
@@ -87,4 +88,16 @@ physics_model.pdf: $(DOC_DIR)/reports/physics/latex/physics_model.pdf
 	mv $< $@
 
 cavity_model.pdf: $(DOC_DIR)/reports/physics/latex/cavity_model.pdf
+	mv $< $@
+
+doxygen: $(SOURCE_DIR)/*.c $(SOURCE_DIR)/*.py $(SOURCE_DIR)/readjson/*.py
+	doxygen doxygen.config
+	@echo "Code documentation can be found in the _doxygen/ directory in HTML and LaTex formats"
+
+_doxygen/latex/refman.tex: doxygen
+
+_doxygen/latex/refman.pdf: _doxygen/latex/refman.tex
+	cd `dirname $<` && make refman.pdf
+
+code_map.pdf: _doxygen/latex/refman.pdf
 	mv $< $@
