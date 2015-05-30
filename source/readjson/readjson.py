@@ -1,8 +1,14 @@
+"""
+Helper routines to parse JSON files.
+"""
+
 import re
 
 def jsontodict(filename, defaultfile=None, Verbose=False):
-    """ jsontodict: helper routine to read a JSON file (and optionally
-        a default file) and return a python dictionary."""
+    """
+    Helper routine to read a JSON file (and optionally
+    a default file) and return a python dictionary.
+    """
 
     import json
 
@@ -28,15 +34,16 @@ def jsontodict(filename, defaultfile=None, Verbose=False):
     return a
 
 def readentry(dictin,entry,localdic=None, safedic={}):
-    """ readentry: Recursively read and evaluate entries in a dictionary.
+    """
+    readentry: Recursively read and evaluate entries in a dictionary.
         inputs:
-            dictin :   dictionary to be searched if entry cannot be evaluated,
-            entry :    the dictionary value you would like to get,
-            localdic:  optional input to pass previously found dictionary entries down the recursive chain.
-        outputs:
-            value of entry is return as float if is can be evaluated using the
+            - dictin :   dictionary to be searched if entry cannot be evaluated,
+            - entry :    the dictionary value you would like to get,
+            - localdic (optional):  input to pass previously found dictionary entries down the recursive chain.
+        output:
+            - the value of entry is return as float if is can be evaluated using the
             in the dictionary and otherwise it returns the string.
-        """
+    """
 
     # Replace localdic with an empty dictionary if nothing passed
     if localdic is None:

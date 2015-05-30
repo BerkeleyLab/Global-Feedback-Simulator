@@ -1,5 +1,14 @@
+"""
+Produce graphical representations of model connectivity using PyDot.
+"""
+
 import pydot
+
 def filter_dotify(fil,graphin,fname="test.png"):
+    """
+    Get a filter object and draw a graph.
+    """
+
     graph = pydot.Dot(graph_type='digraph',rankdir="LR")
     innode = pydot.Node("Input")
     graph.add_node(innode)

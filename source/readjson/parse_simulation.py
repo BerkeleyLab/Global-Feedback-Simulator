@@ -1,9 +1,9 @@
-#!/usr/bin/python
+"""
+Python parser of Simulation Configuration parameters from JSON file.
+"""
 
-# Python parser of Simulation Configuration parameters from JSON file.
-
- # Get list of JSON files and return dictionary
 def loadConfig(files, Verbose=True):
+    """ Get list of JSON files and return JSON dictionary. """
 
     from readjson import ReadDict
     # Read the configuration file(s)
@@ -12,6 +12,7 @@ def loadConfig(files, Verbose=True):
     return confdict
 
 def ParseSimulation(file_list, Verbose=True):
+    """ Get list of JSON files and return Simulation object. """
 
     # Import accelerator-specific functions
     import readjson_accelerator as read_acc
@@ -31,8 +32,4 @@ def DoSimulation():
 
     print simulation
 
-# If this file is called as main, run it from command line arguments,
-# or some default settings.
-#
-if __name__=="__main__":
-    DoSimulation()
+
