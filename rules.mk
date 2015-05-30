@@ -90,7 +90,7 @@ physics_model.pdf: $(DOC_DIR)/reports/physics/latex/physics_model.pdf
 cavity_model.pdf: $(DOC_DIR)/reports/physics/latex/cavity_model.pdf
 	mv $< $@
 
-doxygen: $(SOURCE_DIR)/*.c $(SOURCE_DIR)/*.py $(SOURCE_DIR)/readjson/*.py
+doxygen: $(SOURCE_DIR)/*.c $(SOURCE_DIR)/*.py $(SOURCE_DIR)/readjson/*.py README.md
 	doxygen doxygen.config
 	@echo "Code documentation can be found in the _doxygen/ directory in HTML and LaTex formats"
 
