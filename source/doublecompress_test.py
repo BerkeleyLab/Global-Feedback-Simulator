@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
-#
-# A Unit tests for doublecompress.c/h
-#
+"""
+Unit tests for doublecompress.c/h
+"""
 
 import numpy as np
 from numpy.random import rand
@@ -14,7 +12,7 @@ import oct2py
 
 
 def unit_doublecompress(Verbose=False):
-    """ unit test for doublecompress.c
+    """ Unit test for doublecompress.c
         Uses Oct2Py to call the octave version double_compressxv.m
         and compares the two output for accuracy. It reads inputs from:
             - doublecompress_test.json to set up data structures for the C routine
@@ -180,6 +178,9 @@ def unit_doublecompress(Verbose=False):
     return unit_pass
 
 def perform_tests():
+    """
+    Perform all unit tests for doublecompress.c/h and return a PASS/FAIL boolean.
+    """
     print "\n****\nTesting Doublecompress...\n"
     dc_pass = unit_doublecompress()
     if (dc_pass):

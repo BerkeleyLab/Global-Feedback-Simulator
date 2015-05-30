@@ -1,9 +1,8 @@
-#!/usr/bin/python
-
-#
-# This file collects and performs all of the unit tests in the code.
-# Not all of them say passed, some of them only show plots.
-#
+"""
+A Series of Unit tests for ALL of the C back-end components.
+It runs all of the unit tests one by one, collects the PASS/FAIL results
+and provides a final PASS/FAIL boolean indicated if all tests passed or not.
+"""
 
 import matplotlib.pylab as plt
 

@@ -1,22 +1,11 @@
-#!/usr/bin/python
-
-#
-# A Series of Unit tests for simulation_top.c/h
-#
+"""
+A Series of Unit tests for simulation_top.c/h.
+Unit tests for step functions in Simulation Top Level.
+"""
 
 import accelerator as acc
 
 import numpy as np
-
-####################################
-#
-# Unit tests for step functions in Simulation Top Level
-#
-####################################
-
-#
-# Unit test for Simulation
-#
 
 def run_Simulation_test(Tmax, test_files):
 
@@ -37,6 +26,15 @@ def run_Simulation_test(Tmax, test_files):
 
 
 def unit_Simulation():
+    """
+    Unit test for simulation_top.c/h.
+    It exercises the full simulation cycle:
+        - JSON configuration parsing,
+        - Conversion to Python Objects,
+        - Run numerical simulation of a complete model,
+        - Generation of time-series data,
+        - Plotting of time-series data.
+    """
 
     Tmax = 0.5
 
@@ -47,13 +45,10 @@ def unit_Simulation():
 
     run_Simulation_test(Tmax, test_files)
 
-######################################
-#
-# Now execute the tests...
-#
-######################################
-
 def perform_tests():
+    """
+    Perform all unit tests for simulation_top.c/h and return PASS boolean (qualitative test).
+    """
 
     # This is not a PASS/FAIL test
     print "\n****\nTesting Simulation Top Level..."

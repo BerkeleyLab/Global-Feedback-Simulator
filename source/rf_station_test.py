@@ -1,8 +1,6 @@
-#!/usr/bin/python
-
-#
-# A Series of Unit tests for rf_station.c/h
-#
+"""
+A Series of Unit tests for rf_station.c/h
+"""
 
 import accelerator as acc
 
@@ -11,16 +9,12 @@ import matplotlib.pylab as plt
 import scipy.linalg as linalg
 from scipy import stats
 
-####################################
-#
-# Unit tests for step functions in RF Station
-#
-####################################
-
-#
-# Unit test for Phase_Shift
-#
 def unit_phase_shift():
+    """
+    Unit test for Phase_Shift. Run numerical simulation with several phase shift values,
+    measure the phase difference between the input and output signals and return
+    a PASS/FAIL boolean according to the error on that comparison.
+    """
 
     trang = np.arange(0.0, 1.0, 0.01)
 
@@ -72,11 +66,13 @@ def unit_phase_shift():
     # Return PASS/FAIL
     return phase_shift_pass
 
-#
-# Unit test for step_fpga
-#
-
 def unit_fpga(Tstep=0.01):
+    """
+    Unit test for FPGA controller.
+    Perform test where the FPGA controller transfer function is evaluated.
+    The FPGA drive signal is analyzed, proportional and integral gains are deduced,
+    compared with the model settings, and a PASS/FAIL boolean is return based on that comparison.
+    """
 
     # Get a pointer to the FPGA C-structure
     fpga = acc.FPGA()
@@ -163,11 +159,11 @@ def unit_fpga(Tstep=0.01):
     # PASS == True
     return unit_fpga_pass
 
-#
-# Unit test for Saturation
-#
-
 def unit_saturate():
+    """
+    Unit test for Saturation function. It runs numerical simulations for several values of the clip harshness parameter
+    and plots the results. This is not a PASS/FAIL test and just intended to provide qualitative evidence.
+    """
 
     # Iterate over harshness parameter c
     for c in np.arange(1.0,6,1.0):
@@ -212,15 +208,21 @@ def unit_saturate():
 #
 
 def unit_SSA(showplots=True,TOL=1.0e-14):
+    """
+    Unit test for Solid-State Amplifier funtion.
+    Performs the step response of the SSA (which included a low-pass filter + Saturation) and plots the results.
+    This is not a PASS/FAIL test and just intended to provide qualitative evidence, but it could potentially be compared
+    with the real SSA in use.
+    """
 
-     # Import JSON parser module
+    # Import JSON parser module
     from get_configuration import Get_SWIG_RF_Station
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
     test_file = "source/configfiles/unit_tests/SSA_test.json"
 
-    # Get SWIG-wrappped C handles for RF Station
+    # Get SWIG-wrapped C handles for RF Station
     rf_station, Tstep , fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
 
     # Simulation duration
@@ -253,10 +255,6 @@ def unit_SSA(showplots=True,TOL=1.0e-14):
     plt.ylim([0,50])
 
     plt.show()
-
-#
-# Unit test for RF Station
-#
 
 def run_RF_Station_test(Tmax, test_file):
 
@@ -307,7 +305,13 @@ def run_RF_Station_test(Tmax, test_file):
 
 
 def unit_RF_Station():
-
+    """
+    Unit test for rf_station.c/h
+    It emulates a cavity fill-up, where forward signal is saturated and
+    cavity field reaching steady-state with controller stabilizing the field
+    around the set point. Plot is generated for qualitative analysis.
+    This is not a PASS/FAIL test but responds to the typical RF Station behavior.
+    """
     Tmax = 0.05
 
     test_file = "source/configfiles/unit_tests/cavity_test_step1.json"
@@ -322,6 +326,9 @@ def unit_RF_Station():
 ######################################
 
 def perform_tests():
+    """
+    Perform all unit tests for rf_station.c/h and return PASS/FAIL boolean (AND'd result of all tests).
+    """
 
     print "\n****\nTesting Phase_Shift..."
     phase_shift_pass = unit_phase_shift()

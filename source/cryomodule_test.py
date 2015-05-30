@@ -1,25 +1,12 @@
-#!/usr/bin/python
-
-#
-# A Series of Unit tests for cryomodule.c/h
-#
-
+"""
+A series of unit tests for cryomodule.c/h.
+"""
 import accelerator as acc
 
 import numpy as np
 import matplotlib.pylab as plt
 import scipy.linalg as linalg
 from scipy import stats
-
-####################################
-#
-# Unit tests for step functions in Cryomodule
-#
-####################################
-
-#
-# Unit test for Cryomodule
-#
 
 def run_Cryomodule_test(Tmax, test_file):
 
@@ -30,7 +17,7 @@ def run_Cryomodule_test(Tmax, test_file):
 
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
-    
+
     # Number of points
     nt = len(trang)
 
@@ -78,7 +65,7 @@ def run_Cryomodule_test(Tmax, test_file):
     plt.plot(trang*1e6, np.abs(Kg), '-', label=r'Forward ($\vec K_{\rm g}$)', linewidth = 2)
     plt.plot(trang*1e6, np.abs(cav_v)*1e-4, '-', label=r'Cavity ($\vec V_{\pi}\times \, 10^{-4}$)', linewidth = 2)
     plt.plot(trang*1e6, np.abs(E_reverse), '-', label=r'Reverse ($\vec E_{\rm reverse}$)', linewidth = 2)
-    
+
     plt.title('Cryomodule Test', fontsize=40, y=1.01)
     plt.xlabel(r'Time [$\rm \mu s$]', fontsize=30)
     plt.ylim(0, 60)
@@ -122,28 +109,29 @@ def run_Cryomodule_test(Tmax, test_file):
     plt.figure()
 
 def unit_Cryomodule():
-
+    """
+    Unit test for cryomodule.c/h
+    It exercises electro-mechanical couplings and plots waveforms for qualitative analysis.
+    This is not a PASS/FAIL test, but it has been shown to agree with FPGA simulations.
+    """
     Tmax = 80e-6
-    
+
     test_file = "source/configfiles/unit_tests/cryomodule_test.json"
 
     run_Cryomodule_test(Tmax, test_file)
 
-######################################
-#
-# Now execute the tests...
-#
-######################################
-
 def perform_tests():
+    """
+    Perform all unit tests for cryomodule.c/h and return PASS boolean (qualitative test).
+    """
 
     # This is not a PASS/FAIL test
     print "\n****\nTesting Cryomodule..."
     unit_Cryomodule()
-    print ">>> (Visual inspection only)\n" 
+    print ">>> (Visual inspection only)\n"
 
     plt.figure()
-    
+
     return True
 
 if __name__=="__main__":
