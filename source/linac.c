@@ -213,7 +213,7 @@ Gun *Gun_Allocate_New(
 	double E,			///< Nominal gun exit energy in eV
 	double sz0,		///< Nominal initial RMS bunch length in meters
 	double sd0,		///< Nominal initial incoh. energy spread at nominal gun exit energy (fraction)
-	double Q			///< Nominal beam charge in Coulombsdouble E, double sz0, double sd0, double Q)
+	double Q			///< Nominal beam charge in Coulombs
 	)
 {
 	Gun *gun = calloc(1,sizeof(Gun));

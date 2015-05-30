@@ -97,7 +97,7 @@ void Delay_Clear(Delay *delay, Delay_State *delay_state){
   // Cavity
   Cavity *cav,                ///< RF cavity
   // FPGA controller
-  double stable_gbw,          ///< FPGA controller Gain-Bandwidth product
+  double stable_gbw,          ///< FPGA controller Gain-Bandwidth product in Hz
   double FPGA_out_sat,        ///< FPGA output saturation limit
 
   // Loop Delay
