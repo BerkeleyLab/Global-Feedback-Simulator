@@ -1,8 +1,7 @@
-#!/usr/bin/python
+"""
+Unit tests for cavity.c/h and filter.c/h
+"""
 
-#
-# A Series of Unit tests for filter.c/h, cavity.c/h
-#
 
 import accelerator as acc
 
@@ -10,13 +9,12 @@ import numpy as np
 import matplotlib.pylab as plt
 import scipy.linalg as linalg
 
-####################################
-#
-# Unit test for Filter_Step
-#
-####################################
-
 def unit_filter(dt=0.002):
+    """
+    Unit test for filter.c/h
+    Compare numerical simulation with analytical solution, plot and return PASS/FAIL boolean.
+    """
+
     tmax = 5.0
     nt = int(tmax/dt)
     st = np.zeros(nt,dtype=np.complex)
@@ -72,20 +70,23 @@ def unit_filter(dt=0.002):
     return filter_pass
 
 def cavity_curve_fit(Tstep, drive_in, cav_v, beam_charge):
+    """
+    Fit cavity field signal to 1st-order exponential response.
+    """
 
     from scipy.signal import lfilter
 
     # First find the derivative of the cavity field,
     # and fit to find bandwidth (pole location)
     cav_v_der = np.diff(cav_v, 1)
-    
+
     # Stack vectors
     A = np.column_stack([drive_in[:-1], beam_charge[:-1], cav_v[:-1]])
-    
+
     # Curve fit and find the three coefficients in the least-squares sense
     # Fit cavity step response according to equation:
     # D[i] = a*Kg[i] + b*Beam[i] - c*V[i]
-    # where: Kg is the drive signal, 
+    # where: Kg is the drive signal,
     # and D is the discrete derivative of V (cavity accelerating voltage)
     # (all quantities above are complex numbers)
     a, b, c = np.linalg.lstsq(A, cav_v_der)[0]
@@ -109,10 +110,10 @@ def run_cavity_step_test(Tmax, test_file):
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
     cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
-    
+
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
-    
+
     # Number of points
     nt = len(trang)
 
@@ -121,11 +122,11 @@ def run_cavity_step_test(Tmax, test_file):
     cav_v_beam = np.zeros(nt,dtype=np.complex)   # Overall cavity accelerating voltage
     E_probe = np.zeros(nt,dtype=np.complex)   # Cavity field probe
     E_reverse = np.zeros(nt,dtype=np.complex)   # Reverse field port
-    
+
     # Drive signal
     drive_in_d = np.ones(nt,dtype=np.complex)
     drive_in_b = np.zeros(nt,dtype=np.complex)
-    
+
     # Beam charge
     beam_charge_d = np.zeros(nt,dtype=np.complex)
     beam_charge_b = np.ones(nt,dtype=np.complex)
@@ -150,7 +151,7 @@ def run_cavity_step_test(Tmax, test_file):
 
     # # Fit cavity step response
     beam_step = cavity_curve_fit(Tstep, drive_in_b, cav_v_beam, beam_charge_b)
-    
+
     # Pass along the 1st mode configuration dictionary (useful for single mode tests)
     mode_dict = modes_config[0]
     # Return results
@@ -165,10 +166,10 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
     cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
-    
+
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
-    
+
     # Number of points
     nt = len(trang)
 
@@ -177,7 +178,7 @@ def run_cavity_freq_test(Tmax, test_file, delta_omega=0.0):
 
     # Drive signal
     drive_in = np.ones(nt,dtype=np.complex)
-    
+
     # Beam charge
     beam_charge = np.zeros(nt,dtype=np.complex)
 
@@ -210,10 +211,10 @@ def run_cavity_detune_test(Tmax, test_file, delta_omega_step=0.0):
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
     cav, Tstep, modes_config = Get_SWIG_Cavity(test_file, Verbose=False)
-    
+
     # Create time vector
     trang = np.arange(0,Tmax,Tstep)
-    
+
     # Number of points
     nt = len(trang)
 
@@ -222,7 +223,7 @@ def run_cavity_detune_test(Tmax, test_file, delta_omega_step=0.0):
 
     # Drive signal
     drive_in = np.ones(nt,dtype=np.complex)
-    
+
     drive_in[0:int(nt*0.1)] = 0.0
     # Beam charge
     beam_charge = np.zeros(nt,dtype=np.complex)
@@ -253,7 +254,7 @@ def show_cavity_step(title):
     plt.ylabel(r'$| \vec V_{\rm acc}|$ [V]', fontsize=30)
 
     plt.ticklabel_format(style='sci', axis='y', scilimits=(1,0))
-    
+
     plt.rc('font',**{'size':20})
     plt.legend(loc='upper right')
     plt.show()
@@ -266,7 +267,7 @@ def cavity_test_step():
         "source/configfiles/unit_tests/cavity_test_step2.json", \
         "source/configfiles/unit_tests/cavity_test_step3.json"]
 
-    # Total simulation time 
+    # Total simulation time
     Tmax = 0.2
 
     drive_steps = []
@@ -289,12 +290,12 @@ def cavity_test_step():
         E_reverses.append(E_reverse)
 
     drive_in = np.ones(len(trang),dtype=np.complex)
-    
+
     print "\n**** Step drive signal at modes' frequencies...\n"
     for idx, mode_dict in enumerate(mode_dicts):
         plt.plot(trang,np.abs(drive_steps[idx][5]),'-', label='Numerical ('+mode_dict['mode_name']+')', linewidth=5)
         plt.plot(trang,np.abs(drive_steps[idx][3]),'-', label='Curve fit ('+mode_dict['mode_name']+')', linewidth=3)
-        
+
         # Print some results for log file
         print "Mode "+mode_dict['mode_name']+":"
         # Measure mode's bandwidth (calculated in run_and_fit_cavity based on curve fit)
@@ -304,19 +305,19 @@ def cavity_test_step():
         # Measure gain on drive path
         k_drive_meas = max(np.abs(drive_steps[idx][5]))
         print "  Drive coupling: Measured = {:.2e}, Set to = {:.2e}".format(k_drive_meas, np.abs(mode_dict['k_drive']))
-        
+
         # Calculate error RMS on curve fit
         cav_fit_error = linalg.norm(np.abs(drive_steps[idx][5])-np.abs(drive_steps[idx][3]))/linalg.norm(np.abs(drive_steps[idx][5]))
         E_probe_fit_error = linalg.norm(np.abs(E_probes[idx])-mode_dicts[idx]['k_probe']*np.abs(drive_steps[idx][5]))/linalg.norm(np.abs(drive_steps[idx][5]))
         E_reversre_fit_error = linalg.norm(np.abs(E_reverses[idx] - mode_dicts[idx]['k_em']*drive_steps[idx][5] + drive_in))/linalg.norm(np.abs(E_reverses[idx]))
-        
+
         k_probe_meas = max(np.abs(E_probes[idx]))/k_drive_meas
 
         print '  Cavity accelerating field fit RMS error is {:.2e}'.format(cav_fit_error)
         print '  Cavity probe fit RMS error is {:.2e}'.format(E_probe_fit_error)
         print "  Cavity probe coupling: Measured = {:.2e}, Set to = {:.2e}".format(k_probe_meas, np.abs(mode_dict['k_probe']))
         print '  Cavity reverse fit RMS error is {:.2e}'.format(E_reversre_fit_error)
-        
+
         # Compare error to threshold and establish PASS/FAIL
         if ((cav_fit_error < fit_threshold) & (E_probe_fit_error < fit_threshold) & (E_reversre_fit_error < 3e-3)): this_fit_pass  = True
         else: this_fit_pass = False
@@ -330,7 +331,7 @@ def cavity_test_step():
     for idx, mode_dict in enumerate(mode_dicts):
         plt.plot(trang,np.abs(beam_steps[idx][5]),'-', label='Numerical ('+mode_dict['mode_name']+')', linewidth=5)
         plt.plot(trang,np.abs(beam_steps[idx][3]),'-', label='Curve fit ('+mode_dict['mode_name']+')', linewidth=3)
-        
+
         # Measure gain on beam path
         k_beam_meas = max(np.abs(beam_steps[idx][5]))
 
@@ -340,7 +341,7 @@ def cavity_test_step():
         # Calculate error RMS on curve fit
         fit_error = linalg.norm(np.abs(beam_steps[idx][5])-np.abs(beam_steps[idx][3]))/linalg.norm(np.abs(beam_steps[idx][5]))
         print '  Fit RMS error is {:.2e}'.format(fit_error)
-        
+
         # Compare error to threshold and establish PASS/FAIL
         if fit_error < fit_threshold: this_fit_pass = True
         else: this_fit_pass = False
@@ -348,13 +349,13 @@ def cavity_test_step():
 
     # Show response to step on drive signal
     show_cavity_step("Cavity Step Response: 1 pC Beam step")
-    
+
     # print PASS/FAIL
     if (fit_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
-    print "\n*** Step test >>> " + result 
+    print "\n*** Step test >>> " + result
 
     # Return PASS/FAIL boolean
     return fit_pass
@@ -367,7 +368,7 @@ def cavity_test_freqs():
         "source/configfiles/unit_tests/cavity_test_freqs2.json", \
         "source/configfiles/unit_tests/cavity_test_freqs3.json", \
         "source/configfiles/unit_tests/cavity_test_freqs4.json"]
-    # Total simulation time 
+    # Total simulation time
     Tmax = 1
 
     # Empty lists to append simulation results to
@@ -460,16 +461,16 @@ def cavity_test_freqs():
     x.set_ylabel(r'$\Im (\vec V_{\mu})$ [V]', fontsize=30)
     plt.rc('font',**{'size':15})
     x.legend(loc='upper right')
-    
+
     # Show figure
     plt.show()
 
     # print PASS/FAIL
     if (fit_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
-    print "\n*** Detuning tests >>> " + result 
+    print "\n*** Detuning tests >>> " + result
 
     # Return PASS/FAIL boolean
     return fit_pass
@@ -480,7 +481,7 @@ def cavity_test_detune():
     # (to be appended to standard test cavity configuration)
     test_file = "source/configfiles/unit_tests/cavity_test_freqs1.json"
 
-    # Total simulation time 
+    # Total simulation time
     Tmax = 0.5
 
     # Empty lists to append simulation results to
@@ -488,11 +489,11 @@ def cavity_test_detune():
     cav_v_list = []
     mode_dicts = []
     w_offset_list = []
-    
+
     delta_fs = [100.0, 200.0]   # [Hz]
 
     print "\n**** Test detuning step..."
-    print ">>> (Visual inspection only)\n" 
+    print ">>> (Visual inspection only)\n"
 
     # # First, basis frequency offset tests
     for idx, delta_f in enumerate(delta_fs):
@@ -507,9 +508,9 @@ def cavity_test_detune():
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    # Plot title    
+    # Plot title
     plt.title("Cavity Test: Fill & Step on Detune Frequency", fontsize=40, y=1.05)
-    
+
     # Format plots
     # # Cavity fields for the two simulation runs
     lns1 = ax.plot(trang,np.abs(cav_v_list[0]),'-', label= 'Cavity Field ('+r'$\Delta f_1$'+')', linewidth=2)
@@ -536,14 +537,14 @@ def cavity_test_detune():
     ax2.set_ylabel('Frequency [Hz]', fontsize=30)
     ax2.set_ylim(0,delta_f*1.5)
     plt.rc('font',**{'size':20})
-    
+
     # Show figure
     plt.show()
-    
+
     fig = plt.figure()
     ax = fig.add_subplot(111)
 
-    # Plot title    
+    # Plot title
     plt.title("Cavity Test: Fill & Step on Detune Frequency", fontsize=40, y=1.05)
 
     # # Cavity fields for the two simulation runs
@@ -557,7 +558,7 @@ def cavity_test_detune():
     ax.set_ylabel(r'$\angle \vec V_{\mu}$ [rad]', fontsize=30)
     plt.rc('font',**{'size':20})
     ax.legend(lns, labs, loc='upper right')
-    
+
     ax.set_ylim([0,100])
 
     ax.annotate(r'$d \theta_2/dt=\omega_{\rm d_2}=2\pi \, \Delta f_2\, rad/s$', xy=(0.245, 50), xytext=(0.295, 55),
@@ -577,6 +578,12 @@ def cavity_test_detune():
 
 
 def unit_cavity():
+    """
+    Unit test for cavity.c/h
+    It performs step responses, measures port couplings. detuning, etc.
+    and returns a PASS/FAIL boolean.
+    """
+
     print "\n**** Test Cavity step response..."
     test_step_pass = cavity_test_step()
     test_freqs_pass = cavity_test_freqs()
@@ -585,23 +592,26 @@ def unit_cavity():
     return test_step_pass & test_freqs_pass & test_detune_pass
 
 def perform_tests():
+    """
+    Perform all unit tests for filter.c/h and cavity.c/h and return a PASS/FAIL boolean.
+    """
     print "\n****\nTesting Filter..."
     filter_pass = unit_filter()
     if (filter_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
-    print ">>> " + result 
+    print ">>> " + result
 
     plt.figure()
 
     print "\n****\nTesting Cavity..."
     cavity_pass = unit_cavity()
     if (cavity_pass):
-        result = 'PASS' 
+        result = 'PASS'
     else:
         result = 'FAIL'
-    print "\n>>> " + result 
+    print "\n>>> " + result
 
     plt.figure()
 

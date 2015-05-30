@@ -1,4 +1,9 @@
-#!/usr/bin/python
+"""
+Wrapper functions to get references to SWIG-wrapped C structures (used by unit tests).
+Functions are provided for different levels of the model hierarchy to run
+unit tests on individual components, where the configuration is parsed from
+JSON files.
+"""
 
 import readjson.parse_simulation as parseSim
 
