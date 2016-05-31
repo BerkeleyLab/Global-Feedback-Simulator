@@ -1,0 +1,30 @@
+{
+	"Simulation":{
+    	"Tstep": {
+			"value": 1e-8
+        }
+    },
+
+  "Cryomodule0": {
+        "mechanical_mode_connect": ["MechMode0"]
+  },
+	
+	"Cavity0": {
+      "elec_mode_connect" : ["ElecMode0"]
+	},
+	
+	"ElecMode0": {
+	     "foffset": {
+        "value": 5.0
+    },
+
+    "Q_drive": {
+          "value": 8.1e4
+    },
+    "mech_couplings" : {
+       		"value": {"MechMode0": 1.9e-7, "MechMode1": 0.0, "MechMode2": 0.0}
+       	}
+    }
+
+
+} 

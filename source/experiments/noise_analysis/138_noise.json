@@ -1,0 +1,19 @@
+ {
+  "cav_adc0": {
+    "noise_psd": {
+            "value": -138
+    }
+  },
+
+  "rev_adc0": {
+    "noise_psd": {
+            "value": -138
+    }
+  },
+
+  "fwd_adc0": {
+    "noise_psd": {
+            "value": -138
+    }
+  }
+}

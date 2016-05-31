@@ -1,0 +1,23 @@
+{
+	"Simulation":{
+    	"Tstep": {
+			"value": 1e-6
+        }
+    },
+
+    "Station0": {
+    	"loop_delay_size": {
+            "value": 1
+        }
+    },
+	
+	"Cavity0": {
+      	"elec_mode_connect" : ["ElecMode0"]
+	},
+	
+	"ElecMode0": {
+		"foffset": {
+        	"value": 0.0
+       	}
+    }
+} 

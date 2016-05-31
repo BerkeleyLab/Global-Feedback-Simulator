@@ -1,0 +1,544 @@
+{
+  "c": 299792458,
+  "pi": 3.1415926535898,
+  "Qe": 1.602177e-19,
+  "mu0": "(4*pi)*1e-7",
+  "f0": 1300000000,
+  "lam_beam": "c/f0",
+  "Z0_real": "mu0*c",
+  "Z0": "120*pi",
+  "d_TRF1": {
+    "type": "filter",
+    "name": "TRF1",
+    "order": 2,
+    "nmodes": [
+      1,
+      1
+    ],
+    "poles": [
+      [
+        "-7.5+1j*2.7"
+      ],
+      [
+        "-7.5-1j*2.7"
+      ]
+    ]
+  },
+  "d_CLIP": {
+    "type": "saturate",
+    "name": "CLIP",
+    "sat_c": 5,
+    "kly_max_v": 30000000
+  },
+  "d_TRF2": {
+    "type": "filter",
+    "name": "TRF2",
+    "order": 1,
+    "nmodes": [
+      1
+    ],
+    "poles": [
+      [
+        "-9."
+      ]
+    ]
+  },
+  "d_RXF": {
+    "type": "filter",
+    "name": "RXF",
+    "order": 3,
+    "nmodes": [
+      1,
+      1,
+      1
+    ],
+    "poles": [
+      [
+        "-18+0j"
+      ],
+      [
+        "-9.5+15j"
+      ],
+      [
+        "-9.5-15j"
+      ]
+    ]
+  },
+  "d_Controller": {
+    "type": "PI_CONT",
+    "name": "PI control",
+    "stable_gbw": 50000
+  },
+  "d_CAV": {
+    "type": "beam_cavity",
+    "name": "d_cavity",
+    "E": 0,
+    "phi": 0,
+    "lam": "lam_beam",
+    "s0": 0,
+    "a": 0,
+    "L": 0,
+    "nomgrad": 16301000,
+    "psd_llrf": "10**(-13.5)",
+    "w0": "2.0*pi*f0",
+    "bunch_rep": 1000000,
+    "Q_L": 20000000,
+    "R_Q": 1036,
+    "beta_in": 1,
+    "beta_out": 1,
+    "beta_beam": 1
+  },
+  "d_Chicane": {
+    "type": "chicane",
+    "name": "chicane1",
+    "R56": 0,
+    "T566": 0
+  },
+  "d_Gun": {
+    "type": "gun",
+    "name": "d_Gun",
+    "Q": -3.0e-10,
+    "sz0": 0.548,
+    "sd0": 0,
+    "E": 0.00075
+  },
+  "d_linac": {
+    "type": "linac",
+    "name": "d_linac",
+    "n_cav": 0,
+    "TRF1": "d_TRF1",
+    "CLIP": "d_CLIP",
+    "TRF2": "d_TRF2",
+    "CAV": "d_CAV",
+    "RXF": "d_RXF",
+    "Controller": "d_Controller",
+    "Chicane": "d_Chicane",
+    "Beam": "d_Beam"
+  },
+  "Simulation": {
+    "name": "simtest",
+    "type": "sim_param",
+    "dt": 1.0e-6,
+    "Tmax": 0.12,
+    "Nstep": "Tmax/dt",
+    "sim_t": "Nstep*dt",
+    "Outputfreq": 1
+  },
+  "Accelerator": {
+    "name": "NGLS",
+    "type": "accelerator",
+    "Gun": "d_Gun",
+    "connect": [
+      "Linac0",
+      "Linac1",
+      "Linach",
+      "Linac2",
+      "Linac3"
+    ]
+  },
+  "Linac0": {
+    "type": "linac",
+    "name": "linac0",
+    "n_cav": 7,
+    "TRF1": "d_TRF1",
+    "CLIP": "d_CLIP",
+    "TRF2": "d_TRF2",
+    "CAV": "Cavity0",
+    "RXF": "d_RXF",
+    "Controller": "d_Controller",
+    "Chicane": "Chicane0",
+    "Beam": "d_Gun"
+  },
+  "Linac1": {
+    "type": "linac",
+    "name": "linac1",
+    "n_cav": 7,
+    "CAV": "Cavity1",
+    "Chicane": "Chicane1"
+  },
+  "Linach": {
+    "type": "linac",
+    "name": "linach",
+    "n_cav": 7,
+    "CAV": "Cavityh",
+    "Chicane": "Chicaneh"
+  },
+  "Linac2": {
+    "type": "linac",
+    "name": "linac2",
+    "n_cav": 49,
+    "CAV": "Cavity2",
+    "Chicane": "Chicane2"
+  },
+  "Linac3": {
+    "type": "linac",
+    "name": "linac3",
+    "n_cav": 119,
+    "CAV": "Cavity3",
+    "Chicane": "Chicane3"
+  },
+  "Cavity0": {
+    "type": "beam_cavity",
+    "name": "cavity0",
+    "E": 0.094,
+    "phi": 0,
+    "lam": "lam_beam",
+    "s0": 1.76996,
+    "a": 29,
+    "L": 7.259
+  },
+  "Cavity1": {
+    "type": "beam_cavity",
+    "name": "cavity1",
+    "E": 0.215,
+    "phi": -20,
+    "lam": "lam_beam",
+    "s0": 1.76996,
+    "a": 29,
+    "L": 7.259
+  },
+  "Cavityh": {
+    "type": "beam_cavity",
+    "name": "cavityh",
+    "E": 0.215,
+    "phi": 180,
+    "lam": "lam_beam/3.0",
+    "s0": 0.950628,
+    "a": 12.6,
+    "L": 2.422,
+    "w0": "2.0*pi*3900e6"
+  },
+  "Cavity2": {
+    "type": "beam_cavity",
+    "name": "cavity2",
+    "E": 0.72,
+    "phi": -23.2,
+    "lam": "lam_beam",
+    "s0": 1.76996,
+    "a": 29,
+    "L": 43.554
+  },
+  "Cavity3": {
+    "type": "beam_cavity",
+    "name": "cavity3",
+    "E": 2.4,
+    "phi": 0,
+    "lam": "lam_beam",
+    "s0": 1.76996,
+    "a": 29,
+    "L": 130.662
+  },
+  "Chicane0": {
+    "type": "chicane",
+    "name": "chicane1",
+    "R56": -0.005,
+    "T566": "-1.5*R56"
+  },
+  "Chicane1": {
+    "type": "chicane",
+    "name": "chicane2",
+    "R56": 0,
+    "T566": 0
+  },
+  "Chicaneh": {
+    "type": "chicane",
+    "name": "chicane3",
+    "R56": -0.094,
+    "T566": "-1.5*R56"
+  },
+  "Chicane2": {
+    "type": "chicane",
+    "name": "chicane4",
+    "R56": -0.076,
+    "T566": "-1.5*R56"
+  },
+  "Chicane3": {
+    "type": "chicane",
+    "name": "chicane5",
+    "R56": 0,
+    "T566": 0
+  },
+  "BBF": {
+    "Linac0": {
+      "dphi": {
+        "Linac0": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac1": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.00087266462599716
+      },
+      "dv": {
+        "Linac0": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac1": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.0005
+      }
+    },
+    "Linac1": {
+      "dphi": {
+        "Linac1": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.00087266462599716
+      },
+      "dv": {
+        "Linac1": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.0005
+      }
+    },
+    "Linach": {
+      "dphi": {
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.00087266462599716
+      },
+      "dv": {
+        "Linach": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.0005
+      }
+    },
+    "Linac2": {
+      "dphi": {
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.00087266462599716
+      },
+      "dv": {
+        "Linac2": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.0005
+      }
+    },
+    "Linac3": {
+      "dphi": {
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.00087266462599716
+      },
+      "dv": {
+        "Linac3": [
+          "dE_E",
+          "sz",
+          "dt",
+          "sd"
+        ],
+        "ki": 0,
+        "delta": 0.0005
+      }
+    }
+  },
+  "Noise": {
+    "dQ_Q": {
+      "Type": "Step",
+      "Settings": [
+        0.06,
+        0.125
+      ]
+    },
+    "dtg": {
+      "Type": "None",
+      "Settings": [
+        5.0e-12
+      ]
+    },
+    "dE_ing": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    },
+    "dsig_z": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    },
+    "dsig_E": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    },
+    "dchirp": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    },
+    "adc_real": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    },
+    "adc_imag": {
+      "Type": "None",
+      "Settings": [
+        0.5
+      ]
+    }
+  }
+}

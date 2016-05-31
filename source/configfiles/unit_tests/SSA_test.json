@@ -1,0 +1,13 @@
+{
+	"Simulation":{
+    	"Tstep": {
+			"value": 1e-9
+        }
+    },
+
+  "SSA_Amplifier": {
+        "PAbw" : {
+            "value": 1e6
+        }
+  }
+} 

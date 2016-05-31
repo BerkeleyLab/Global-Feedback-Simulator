@@ -1,0 +1,575 @@
+{
+    "Simulation":{
+        "type": "simulation",
+        "name": "test_simulation",
+        "Tstep": {
+            "value": 10e-6,
+            "units": "s",
+            "description": "Simulation step size"
+        },
+        "time_steps": {
+            "value": 30000,
+            "units": "steps",
+            "description" : "Total simulation time"
+        },
+        "nyquist_sign": {
+            "value": -1,
+            "units": "Unitless",
+            "description": "-1 represents frequency inversion, as with high-side LO or even-numbered Nyquist zones"
+        },
+        "Synthesis": {
+            "name": "Synthesis0",
+            "type": "Synthesis",
+            "n_mech_modes": {
+                "value": 7,
+                "units": "Unitless",
+                "description": "Number of mechanical modes handled"
+            },
+            "df_scale": {
+                "value": 9,
+                "units": "",
+                "description": "see cav4_freq.v"
+            }
+        },
+        "OutputFreq": {
+            "value": 1,
+            "units": "Unitless",
+            "description": "Decimation factor of data plots."
+        }
+    },
+
+    "Accelerator": {
+        "name": "LCLS-II",
+        "type": "Accelerator",
+        "bunch_rate": {
+            "value": 1e6,
+            "units": "Hz",
+            "description": "Bunch repetition rate"
+        },
+
+        "gun": "d_Gun",
+        "linac_connect": ["Linac0", "Linac1","Linach","Linac2","Linac3"]
+    },
+
+    "Noise": "d_Noise",
+
+    "Linac0": {
+        "type": "linac",
+        "name": "linac0",
+
+        "f0": {
+            "value": 1300e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 94e6,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 1.76996e-3,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 29.0e-3,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": -0.005,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
+        },
+
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["Cryomodule0"]
+    },
+
+    "Cryomodule0": {
+        "type": "Cryomodule",
+        "name": "cryomodule0",
+        "station_connect": ["Station0"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "Station0": {
+        "type": "station",
+        "name": "station0",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "Cavity0",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+        "ns_filter_bw": {
+            "value": 53e3,
+            "units": "Hz",
+            "description": "Noise-shaping filter bandwidth"
+        },
+
+        "piezo_connect": [],
+
+        "N_Stations": {
+            "value": 7,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rev_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    },
+
+    "Cavity0": {
+        "type": "Cavity",
+        "name": "cavity0",
+
+        "L": {
+            "value": 1.037,
+            "units": "m",
+            "description": "Length"
+        },
+        "nom_grad": {
+            "value": 16.301e6,
+            "units": "V/m",
+            "description": "Nominal gradient"
+        },
+
+        "elec_mode_connect" : ["d_ElecMode"]
+    },
+
+    "Linac1": {
+        "type": "linac",
+        "name": "linac1",
+
+        "f0": {
+            "value": 1300e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 215e6,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": -20.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 1.76996e-3,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 29.0e-3,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+        "R56": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
+        },
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["Cryomodule1"]
+    },
+
+    "Cryomodule1": {
+        "type": "Cryomodule",
+        "name": "cryomodule1",
+        "station_connect": ["Station1"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "Station1": {
+        "type": "station",
+        "name": "station1",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "Cavity1",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+        "ns_filter_bw": {
+            "value": 53e3,
+            "units": "Hz",
+            "description": "Noise-shaping filter bandwidth"
+        },
+
+        "piezo_connect": [],
+
+        "N_Stations": {
+            "value": 7,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rev_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    },
+
+    "Cavity1": {
+        "type": "Cavity",
+        "name": "cavity1",
+
+        "L": {
+            "value": 1.037,
+            "units": "m",
+            "description": "Length"
+        },
+        "nom_grad": {
+            "value": 20e6,
+            "units": "V/m",
+            "description": "Nominal gradient"
+        },
+
+        "elec_mode_connect" : ["d_ElecMode"]
+    },
+
+    "Linach": {
+        "type": "linac",
+        "name": "linach",
+
+        "f0": {
+            "value": 3900e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 215e6,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 180.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 0.950628e-3,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 12.6e-3,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": -0.094,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
+        },
+
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["Cryomoduleh"]
+    },
+
+    "Cryomoduleh": {
+        "type": "Cryomodule",
+        "name": "cryomoduleh",
+        "station_connect": ["Stationh"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "Stationh": {
+        "type": "station",
+        "name": "stationh",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "Cavityh",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+        "ns_filter_bw": {
+            "value": 53e3,
+            "units": "Hz",
+            "description": "Noise-shaping filter bandwidth"
+        },
+
+        "piezo_connect": [],
+
+        "N_Stations": {
+            "value": 7,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rev_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    },
+
+    "Cavityh": {
+        "type": "Cavity",
+        "name": "cavityh",
+
+        "L": {
+            "value": 0.346,
+            "units": "m",
+            "description": "Length"
+        },
+        "nom_grad": {
+            "value": 16.301e6,
+            "units": "V/m",
+            "description": "Nominal gradient"
+        },
+
+        "elec_mode_connect" : ["d_ElecMode"]
+    },
+
+    "Linac2": {
+        "type": "linac",
+        "name": "linac2",
+
+        "f0": {
+            "value": 1300e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 720e6,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": -23.2,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 1.76996e-3,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 29.0e-3,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": -0.076,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
+        },
+
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["Cryomodule2"]
+    },
+
+    "Cryomodule2": {
+        "type": "Cryomodule",
+        "name": "cryomodule2",
+        "station_connect": ["Station2"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "Station2": {
+        "type": "station",
+        "name": "station2",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "Cavity0",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+        "ns_filter_bw": {
+            "value": 53e3,
+            "units": "Hz",
+            "description": "Noise-shaping filter bandwidth"
+        },
+
+        "piezo_connect": [],
+
+        "N_Stations": {
+            "value": 42,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rev_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    },
+
+    "Linac3": {
+        "type": "linac",
+        "name": "linac3",
+
+        "f0": {
+            "value": 1300e6,
+            "units": "Hz",
+            "description": "Nominal LO frequency"
+        },
+        "E": {
+            "value": 2.4e9,
+            "units": "eV",
+            "description": "Energy at the end of the Linac"
+        },
+        "phi": {
+            "value": 0.0,
+            "units": "deg",
+            "description": "Nominal Linac RF phase (-30 deg accelerates and puts head energy lower than tail)"
+        },
+        "s0": {
+            "value": 1.76996e-3,
+            "units": "m",
+            "description": "Wakefield characteristic length (Sband=1.322mm, Xband=0.77mm)"
+        },
+        "iris_rad": {
+            "value": 29.0e-3,
+            "units": "m",
+            "description": "Mean iris radius (Sband=11.654mm,Xband=4.72mm)"
+        },
+
+        "R56": {
+            "value": 0.0,
+            "units": "m",
+            "description": "Nominal R56 value for Linac (chicane-R56 < 0, No chicane = 0)"
+        },
+
+
+        "dds_numerator": {
+            "value": 7,
+            "units": "Unitless",
+            "description": "Near-IQ numerator (IF carrier/ADC clock)"
+        },
+        "dds_denominator": {
+            "value": 33,
+            "units": "Unitless",
+            "description": "Near-IQ denominator (IF carrier/ADC clock)"
+        },
+
+        "cryomodule_connect" : ["Cryomodule3"]
+    },
+
+    "Cryomodule3": {
+        "type": "Cryomodule",
+        "name": "cryomodule3",
+        "station_connect": ["Station3"],
+        "mechanical_mode_connect": [],
+
+        "lp_shift": {
+            "value": 9,
+            "units": "",
+            "description": "Low-pass FPGA implementation"
+        }
+    },
+
+    "Station3": {
+        "type": "station",
+        "name": "station3",
+        "Amplifier": "d_Amplifier",
+        "Cavity": "Cavity0",
+        "Controller": "d_Controller",
+        "loop_delay_size": {
+            "value": 3,
+            "units": "Time steps",
+            "description": "RF station aggregated loop delay"
+        },
+        "ns_filter_bw": {
+            "value": 53e3,
+            "units": "Hz",
+            "description": "Noise-shaping filter bandwidth"
+        },
+
+        "piezo_connect": [],
+
+        "N_Stations": {
+            "value": 126,
+            "units": "N/A",
+            "description": "Number of Virtual RF Stations to be represented"
+        },
+
+        "cav_adc" : "d_adc",
+        "rev_adc" : "d_adc",
+        "fwd_adc" : "d_adc"
+    }
+
+ }

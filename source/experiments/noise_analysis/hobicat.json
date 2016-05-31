@@ -1,0 +1,65 @@
+{
+	"Simulation":{
+    	"Tstep": {
+			"value": 1e-8
+        },
+      "time_steps": {
+            "value": 50000
+      }
+    },
+
+  "Cavity0": {
+        "elec_mode_connect" : ["ElecMode0"]
+  },
+
+  "d_Controller": {
+      "stable_gbw": {
+        "value": 30e3
+      },
+      "control_zero": {
+            "value": 7.5e3
+      }
+  },
+
+  "SSA_Amplifier": {
+        "PAmax" : {
+            "value": 3.8e3
+        },
+        "PAbw" : {
+            "value": 1e6
+        }
+  },
+
+  "Station0": {
+    "loop_delay_size": {
+            "value": 100
+      },
+    "ns_filter_bw": {
+            "value": 100e3
+      }
+  },
+
+  "ElecMode0": {
+    "foffset": {
+          "value": 0.0
+        }
+  },
+
+  "cav_adc0": {
+    "noise_psd": {
+            "value": -500
+    }
+  },
+
+  "rev_adc0": {
+    "noise_psd": {
+            "value": -500
+    }
+  },
+
+  "fwd_adc0": {
+    "noise_psd": {
+            "value": -500
+    }
+  }
+} 
