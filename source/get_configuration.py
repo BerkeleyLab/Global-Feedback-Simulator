@@ -10,9 +10,10 @@ import readjson.parse_simulation as parseSim
 def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 
     # Get the Simulation object from the JSON parser
-    if Verbose: print "\nLoading JSON configuration files ..."
+    if Verbose:
+        print "\nLoading JSON configuration files ..."
 
-    file_list =  [
+    file_list = [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json",
         cavity_test_file]
@@ -34,9 +35,10 @@ def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
 def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True, set_point=None):
 
     # Get the Simulation object from the JSON parser
-    if Verbose: print "\nLoading JSON configuration files ..."
+    if Verbose:
+        print "\nLoading JSON configuration files ..."
 
-    file_list =  [
+    file_list = [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
 
@@ -72,9 +74,10 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True, set_point=None):
 def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
 
     # Get the Simulation object from the JSON parser
-    if Verbose: print "\nLoading JSON configuration files ..."
+    if Verbose:
+        print "\nLoading JSON configuration files ..."
 
-    file_list =  [
+    file_list = [
         "source/configfiles/unit_tests/default_accelerator.json",
         "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
 
@@ -107,9 +110,10 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
 def Get_SWIG_Simulation(sim_test_files=None, Verbose=True):
 
     # Get the Simulation object from the JSON parser
-    if Verbose: print "\nLoading JSON configuration files ..."
+    if Verbose:
+        print "\nLoading JSON configuration files ..."
 
-    file_list =  [
+    file_list = [
         "source/configfiles/unit_tests/default_accelerator.json"]
 
     if sim_test_files:
@@ -126,7 +130,7 @@ def Get_SWIG_Simulation(sim_test_files=None, Verbose=True):
 
     return sim_object
 
-if __name__=="__main__":
+if __name__ == "__main__":
 
     # Convert user-defined configuration into SWIG-wrapped C handlers
     Get_SWIG_Cavity()

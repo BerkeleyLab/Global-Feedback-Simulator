@@ -62,7 +62,6 @@ if __name__ == "__main__":
     # print "===== BBF tests: unit_test_bbf.py ====="
     # utb = unit_test_bbf.perform_tests()
 
-
     # if ut and utc and utb:
     if rf_station_pass & cavity_pass & cryomodule_pass & doublecompress_pass:
         print "ooooo ALL TESTS PASSED ooooo"

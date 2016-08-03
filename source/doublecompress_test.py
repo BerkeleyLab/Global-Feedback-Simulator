@@ -44,7 +44,7 @@ def unit_doublecompress(Verbose=False):
     # Outputs
     dc_noise_srcs = acc.Noise_Srcs()
     dcs = acc.Doublecompress_State()
-    acc.Doublecompress_State_Allocate(dcs,Nlinac)
+    acc.Doublecompress_State_Allocate(dcs, Nlinac)
 
     # Pointers to outputs
     Ipk = acc.double_Array_frompointer(dcs.Ipk)
@@ -72,13 +72,13 @@ def unit_doublecompress(Verbose=False):
 
         # Find random values for Octave Linac configuration
         for l in range(Nlinac):
-            params.lamv[0][l]=rand()+.2
-            params.Lv[0][l]=100*rand()+10
-            params.av[0][l]=(20*rand())+15.0
-            params.R56v[0][l]=.002*(rand()-.5)*2.0
-            params.T566v[0][l]=.002*(rand()-.5)*2.0
-            params.phiv[0][l]=360.0*rand()
-            params.s0v[0][l]=3.0*rand()+.5
+            params.lamv[0][l] = rand()+.2
+            params.Lv[0][l] = 100*rand()+10
+            params.av[0][l] = (20*rand())+15.0
+            params.R56v[0][l] = .002*(rand()-.5)*2.0
+            params.T566v[0][l] = .002*(rand()-.5)*2.0
+            params.phiv[0][l] = 360.0*rand()
+            params.s0v[0][l] = 3.0*rand()+.5
 
             # Copy and do unit conversion for C version
             sim.linac_list[l].C_Pointer.lam = params.lamv[0][l]
@@ -90,81 +90,81 @@ def unit_doublecompress(Verbose=False):
             sim.linac_list[l].C_Pointer.s0 = params.s0v[0][l]/1000.0
 
         # Introduce some pseudo-random numbers into noise source inputs
-        dN_N=100*(rand()-.5)*2
-        dtg=500*(rand()-.5)*2 #[picoseconds]
-        dEg=.001*(rand()-.5)*2  #[Gev]
-        dsig_z=params.sz0*(rand()-.5)*2 #[mm]
-        dsig_E=100*(rand()-.5)*2 #[%]
-        chirp = .00001*(rand()-0)*2*0 #[m]
+        dN_N = 100*(rand()-.5)*2
+        dtg = 500*(rand()-.5)*2  # [picoseconds]
+        dEg = .001*(rand()-.5)*2  # [Gev]
+        dsig_z = params.sz0*(rand()-.5)*2  # [mm]
+        dsig_E = 100*(rand()-.5)*2  # [%]
+        chirp = .00001*(rand()-0)*2*0  # [m]
 
         # Vectors for Octave code
-        dphiv_oct,dV_Vv_oct=np.zeros((2,Nlinac),dtype=float)
+        dphiv_oct, dV_Vv_oct = np.zeros((2, Nlinac), dtype=float)
         for i in range(Nlinac):
-            dphiv_oct[i]=180*(rand()-.5)*2 #[deg]
-            dV_Vv_oct[i]=100*(rand()-.5)*2 #[%]
+            dphiv_oct[i] = 180*(rand()-.5)*2  # [deg]
+            dV_Vv_oct[i] = 100*(rand()-.5)*2  # [%]
 
         # Copy and do unit conversion for C version
-        dc_noise_srcs.dQ_Q=dN_N/100
-        dc_noise_srcs.dtg=dtg/1e12
-        dc_noise_srcs.dE_ing=dEg*1e9
-        dc_noise_srcs.dsig_z=dsig_z/1000
-        dc_noise_srcs.dsig_E=dsig_E/100
-        dc_noise_srcs.dchirpt=chirp
+        dc_noise_srcs.dQ_Q = dN_N/100
+        dc_noise_srcs.dtg = dtg/1e12
+        dc_noise_srcs.dE_ing = dEg*1e9
+        dc_noise_srcs.dsig_z = dsig_z/1000
+        dc_noise_srcs.dsig_E = dsig_E/100
+        dc_noise_srcs.dchirpt = chirp
 
         # Copy and do unit conversion for C version
         for i in range(Nlinac):
             # Inputs
-            dphivr[i]=dphiv_oct[i]*np.pi/180
-            dV_Vvr[i]=dV_Vv_oct[i]/100
+            dphivr[i] = dphiv_oct[i]*np.pi/180
+            dV_Vvr[i] = dV_Vv_oct[i]/100
 
         # Call the C routine via SWIG
-        acc.Doublecompress(sim.gun.C_Pointer, sim.C_Pointer.linac_net, Nlinac,\
-            dc_noise_srcs,dphivr,  dV_Vvr, dcs)
+        acc.Doublecompress(sim.gun.C_Pointer, sim.C_Pointer.linac_net, Nlinac,
+                           dc_noise_srcs, dphivr, dV_Vvr, dcs)
 
         # Call the Octave routine using Oct2py
-        Ipk_o,sz_o,dE_E_o,sd_o,dt_o,sdsgn_o,k_o,Eloss_o\
-            ,dE_Ei_o,dE_Ei2_o,cor1_o=oct2py.octave.double_compressxv(params,\
-                 dN_N, dtg,dEg,dsig_z,\
-                 dsig_E,chirp,\
-                 dphiv_oct,dV_Vv_oct,sim.gun.C_Pointer.Q,verbose=False)
+        Ipk_o, sz_o, dE_E_o, sd_o, dt_o, sdsgn_o, k_o, Eloss_o\
+            , dE_Ei_o, dE_Ei2_o, cor1_o = oct2py.octave.double_compressxv(params,
+                                                                          dN_N, dtg, dEg, dsig_z,
+                                                                          dsig_E, chirp,
+                                                                          dphiv_oct, dV_Vv_oct, sim.gun.C_Pointer.Q, verbose=False)
 
         # Subroutine for subtracting and scaling outputs
         # for error calcualtion
-        def diffoctcarr(inputoct,inputcarr,scale=1.0):
-            N=len(inputoct[0])
-            out=np.zeros(N,dtype=float)
+        def diffoctcarr(inputoct, inputcarr, scale=1.0):
+            N = len(inputoct[0])
+            out = np.zeros(N, dtype=float)
             for k in range(N):
-                out[k]=(inputoct[0][k]-inputcarr[k]*scale)
+                out[k] = (inputoct[0][k]-inputcarr[k]*scale)
             return out
 
         # Get the errors for the different outputs
-        errIpk = abs(diffoctcarr(Ipk_o,Ipk))
-        errsz = abs(diffoctcarr(sz_o,sz,1.0e3))
-        errdE_E = abs(diffoctcarr(dE_E_o,dE_E,100.0))
-        errsd = abs(diffoctcarr(sd_o,sd,100.0))
-        errdt = abs(diffoctcarr(dt_o,dt,1.0e12))
-        errsdsgn = abs(diffoctcarr(sdsgn_o,sdsgn,100.0))
-        errk = abs(diffoctcarr(k_o,k))
-        errEloss = abs(diffoctcarr(Eloss_o,Eloss,1.0e-9))
-        errdE_Ei = abs(diffoctcarr(dE_Ei_o,dE_Ei,100.0))
-        errdE_Ei2 = abs(diffoctcarr(dE_Ei2_o,dE_Ei2,100.0))
-        errcor = abs(diffoctcarr([cor1_o[0,1:]],cor))
+        errIpk = abs(diffoctcarr(Ipk_o, Ipk))
+        errsz = abs(diffoctcarr(sz_o, sz, 1.0e3))
+        errdE_E = abs(diffoctcarr(dE_E_o, dE_E, 100.0))
+        errsd = abs(diffoctcarr(sd_o, sd, 100.0))
+        errdt = abs(diffoctcarr(dt_o, dt, 1.0e12))
+        errsdsgn = abs(diffoctcarr(sdsgn_o, sdsgn, 100.0))
+        errk = abs(diffoctcarr(k_o, k))
+        errEloss = abs(diffoctcarr(Eloss_o, Eloss, 1.0e-9))
+        errdE_Ei = abs(diffoctcarr(dE_Ei_o, dE_Ei, 100.0))
+        errdE_Ei2 = abs(diffoctcarr(dE_Ei2_o, dE_Ei2, 100.0))
+        errcor = abs(diffoctcarr([cor1_o[0, 1:]], cor))
 
         # Find maximum error for this run
-        temp=np.max([errIpk,
-                     errsz,
-                     errdE_E,
-                     errsd,
-                     errdt,
-                     errsdsgn,
-                     errk,
-                     errEloss,
-                     errdE_Ei,
-                     errdE_Ei2,
-                     errcor])
+        temp = np.max([errIpk,
+                       errsz,
+                       errdE_E,
+                       errsd,
+                       errdt,
+                       errsdsgn,
+                       errk,
+                       errEloss,
+                       errdE_Ei,
+                       errdE_Ei2,
+                       errcor])
 
         # Compare to maximum of previous runs and keep highest error
-        maxerr=max(temp,maxerr)
+        maxerr = max(temp, maxerr)
 
     print " After {0} runs with random inputs the".format(testnum)
     print " Maximum difference is {0}\n".format(maxerr)
@@ -173,7 +173,7 @@ def unit_doublecompress(Verbose=False):
     tol = 1e-8
 
     # Unit passes if maximum error lower than error threshold
-    unit_pass = maxerr<tol
+    unit_pass = maxerr < tol
 
     return unit_pass
 
@@ -191,5 +191,5 @@ def perform_tests():
 
     return dc_pass
 
-if __name__=="__main__":
+if __name__ == "__main__":
     perform_tests()

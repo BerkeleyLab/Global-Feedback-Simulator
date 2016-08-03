@@ -18,7 +18,8 @@ import sys
 
 import numpy as np
 
-import linac, linac_pretty_print
+import linac
+import linac_pretty_print
 
 from readjson.loadconfig import LoadConfig
 from readjson.readjson import readentry
@@ -26,7 +27,7 @@ from readjson.readjson import readentry
 #
 # Call this routine to script!
 #
-def DoSimulation(ConfigFiles,OutputFile):
+def DoSimulation(ConfigFiles, OutputFile):
 
     #
     # Read in the configuration files
@@ -40,11 +41,11 @@ def DoSimulation(ConfigFiles,OutputFile):
     #                vectors and indices of measurements and inputs used in the
     #                feadback operation.
     #
-    confdict, linp_pylist,linp_arr,gun, bbf, nsrc = \
+    confdict, linp_pylist, linp_arr, gun, bbf, nsrc = \
         LoadConfig(ConfigFiles)
     Nlinac = len(linp_pylist)
 
-    #for l in xrange(len(linp_pylist)):
+    # for l in xrange(len(linp_pylist)):
     #    print "*****LINAC ",l,"*****"
     #    print linac_pretty_print.lintostr(linp_pylist[l])
 
@@ -56,21 +57,19 @@ def DoSimulation(ConfigFiles,OutputFile):
     Nhist = 3
     linss_array = linac.allocate_states(linp_arr.cast(), Nlinac, Nhist)
 
-
     #
     # Pull out the number of step, dt and frequency of outputdata from the config file
     #
-    Nstep=int(readentry(confdict,confdict['Simulation']['Nstep'],localdic=confdict['Simulation']))
-    dt=readentry(confdict,confdict['Simulation']['dt'],localdic=confdict['Simulation'])
-    Outputfreq=int(readentry(confdict,confdict['Simulation']['Outputfreq'],localdic=confdict['Simulation']))
-
+    Nstep = int(readentry(confdict, confdict['Simulation']['Nstep'], localdic=confdict['Simulation']))
+    dt = readentry(confdict, confdict['Simulation']['dt'], localdic=confdict['Simulation'])
+    Outputfreq = int(readentry(confdict, confdict['Simulation']['Outputfreq'], localdic=confdict['Simulation']))
 
     #
     # Actually run the simulation
     #
-    linac.state_space_top(gun,linp_arr.cast(),Nlinac, linss_array,Nhist,
-                          bbf, nsrc, dt, Nstep,0,
-                          OutputFile,Outputfreq)
+    linac.state_space_top(gun, linp_arr.cast(), Nlinac, linss_array, Nhist,
+                          bbf, nsrc, dt, Nstep, 0,
+                          OutputFile, Outputfreq)
 
     #
     # Deallocate all c-objects needed
@@ -81,16 +80,14 @@ def DoSimulation(ConfigFiles,OutputFile):
     linac.BBF_Param_Free(bbf)
 
 
-
-
 #
 # If this file is called as main, run it from command line arguments,
 # or some defualt settings.
 #
-if __name__=="__main__":
-    outputfile= sys.argv[1] #"outputdata/test.dat"
+if __name__ == "__main__":
+    outputfile = sys.argv[1]  # "outputdata/test.dat"
 
     ConfigFiles = sys.argv[2:]
 
     print sys.argv
-    DoSimulation(ConfigFiles,outputfile)
+    DoSimulation(ConfigFiles, outputfile)

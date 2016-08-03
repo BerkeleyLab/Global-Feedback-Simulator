@@ -17,7 +17,7 @@ import linac
 import full_dc_matrix
 import readjson.readjson as rj
 
-def BBF_Config(pa,gun,linp_arr,Nlinac):
+def BBF_Config(pa, gun, linp_arr, Nlinac):
     Nmeas = 4
     Ncont = 2
 
@@ -27,18 +27,17 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
     # Dictionaries that are used by the selectors
     #
     measdict = {
-        "dE_E" : 0,
-        "sz" : 1,
-        "dt" : 2,
-        "sd" : 3
-        }
+        "dE_E": 0,
+        "sz": 1,
+        "dt": 2,
+        "sd": 3
+    }
     contdict = {
-        "dv" : 0,
-        "dphi" : 1
-        }
+        "dv": 0,
+        "dphi": 1
+    }
     connect = pa['Accelerator']['connect']
-    linidx = { connect[i]:i for i in range(len(connect)) }
-
+    linidx = {connect[i]: i for i in range(len(connect))}
 
     #
     # Build the list of utilized pairs
@@ -48,59 +47,56 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
     mask = np.zeros([Nmeas*Nlinac, Ncont*Nlinac])
     KIdict = {}
 
-    for (LinName,LinConts) in bbf_conf.iteritems():
+    for (LinName, LinConts) in bbf_conf.iteritems():
         if LinName not in connect:
             continue
         lval = linidx[LinName]
-        for (ContName,Affected) in LinConts.iteritems():
+        for (ContName, Affected) in LinConts.iteritems():
             cval = contdict[ContName]
-            used_control += [(lval,cval)]
-            for (LinMeas,Measured) in Affected.iteritems():
+            used_control += [(lval, cval)]
+            for (LinMeas, Measured) in Affected.iteritems():
                 if LinMeas not in connect:
                     continue
                 mval = linidx[LinMeas]
                 for mm in Measured:
-                    used_measured += [(mval,measdict[mm])]
-                    mask[Nmeas*mval+measdict[mm],Ncont*lval+cval] = 1
+                    used_measured += [(mval, measdict[mm])]
+                    mask[Nmeas*mval+measdict[mm], Ncont*lval+cval] = 1
             # Extract Ki
-            KIdict[(lval,cval)] = Affected['ki']
+            KIdict[(lval, cval)] = Affected['ki']
     used_measured = sorted(set(used_measured))
     used_control = sorted(set(used_control))
-    #print KIdict
-    KI = np.array([rj.readentry(pa,KIdict[x],bbf_conf) for x in used_control])
+    # print KIdict
+    KI = np.array([rj.readentry(pa, KIdict[x], bbf_conf) for x in used_control])
     Um = len(used_measured)
     Uc = len(used_control)
 
-    #print KI
-    #print used_measured
-    #print used_control
-    #print mask
-    #return
-
-
+    # print KI
+    # print used_measured
+    # print used_control
+    # print mask
+    # return
 
     #
     # Make the Jacobian, take the SVD and construct the Pseudoinv
     #
-    M = full_dc_matrix.full_dc_matrix(gun,linp_arr, 0.0005,
-                       0.0008,Nlinac)
+    M = full_dc_matrix.full_dc_matrix(gun, linp_arr, 0.0005,
+                                      0.0008, Nlinac)
     Mmasked = (M*mask)
-    #print Mmasked
+    # print Mmasked
     Mmasked = Mmasked[
-        [Nmeas*A+i for (A,i) in used_measured]
-        ,:][:,[Ncont*A+i for (A,i) in used_control ] ]
-    #print Mmasked
+        [Nmeas*A+i for (A, i) in used_measured], :][:, [Ncont*A+i for (A, i) in used_control]]
+    # print Mmasked
     # Chop chop
-    #print M
-    U, S, Vh = linalg.svd(Mmasked,full_matrices=False)
+    # print M
+    U, S, Vh = linalg.svd(Mmasked, full_matrices=False)
 
     Mpinv = Vh.conj().T .dot(np.diag(KI)) .dot(np.diag(1/S)) .dot(U.conj().T)
 
-    #print U
-    #print S
-    #print Vh
+    # print U
+    # print S
+    # print Vh
 
-    #Mpinv = linalg.pinv2(M) #2 uses the SVD
+    # Mpinv = linalg.pinv2(M) #2 uses the SVD
     #Mpinv = Vh.H * KI * inv(S) * U.H;
     # Cut down the Mpinv matrix
 
@@ -125,5 +121,5 @@ def BBF_Config(pa,gun,linp_arr,Nlinac):
     CM = linac.double_Array_frompointer(bbf.Mpinv)
     for i in xrange(Uc):
         for j in xrange(Um):
-            CM[Um*i+j] = Mpinv[i,j]
-    return [bbf,M,U,S,Vh,Mpinv]
+            CM[Um*i+j] = Mpinv[i, j]
+    return [bbf, M, U, S, Vh, Mpinv]
