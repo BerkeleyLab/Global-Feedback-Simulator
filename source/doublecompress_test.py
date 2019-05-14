@@ -126,7 +126,7 @@ def unit_doublecompress(Verbose=False):
             , dE_Ei_o, dE_Ei2_o, cor1_o = oct2py.octave.double_compressxv(params,
                                                                           dN_N, dtg, dEg, dsig_z,
                                                                           dsig_E, chirp,
-                                                                          dphiv_oct, dV_Vv_oct, sim.gun.C_Pointer.Q, verbose=False)
+                                                                          dphiv_oct, dV_Vv_oct, sim.gun.C_Pointer.Q, verbose=False, nout=11)
 
         # Subroutine for subtracting and scaling outputs
         # for error calcualtion
