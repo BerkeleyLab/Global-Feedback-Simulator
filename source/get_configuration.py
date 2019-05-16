@@ -39,8 +39,7 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True, set_point=None):
         print "\nLoading JSON configuration files ..."
 
     file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json",
-        "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
+        "source/configfiles/unit_tests/default_accelerator.json"]
 
     if isinstance(rf_station_test_file, list):
         for file in rf_station_test_file:

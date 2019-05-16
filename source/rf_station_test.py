@@ -221,7 +221,7 @@ def unit_SSA(showplots=True, TOL=1.0e-14):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    test_file = "source/configfiles/unit_tests/SSA_test.json"
+    test_file = ["source/configfiles/unit_tests/LCLS-II_accelerator.json", "source/configfiles/unit_tests/SSA_test.json"]
 
     # Get SWIG-wrapped C handles for RF Station
     rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, Verbose=False)
@@ -315,7 +315,7 @@ def unit_RF_Station():
     """
     Tmax = 0.05
 
-    test_file = "source/configfiles/unit_tests/cavity_test_step1.json"
+    test_file = ["source/configfiles/unit_tests/LCLS-II_accelerator.json", "source/configfiles/unit_tests/cavity_test_step1.json"]
 
     run_RF_Station_test(Tmax, test_file)
 
