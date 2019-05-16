@@ -77,10 +77,12 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
         print "\nLoading JSON configuration files ..."
 
     file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json",
-        "source/configfiles/unit_tests/LCLS-II_accelerator.json"]
+        "source/configfiles/unit_tests/default_accelerator.json"]
 
-    if cryo_test_file:
+    if isinstance(cryo_test_file, list):
+        for file in cryo_test_file:
+            file_list.append(file)
+    else:
         file_list.append(cryo_test_file)
 
     simulation = parseSim.ParseSimulation(file_list, Verbose)

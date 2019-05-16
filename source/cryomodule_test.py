@@ -116,7 +116,7 @@ def unit_Cryomodule():
     """
     Tmax = 80e-6
 
-    test_file = "source/configfiles/unit_tests/cryomodule_test.json"
+    test_file = ["source/configfiles/unit_tests/LCLS-II_accelerator.json", "source/configfiles/unit_tests/cryomodule_test.json"]
 
     run_Cryomodule_test(Tmax, test_file)
 
