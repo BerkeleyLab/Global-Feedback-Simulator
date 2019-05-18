@@ -4,6 +4,13 @@ Functions are provided for different levels of the model hierarchy to run
 unit tests on individual components, where the configuration is parsed from
 JSON files.
 """
+import sys
+import os
+
+sys.path.append(os.path.join(os.path.dirname(__file__), "."))
+default_accelerator_json = os.path.join(os.path.dirname(__file__), "configfiles/unit_tests/default_accelerator.json")
+LCLS_II_accelerator_json = os.path.join(os.path.dirname(__file__), "configfiles/unit_tests/LCLS-II_accelerator.json")
+
 
 import readjson.parse_simulation as parseSim
 
@@ -14,8 +21,8 @@ def Get_SWIG_Cavity(cavity_test_file, Verbose=True):
         print "\nLoading JSON configuration files ..."
 
     file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json",
-        "source/configfiles/unit_tests/LCLS-II_accelerator.json",
+        default_accelerator_json,
+        LCLS_II_accelerator_json,
         cavity_test_file]
 
     simulation = parseSim.ParseSimulation(file_list, Verbose)
@@ -38,8 +45,7 @@ def Get_SWIG_RF_Station(rf_station_test_file, Verbose=True, set_point=None):
     if Verbose:
         print "\nLoading JSON configuration files ..."
 
-    file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json"]
+    file_list = [default_accelerator_json]
 
     if isinstance(rf_station_test_file, list):
         for file in rf_station_test_file:
@@ -77,7 +83,7 @@ def Get_SWIG_Cryomodule(cryo_test_file, Verbose=True):
         print "\nLoading JSON configuration files ..."
 
     file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json"]
+        default_accelerator_json]
 
     if isinstance(cryo_test_file, list):
         for file in cryo_test_file:
@@ -115,7 +121,7 @@ def Get_SWIG_Simulation(sim_test_files=None, Verbose=True):
         print "\nLoading JSON configuration files ..."
 
     file_list = [
-        "source/configfiles/unit_tests/default_accelerator.json"]
+        default_accelerator_json]
 
     if sim_test_files:
         for sim_test_file in sim_test_files:
