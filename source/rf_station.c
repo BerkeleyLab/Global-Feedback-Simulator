@@ -295,12 +295,13 @@ void FPGA_Clear(FPGA_State * stnow)
   * Calculates the state for the next simulation step.
   * Returns the error signal and stores current state in State struct. */
 double complex FPGA_Step(
-  FPGA *fpga,                 ///< Pointer to FPGA
-  double complex cavity_vol,  ///< Measured cavity field
-  FPGA_State *stnow           ///< Pointer to FPGA State
+  FPGA *fpga,                   ///< Pointer to FPGA
+  double complex cavity_vol,    ///< Measured cavity field
+  double complex feed_forward,  ///< Measured cavity field
+  FPGA_State *stnow             ///< Pointer to FPGA State
   )
 {
-  double complex state, drive; 
+  double complex state, drive;
   double scale;
 
   // Calculate error signal
@@ -311,7 +312,7 @@ double complex FPGA_Step(
     stnow->state = fpga->set_point;
   } else {  //Closed loop
     // Integrator state
-    state = stnow->state + fpga->Tstep*err*fpga->ki;
+    state = stnow->state + feed_forward + fpga->Tstep*err*fpga->ki;
     // state = stnow->state + fpga->Tstep*fpga->ki*0.5*(err+stnow->err);
     // Compare state magnitude and saturation limit
     scale = cabs(state)/fpga->state_sat;
@@ -360,7 +361,7 @@ double complex SSA_Step(
   satout = Saturate(fil_out,rf_station->Clip);
   // Scale output signal (sqrt(W) -> Normalized units)
   satout = satout*rf_station->PAscale;
-  
+
   // Return SSA output
   return satout;
 }
@@ -414,10 +415,10 @@ double complex RF_Station_Step(
   E_probe_lp = Filter_Step(&rf_station->noise_shape_fil, E_probe_delayed, &rf_state->noise_shape_fil);
 
   // FPGA
-  sig_error = FPGA_Step(&rf_station->fpga, E_probe_lp, &rf_state->fpga_state);
+  sig_error = FPGA_Step(&rf_station->fpga, E_probe_lp, feed_forward, &rf_state->fpga_state);
 
   // SSA (includes band-limiting low-pass filter and saturation)
-  Kg = SSA_Step(rf_station, rf_state->fpga_state.drive+feed_forward, rf_state);
+  Kg = SSA_Step(rf_station, rf_state->fpga_state.drive, rf_state);
 
   // Cavity
   V_acc = Cavity_Step(rf_station->cav, delta_tz, Kg, beam_current, &rf_state->cav_state);

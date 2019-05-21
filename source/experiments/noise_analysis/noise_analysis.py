@@ -195,6 +195,7 @@ class Signal:
                 plt.plot(self.trang*1e3, np.abs(self.E_reverse/fund_k_em), '-',
                          label=r'Reverse $\left(\vec E_{\rm reverse}\right)$', linewidth=2)
             plt.plot(self.trang*1e3, np.abs(self.cav_v), '-', label=r'Cavity Field', linewidth=2, color='r')
+            plt.plot(self.trang*1e3, np.abs(self.error), '-', label=r'Error', linewidth=2, color='k')
             plt.plot(self.trang*1e3, np.abs(self.set_point/fund_k_probe), '-',
                      label=r'Set-point $\left(\vec E_{\rm sp}\right)$', linewidth=2, color='c')
             # Y label
@@ -352,6 +353,12 @@ def run_noise_numerical(Tmax, test_file, beam_configuration, detuning=False):
     # Record initial set-point
     set_point = set_point*rf_station.C_Pointer.fpga.set_point
 
+    # Loop timing
+    t1 = int(0.22e-3/Tstep)  # Transition to driving with set-point (open loop)
+    t2 = t1 + 10000			# Transition to closed loop operation
+
+    print('nt = %d, t1 = %d, t2 = %d') % (nt, t1, t2)
+
     # Run Numerical Simulation
     for i in xrange(0, nt):
         if detuning:
@@ -363,6 +370,16 @@ def run_noise_numerical(Tmax, test_file, beam_configuration, detuning=False):
         if (i == (beam_start+(n_pulses-0.5)*1e-6)/Tstep) & feedforward:
             rf_station.C_Pointer.fpga.set_point = rf_station.C_Pointer.fpga.set_point + 209*fund_k_probe
 
+        if i < t2:
+            rf_station.State.fpga_state.openloop = 1
+            if i < t1:
+                rf_station.State.fpga_state.max_drive = 1
+            else:
+                rf_station.State.fpga_state.max_drive = 0
+        else:
+            rf_station.State.fpga_state.openloop = 0
+            rf_station.State.fpga_state.max_drive = 0
+
         # Run RF Station time-series simulation
         cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, beam_current[i], feed_forward[i], rf_station.State)
         # Record signals of interest
@@ -373,6 +390,145 @@ def run_noise_numerical(Tmax, test_file, beam_configuration, detuning=False):
 
     # Instantiate Signal object to provide caller with simulation results
     signal = Signal(E_fwd, E_reverse, E_probe, cav_v, set_point, beam_current, error, fund_mode_dict, trang)
+    return signal
+
+def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
+    """
+    Run the time-series simulations to analyze the impact of different noise sources/perturbations in an RF Station.
+    """
+
+    # Grab beam configuration parameters
+    feedforward = beam_configuration['feedforward']
+    beam_charge = beam_configuration['charge']
+    n_pulses = beam_configuration['n_pulses']
+    beam_start = beam_configuration['beam_start']
+    missing_pulse = beam_configuration['missing_pulse']
+    charge_noise_percent = beam_configuration['noise']
+
+    # Import JSON parser module
+    from get_configuration import Get_SWIG_RF_Station
+
+    # Configuration file for specific test configuration
+    # (to be appended to standard test cavity configuration)
+    rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, set_point=16e6, Verbose=False)
+
+    # Create time vector
+    trang = np.arange(0, Tmax, Tstep)
+
+    # Number of points
+    nt = len(trang)
+
+    # Initialize vectors for test
+    cav_v = np.zeros(nt, dtype=np.complex)
+    error = np.zeros(nt, dtype=np.complex)
+    E_probe = np.zeros(nt, dtype=np.complex)
+    E_reverse = np.zeros(nt, dtype=np.complex)
+    E_fwd = np.zeros(nt, dtype=np.complex)
+    set_point = np.ones(nt, dtype=np.complex)
+
+    # Initialize beam vector with 0s
+    beam_current = np.zeros(nt, dtype=np.complex)
+
+    # Record some initial nominal settings from C data structures
+    kp_nominal = rf_station.C_Pointer.fpga.kp
+    ki_nominal = rf_station.C_Pointer.fpga.ki
+    max_drive_level = rf_station.C_Pointer.fpga.out_sat
+
+    # Record initial set-point
+    set_point = set_point*rf_station.C_Pointer.fpga.set_point
+
+    # Pulse timing (clock cycles)
+    t1 = int(0.2e-6/Tstep)			# end of idle -> FF on
+    t2 = t1 + int(250e-6/Tstep)		# end of fill time -> FB on
+    t3 = t2 + int(15e-6/Tstep) 		# end of settle time -> beam and AFF on
+    t4 = t3 + int(1e-3/Tstep)  		# end of pulse -> drive off
+    t5 = t4 + int(200e-6/Tstep)  	# end of decay -> RF off
+
+    print('Pulse timing:\n\tt1 = %d, t2 = %d, t3 = %d, t4 = %d, t5 = %d') % (t1, t2, t3, t4, t5)
+    # Create driving vectors based on pulse timing
+    kp_vec = np.zeros(nt, dtype=float)
+    ki_vec = np.zeros(nt, dtype=float)
+    feed_forward_vec = np.zeros(nt+1, dtype=np.complex)
+
+    # Fill time
+    feed_forward_vec[t1:t2] = max_drive_level*0.95
+    # feed_forward_vec[t1+int(30e-6/Tstep):t2] = max_drive_level*0.70
+    feed_forward_ramp = np.arange(max_drive_level, np.real(set_point[0]), -(max_drive_level-set_point[0])/(200e-6/Tstep))
+    feed_forward_ramp_len = len(feed_forward_ramp)
+
+    print(max_drive_level, set_point[0])
+
+    # Controller settling time
+    kp_ramp = np.arange(-1, kp_nominal, kp_nominal/(200e-6/Tstep))
+    ki_ramp = np.arange(-1, ki_nominal, ki_nominal/(200e-6/Tstep))
+    ramp_len = len(kp_ramp)
+
+    # Feedback on, ramp gains to nominal configuration
+    # for i in range(t2, t2+ramp_len):
+    #     kp_vec[i] = kp_ramp[i-t2]
+    #     ki_vec[i] = ki_ramp[i-t2]
+
+    # for i in range(t2, t2+feed_forward_ramp_len):
+    #     feed_forward_vec[i] = feed_forward_ramp[i-t2]
+
+    # Find derivative to fit into the controller integrator input
+    feed_forward_vec_diff = np.diff(feed_forward_vec)/Tstep
+
+    # [kp_vec[i] = kp_ramp[i] for i in range(t1, t1+ramp_len)]
+    # [ki_vec[i] = ki_ramp[i] for i in range(t1, t1+ramp_len)]
+
+    # Keep feedback on until the end of the pulse
+    # kp_vec[t2+ramp_len:t4] = kp_nominal
+    # ki_vec[t2+ramp_len:t4] = ki_nominal
+    # kp_vec[t2:t4] = kp_nominal
+    # ki_vec[t2:t4] = ki_nominal
+
+    # Create beam vector based on configuration parameters
+    # Calculate current
+    nominal_beam_current = beam_charge/Tstep  # Amps
+
+    # Add charge noise if turned on
+    if charge_noise_percent != None:
+        beam_current_samples = -np.random.normal(-nominal_beam_current, -nominal_beam_current*charge_noise_percent, n_pulses)
+    else:
+        beam_current_samples = nominal_beam_current*np.ones(nt, dtype=np.double)
+
+    # Fill in the pulses
+    for i in range(n_pulses):
+        beam_current[(beam_start+i*1e-6)/Tstep] = beam_current_samples[i]
+
+    # Grab some scaling factors
+    fund_k_beam = fund_mode_dict['k_beam']
+    fund_k_drive = fund_mode_dict['k_drive']
+    fund_k_probe = fund_mode_dict['k_probe']
+
+    # Deduce feed-forward signal with some error
+    # nominal_feed_forward = -0.99*np.sqrt(2)*nominal_beam_current*(Tstep/1e-6)*fund_k_beam/fund_k_drive
+
+    # Run Numerical Simulation
+    for i in xrange(0, nt):
+
+        # if i < t2:
+        #     rf_station.State.fpga_state.openloop = 1
+        # else:
+        #     rf_station.State.fpga_state.openloop = 0
+        # print(rf_station.C_Pointer.fpga.kp)
+        rf_station.C_Pointer.fpga.kp = kp_vec[i]
+        # print(rf_station.C_Pointer.fpga.kp)
+        rf_station.C_Pointer.fpga.ki = ki_vec[i]
+
+        # Adjust the set-point if feedforward is on
+
+        # Run RF Station time-series simulation
+        cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, beam_current[i], feed_forward_vec_diff[i], rf_station.State)
+        # Record signals of interest
+        error[i] = rf_station.State.fpga_state.err
+        E_probe[i] = rf_station.State.cav_state.E_probe
+        E_reverse[i] = rf_station.State.cav_state.E_reverse
+        E_fwd[i] = rf_station.State.cav_state.E_fwd
+
+    # Instantiate Signal object to provide caller with simulation results
+    signal = Signal(E_fwd, E_reverse, E_probe, cav_v, set_point, beam_current, feed_forward_vec_diff, fund_mode_dict, trang)
     return signal
 
 def run_noise_numerical_tests():

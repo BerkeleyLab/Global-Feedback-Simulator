@@ -33,7 +33,7 @@ typedef struct str_fpga_state {
 void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double out_sat, double Tstep);
 void FPGA_Deallocate(FPGA *fpga);
 void FPGA_Clear(FPGA_State * stnow);
-double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, FPGA_State *stnow);
+double complex FPGA_Step(FPGA *fpga, double complex cavity_vol, double complex feed_forward, FPGA_State *stnow);
 
 /*
  * Delay
