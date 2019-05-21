@@ -231,7 +231,7 @@ void RF_State_Allocate(RF_State *rf_state, RF_Station *rf_station){
 
   rf_state->fpga_state.drive = (double complex) 0.0;
   rf_state->fpga_state.state = (double complex) 0.0;
-  rf_state->fpga_state.openloop = (int) 0;
+  rf_state->fpga_state.drive_off = (int) 0;
 
   Delay_State_Allocate(&rf_station->loop_delay, &rf_state->loop_delay_state);
 }
@@ -288,7 +288,7 @@ void FPGA_Clear(FPGA_State * stnow)
   stnow-> drive = 0.0+0.0*_Complex_I;
   stnow-> state = 0.0+0.0*_Complex_I;
   stnow-> err = 0.0+0.0*_Complex_I;
-  stnow-> openloop = 0;
+  stnow-> drive_off = 0;
 }
 
 /** Step function for FPGA:
@@ -307,9 +307,8 @@ double complex FPGA_Step(
   // Calculate error signal
   double complex err = cavity_vol - fpga->set_point;
 
-  if(stnow->openloop == 1) { // Open loop
-    stnow->drive = fpga->set_point;
-    stnow->state = fpga->set_point;
+  if(stnow->drive_off == 1) {
+    stnow->drive = 0.0;
   } else {  //Closed loop
     // Integrator state
     state = stnow->state + feed_forward + fpga->Tstep*err*fpga->ki;

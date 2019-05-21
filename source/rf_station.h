@@ -27,7 +27,7 @@ typedef struct str_FPGA {
 
 typedef struct str_fpga_state {
   double complex drive, state, err;
-  int openloop; ///< FPGA control boolean to open and close the feedback loop
+  int drive_off; ///< FPGA control boolean to open and close the feedback loop
 } FPGA_State;
 
 void FPGA_Allocate_In(FPGA * fpga, double kp, double ki, double complex set_point, double out_sat, double Tstep);

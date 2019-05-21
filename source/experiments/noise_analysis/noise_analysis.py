@@ -195,7 +195,7 @@ class Signal:
                 plt.plot(self.trang*1e3, np.abs(self.E_reverse/fund_k_em), '-',
                          label=r'Reverse $\left(\vec E_{\rm reverse}\right)$', linewidth=2)
             plt.plot(self.trang*1e3, np.abs(self.cav_v), '-', label=r'Cavity Field', linewidth=2, color='r')
-            plt.plot(self.trang*1e3, np.abs(self.error), '-', label=r'Error', linewidth=2, color='k')
+            # plt.plot(self.trang*1e3, np.abs(self.error), '-', label=r'Error', linewidth=2, color='k')
             plt.plot(self.trang*1e3, np.abs(self.set_point/fund_k_probe), '-',
                      label=r'Set-point $\left(\vec E_{\rm sp}\right)$', linewidth=2, color='c')
             # Y label
@@ -410,7 +410,7 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, set_point=16.248e6, Verbose=False)
+    rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, set_point=16e6*0.9, Verbose=False)
 
     # Create time vector
     trang = np.arange(0, Tmax, Tstep)
@@ -448,27 +448,37 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
     # Create driving vectors based on pulse timing
     kp_vec = np.zeros(nt, dtype=float)
     ki_vec = np.zeros(nt, dtype=float)
+    drive_off = np.zeros(nt, dtype=int)
+    drive_off[t4:] = int(1)
     feed_forward_vec = np.zeros(nt+1, dtype=np.complex)
 
-    # Fill time
-    feed_forward_vec[t1:t2] = max_drive_level*0.85
-    feed_forward_vec[t2:t2+int(15e-6/Tstep)] = max_drive_level*0.39
-    # feed_forward_vec[t2:t4] = max_drive_level*0.39
+    # Create beam vector based on configuration parameters
+    avg_macro_pulse_current = -38e-3  # Amps
+    # mini_pulse_current = avg_macro_pulse_current*1e-3/Tstep  # Amps
+    beam_current[t3:t4] = avg_macro_pulse_current
+
+    # Build feed-forward Fill time
+    feed_forward_vec[t1:t2] = max_drive_level*0.67851
+    feed_forward_vec[t2:t3] = max_drive_level*0.34344
+    feed_forward_vec[t3:t4] = max_drive_level*0.64
+    feed_forward_vec[t3:t4] = max_drive_level*0.81
+    # feed_forward_vec[t3:t4] = max_drive_level*0.8
+    # feed_forward_vec[t3:t4] = max_drive_level*0.5
+    # feed_forward_vec[t2:t3] = max_drive_level*0.39
+
     # feed_forward_vec[t1+int(30e-6/Tstep):t2] = max_drive_level*0.70
-    feed_forward_ramp = np.arange(max_drive_level, np.real(set_point[0]), -(max_drive_level-set_point[0])/(200e-6/Tstep))
-    feed_forward_ramp_len = len(feed_forward_ramp)
 
     print(max_drive_level, set_point[0])
 
     # Controller settling time
-    kp_ramp = np.arange(-1, kp_nominal, kp_nominal/(200e-6/Tstep))
-    # ki_ramp = np.arange(-1, ki_nominal, ki_nominal/(200e-6/Tstep))
+    kp_ramp = np.arange(kp_nominal/2.0, kp_nominal, kp_nominal/(15e-6/Tstep))
+    ki_ramp = np.arange(ki_nominal/2.0, ki_nominal, ki_nominal/(15e-6/Tstep))
     ramp_len = len(kp_ramp)
 
     # Feedback on, ramp gains to nominal configuration
     for i in range(t2, t2+ramp_len):
         kp_vec[i] = kp_ramp[i-t2]
-        # ki_vec[i] = ki_ramp[i-t2]
+        ki_vec[i] = ki_ramp[i-t2]
 
     # for i in range(t2, t2+feed_forward_ramp_len):
     #     feed_forward_vec[i] = feed_forward_ramp[i-t2]
@@ -482,19 +492,17 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
     # kp_vec[t2:t4] = kp_nominal
     # ki_vec[t2:t4] = ki_nominal
 
-    # Create beam vector based on configuration parameters
-    # Calculate current
-    nominal_beam_current = beam_charge/Tstep  # Amps
-
     # Add charge noise if turned on
-    if charge_noise_percent != None:
-        beam_current_samples = -np.random.normal(-nominal_beam_current, -nominal_beam_current*charge_noise_percent, n_pulses)
-    else:
-        beam_current_samples = nominal_beam_current*np.ones(nt, dtype=np.double)
+    # if charge_noise_percent != None:
+    #     beam_current_samples = -np.random.normal(-nominal_beam_current, -nominal_beam_current*charge_noise_percent, n_pulses)
+    # else:
+    #     beam_current_samples = nominal_beam_current*np.ones(nt, dtype=np.double)
 
     # Fill in the pulses
-    for i in range(n_pulses):
-        beam_current[(beam_start+i*1e-6)/Tstep] = beam_current_samples[i]
+    # beam_current[t3:t4] = beam_current_samples[t3:t4]
+
+    # for i in range(n_pulses):
+    # beam_current[(beam_start+i*1e-6)/Tstep] = beam_current_samples[i]
 
     # Grab some scaling factors
     fund_k_beam = fund_mode_dict['k_beam']
@@ -507,13 +515,13 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
     # Run Numerical Simulation
     for i in xrange(0, nt):
 
+        rf_station.State.fpga_state.drive_off = drive_off[i]
         # if i < t2:
         #     rf_station.State.fpga_state.openloop = 1
         # else:
         #     rf_station.State.fpga_state.openloop = 0
         # print(rf_station.C_Pointer.fpga.kp)
         rf_station.C_Pointer.fpga.kp = kp_vec[i]
-        print(i, rf_station.C_Pointer.fpga.kp)
         # print(rf_station.C_Pointer.fpga.kp)
         rf_station.C_Pointer.fpga.ki = ki_vec[i]
 
@@ -523,13 +531,14 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
         cav_v[i] = acc.RF_Station_Step(rf_station.C_Pointer, 0.0, beam_current[i], feed_forward_vec_diff[i], rf_station.State)
         # Record signals of interest
         error[i] = rf_station.State.fpga_state.err
+        error[i] = rf_station.State.fpga_state.drive
         E_probe[i] = rf_station.State.cav_state.E_probe
         E_reverse[i] = rf_station.State.cav_state.E_reverse
         E_fwd[i] = rf_station.State.cav_state.E_fwd
 
     print(E_probe[t2+1000])
     # Instantiate Signal object to provide caller with simulation results
-    signal = Signal(E_fwd, E_reverse, E_probe, cav_v, set_point, beam_current, feed_forward_vec_diff, fund_mode_dict, trang)
+    signal = Signal(E_fwd, E_reverse, E_probe, cav_v, set_point, beam_current, error, fund_mode_dict, trang)
     return signal
 
 def run_noise_numerical_tests():
