@@ -410,7 +410,7 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
 
     # Configuration file for specific test configuration
     # (to be appended to standard test cavity configuration)
-    rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, set_point=16e6, Verbose=False)
+    rf_station, Tstep, fund_mode_dict = Get_SWIG_RF_Station(test_file, set_point=16.248e6, Verbose=False)
 
     # Create time vector
     trang = np.arange(0, Tmax, Tstep)
@@ -451,7 +451,9 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
     feed_forward_vec = np.zeros(nt+1, dtype=np.complex)
 
     # Fill time
-    feed_forward_vec[t1:t2] = max_drive_level*0.95
+    feed_forward_vec[t1:t2] = max_drive_level*0.85
+    feed_forward_vec[t2:t2+int(15e-6/Tstep)] = max_drive_level*0.39
+    # feed_forward_vec[t2:t4] = max_drive_level*0.39
     # feed_forward_vec[t1+int(30e-6/Tstep):t2] = max_drive_level*0.70
     feed_forward_ramp = np.arange(max_drive_level, np.real(set_point[0]), -(max_drive_level-set_point[0])/(200e-6/Tstep))
     feed_forward_ramp_len = len(feed_forward_ramp)
@@ -460,26 +462,23 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
 
     # Controller settling time
     kp_ramp = np.arange(-1, kp_nominal, kp_nominal/(200e-6/Tstep))
-    ki_ramp = np.arange(-1, ki_nominal, ki_nominal/(200e-6/Tstep))
+    # ki_ramp = np.arange(-1, ki_nominal, ki_nominal/(200e-6/Tstep))
     ramp_len = len(kp_ramp)
 
     # Feedback on, ramp gains to nominal configuration
-    # for i in range(t2, t2+ramp_len):
-    #     kp_vec[i] = kp_ramp[i-t2]
-    #     ki_vec[i] = ki_ramp[i-t2]
+    for i in range(t2, t2+ramp_len):
+        kp_vec[i] = kp_ramp[i-t2]
+        # ki_vec[i] = ki_ramp[i-t2]
 
     # for i in range(t2, t2+feed_forward_ramp_len):
     #     feed_forward_vec[i] = feed_forward_ramp[i-t2]
 
     # Find derivative to fit into the controller integrator input
-    feed_forward_vec_diff = np.diff(feed_forward_vec)/Tstep
-
-    # [kp_vec[i] = kp_ramp[i] for i in range(t1, t1+ramp_len)]
-    # [ki_vec[i] = ki_ramp[i] for i in range(t1, t1+ramp_len)]
+    feed_forward_vec_diff = np.diff(feed_forward_vec)
 
     # Keep feedback on until the end of the pulse
-    # kp_vec[t2+ramp_len:t4] = kp_nominal
-    # ki_vec[t2+ramp_len:t4] = ki_nominal
+    kp_vec[t2+ramp_len:t4] = kp_nominal
+    ki_vec[t2+ramp_len:t4] = ki_nominal
     # kp_vec[t2:t4] = kp_nominal
     # ki_vec[t2:t4] = ki_nominal
 
@@ -514,6 +513,7 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
         #     rf_station.State.fpga_state.openloop = 0
         # print(rf_station.C_Pointer.fpga.kp)
         rf_station.C_Pointer.fpga.kp = kp_vec[i]
+        print(i, rf_station.C_Pointer.fpga.kp)
         # print(rf_station.C_Pointer.fpga.kp)
         rf_station.C_Pointer.fpga.ki = ki_vec[i]
 
@@ -527,6 +527,7 @@ def run_ppu_pulse(Tmax, test_file, beam_configuration, detuning=False):
         E_reverse[i] = rf_station.State.cav_state.E_reverse
         E_fwd[i] = rf_station.State.cav_state.E_fwd
 
+    print(E_probe[t2+1000])
     # Instantiate Signal object to provide caller with simulation results
     signal = Signal(E_fwd, E_reverse, E_probe, cav_v, set_point, beam_current, feed_forward_vec_diff, fund_mode_dict, trang)
     return signal
