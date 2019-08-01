@@ -9,7 +9,7 @@ import matplotlib.pylab as plt
 import cavity_test
 import rf_station_test
 import cryomodule_test
-import doublecompress_test
+# import doublecompress_test
 import simulation_test
 
 # import unit_test_bbf
@@ -40,13 +40,13 @@ if __name__ == "__main__":
         result = 'FAIL'
     print "===== Cryomodule tests >>> " + result + " =====\n"
 
-    print "===== DoubleCompress test: doublecompress_test.py ====="
-    doublecompress_pass = doublecompress_test.perform_tests()
-    if (doublecompress_pass):
-        result = 'PASS'
-    else:
-        result = 'FAIL'
-    print "===== DoubleCompress tests >>> " + result + " =====\n"
+    # print "===== DoubleCompress test: doublecompress_test.py ====="
+    # doublecompress_pass = doublecompress_test.perform_tests()
+    # if (doublecompress_pass):
+    #     result = 'PASS'
+    # else:
+    #     result = 'FAIL'
+    # print "===== DoubleCompress tests >>> " + result + " =====\n"
 
     # print "===== Simulation Top Level test: simulation_test.py ====="
     # sim_test_pass = simulation_test.perform_tests()
